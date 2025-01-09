@@ -154,7 +154,6 @@ app.get('/api/planning-data', (req, res) => {
             console.error('Erreur lors de la récupération des données du planning :', err.message);
             res.status(500).send('Erreur lors de la récupération des données du planning');
         } else {
-            console.log('Résultats de la requête :', results);
             res.json(results);
         }
     });
