@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Donnée</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="content">
+        <h1>Base de Donnée</h1>
+        <table id="databaseTable">
+            <thead>
+                <tr>
+                    <th>nom_id</th>
+                    <th>nom</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les lignes seront ajoutées ici dynamiquement -->
+            </tbody>
+        </table>
+        <button id="addNameButton">Ajouter un nom</button>
+        
+        <!-- Nouveau tableau pour horaires et compétences -->
+        <table id="horairesCompetenceTable">
+            <thead>
+                <tr>
+                    <th>horaires_nom</th>
+                    <th>competence</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les lignes seront ajoutées ici dynamiquement -->
+            </tbody>
+        </table>
+        <button id="addRowButton">Ajouter</button>
+
+        <!-- Nouveau tableau pour compétences des personnes -->
+        <h2>Compétences des personnes</h2>
+        <table id="competencesPersonnesTable">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <!-- Les compétences seront ajoutées ici dynamiquement -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les lignes seront ajoutées ici dynamiquement -->
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="menu">
+        <h2>Menu</h2>
+        <a href="index.html">Index</a>
+        <a href="base-de-donnee.html">Base de donnée</a>
+        <a href="planning.html">Planning</a>
+    </div>
+    
+    <!-- Fenêtre modale -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Modifier le nom</h2>
+            <input type="text" id="newName" placeholder="Entrez le nouveau nom">
+            <button id="saveName">Sauvegarder</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentCell = null;
+        let currentId = null;
+
+        // Fonction pour afficher les données dans le tableau
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                
+                const tableBody = document.querySelector("#databaseTable tbody");
+                tableBody.innerHTML = ''; // Vider le contenu du tableau
+
+                // Ajouter les données récupérées au tableau
+                data.forEach(rowData => {
+                    const row = document.createElement("tr");
+                    Object.keys(rowData).forEach(key => {
+                        const cell = document.createElement("td");
+                        cell.textContent = rowData[key];
+                        // Ajouter un gestionnaire de clics à la colonne "nom"
+                        if (key === 'nom') {
+                            cell.style.cursor = 'pointer';
+                            cell.addEventListener("click", () => {
+                                currentCell = cell;
+                                currentId = rowData.nom_id;
+                                showModal();
+                            });
+                        }
+                        row.appendChild(cell);
+                    });
+                    // Ajouter une cellule pour les actions (supprimer)
+                    const actionCell = document.createElement("td");
+                    const deleteButton = document.createElement("button");
+                    deleteButton.textContent = "Supprimer";
+                    deleteButton.addEventListener("click", () => deleteName(rowData.nom_id));
+                    actionCell.appendChild(deleteButton);
+                    row.appendChild(actionCell);
+                    tableBody.appendChild(row);
+                });
+                
+                // Appel de la fonction pour récupérer les horaires et compétences
+                fetchHorairesCompetence();
+
+                // Appel de la fonction pour récupérer les compétences des personnes
+                fetchCompetencesPersonnes();
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données :', error);
+            }
+        }
+
+        // Fonction pour afficher les données horaires et compétences dans le tableau
+        async function fetchHorairesCompetence() {
+            try {
+                const response = await fetch('/api/horaires-competence');
+                const data = await response.json();
+                
+                const tableBody = document.querySelector("#horairesCompetenceTable tbody");
+                tableBody.innerHTML = ''; // Vider le contenu du tableau
+
+                // Ajouter les données récupérées au tableau
+                data.forEach(rowData => {
+                    const row = document.createElement("tr");
+                    const horairesNomCell = document.createElement("td");
+                    horairesNomCell.textContent = rowData.horaires_nom;
+                    row.appendChild(horairesNomCell);
+
+                    const competenceCell = document.createElement("td");
+                    competenceCell.textContent = rowData.competence;
+                    row.appendChild(competenceCell);
+
+                    // Ajouter une cellule pour les actions (supprimer)
+                    const actionCell = document.createElement("td");
+                    const deleteButton = document.createElement("button");
+                    deleteButton.textContent = "Supprimer";
+                    deleteButton.addEventListener("click", () => deleteRow(rowData.horaire_id, rowData.competence_id));
+                    actionCell.appendChild(deleteButton);
+                    row.appendChild(actionCell);
+
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données horaires et compétences :', error);
+            }
+        }
+
+        // Fonction pour afficher les compétences des personnes dans le tableau
+        async function fetchCompetencesPersonnes() {
+            try {
+                const response = await fetch('/api/competences-personnes');
+                const data = await response.json();
+                
+                const tableHead = document.querySelector("#competencesPersonnesTable thead tr");
+                const tableBody = document.querySelector("#competencesPersonnesTable tbody");
+                tableHead.innerHTML = '<th>Nom</th>'; // Vider le contenu des en-têtes de colonne
+                tableBody.innerHTML = ''; // Vider le contenu du tableau
+
+                // Récupérer toutes les compétences uniques
+                const competences = [...new Set(data.map(item => item.competence))];
+
+                // Ajouter les compétences en tant qu'en-têtes de colonne
+                competences.forEach(competence => {
+                    const th = document.createElement("th");
+                    th.textContent = competence;
+                    tableHead.appendChild(th);
+                });
+
+                // Grouper les données par nom
+                const groupedData = data.reduce((acc, item) => {
+                    if (!acc[item.nom]) {
+                        acc[item.nom] = { nom_id: item.nom_id };
+                    }
+                    if (item.competence) {
+                        acc[item.nom][item.competence] = true;
+                    }
+                    return acc;
+                }, {});
+
+                // Ajouter les données récupérées au tableau
+                Object.keys(groupedData).forEach(nom => {
+                    const row = document.createElement("tr");
+                    const nameCell = document.createElement("td");
+                    nameCell.textContent = nom;
+                    row.appendChild(nameCell);
+
+                    competences.forEach(competence => {
+                        const cell = document.createElement("td");
+                        cell.textContent = groupedData[nom][competence] ? '✔' : '';
+                        cell.addEventListener('click', () => toggleCompetence(groupedData[nom].nom_id, competence, cell));
+                        row.appendChild(cell);
+                    });
+
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erreur lors de la récupération des compétences des personnes :', error);
+            }
+        }
+
+        // Fonction pour ajouter ou supprimer une compétence pour une personne
+        async function toggleCompetence(nom_id, competence, cell) {
+            try {
+                const response = await fetch('/api/competences-personnes');
+                const data = await response.json();
+                const competenceData = data.find(item => item.competence === competence);
+
+                if (cell.textContent === '✔') {
+                    // Supprimer la compétence
+                    const response = await fetch('/api/delete-competence', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nom_id, competence_id: competenceData.competence_id })
+                    });
+
+                    if (response.ok) {
+                        cell.textContent = '';
+                    } else {
+                        console.error('Erreur lors de la suppression de la compétence');
+                    }
+                } else {
+                    // Ajouter la compétence
+                    const response = await fetch('/api/add-competence', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nom_id, competence_id: competenceData.competence_id })
+                    });
+
+                    if (response.ok) {
+                        cell.textContent = '✔';
+                    } else {
+                        console.error('Erreur lors de l\'ajout de la compétence');
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur lors de la requête:', error);
+            }
+        }
+
+        // Fonction pour ajouter un nom
+        async function addName() {
+            const nom = prompt("Entrez le nom");
+            if (nom) {
+                try {
+                    const response = await fetch('/api/add-nom', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nom })
+                    });
+
+                    if (response.ok) {
+                        fetchData();
+                    } else {
+                        console.error('Erreur lors de l\'ajout du nom');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la requête:', error);
+                }
+            }
+        }
+
+        // Fonction pour supprimer un nom
+        async function deleteName(nom_id) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer ce nom ?")) {
+                try {
+                    console.log(`Suppression du nom avec nom_id: ${nom_id}`); // Ajout d'un message de console
+                    const response = await fetch('/api/delete-nom', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nom_id })
+                    });
+
+                    if (response.ok) {
+                        console.log('Nom supprimé avec succès'); // Ajout d'un message de console
+                        fetchData();
+                    } else {
+                        console.error('Erreur lors de la suppression du nom');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la requête:', error);
+                }
+            }
+        }
+
+        // Fonction pour afficher la fenêtre modale
+        function showModal() {
+            const modal = document.getElementById("myModal");
+            modal.style.display = "block";
+            document.getElementById("newName").value = currentCell.textContent;
+        }
+
+        // Fonction pour fermer la fenêtre modale
+        function closeModal() {
+            const modal = document.getElementById("myModal");
+            modal.style.display = "none";
+        }
+
+        // Fonction pour sauvegarder le nouveau nom
+        async function saveName() {
+            const newName = document.getElementById("newName").value;
+            if (currentCell && currentId) {
+                try {
+                    const response = await fetch('/api/update-name', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nom_id: currentId, nom: newName })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.text();
+                        console.log(result);
+                        // Mettre à jour l'affichage du nom dans la cellule
+                        currentCell.textContent = newName;
+                        closeModal();
+                    } else {
+                        console.error('Erreur lors de la mise à jour du nom');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la requête:', error);
+                }
+            }
+        }
+
+        // Fonction pour ajouter une nouvelle ligne
+        async function addRow() {
+            const horairesNom = prompt("Entrez le nom de l'horaire");
+            const competence = prompt("Entrez la compétence");
+            if (horairesNom && competence) {
+                try {
+                    const response = await fetch('/api/add-horaires-competence', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ horaires_nom: horairesNom, competence: competence })
+                    });
+
+                    if (response.ok) {
+                        fetchHorairesCompetence();
+                    } else {
+                        console.error('Erreur lors de l\'ajout de la ligne');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la requête:', error);
+                }
+            }
+        }
+
+        // Fonction pour supprimer une ligne
+        async function deleteRow(horairesId, competenceId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette ligne ?")) {
+                try {
+                    console.log(`Suppression de la ligne avec horaires_id: ${horairesId}, competence_id: ${competenceId}`); // Ajout d'un message de console
+                    const response = await fetch('/api/delete-horaires-competence', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ horaires_id: horairesId, competence_id: competenceId })
+                    });
+
+                    if (response.ok) {
+                        console.log('Ligne supprimée avec succès'); // Ajout d'un message de console
+                        fetchHorairesCompetence();
+                    } else {
+                        console.error('Erreur lors de la suppression de la ligne');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la requête:', error);
+                }
+            }
+        }
+
+        // Gestionnaire d'événements pour fermer la fenêtre modale
+        document.querySelector(".close").addEventListener("click", closeModal);
+
+        // Gestionnaire d'événements pour sauvegarder le nouveau nom
+        document.getElementById("saveName").addEventListener("click", saveName);
+
+        // Gestionnaire d'événements pour ajouter un nom
+        document.getElementById("addNameButton").addEventListener("click", addName);
+
+        // Gestionnaire d'événements pour ajouter une nouvelle ligne
+        document.getElementById("addRowButton").addEventListener("click", addRow);
+
+        // Appeler la fonction pour récupérer les données lorsque la page est chargée
+        document.addEventListener('DOMContentLoaded', fetchData);
+
+        // Fermer la fenêtre modale si l'utilisateur clique en dehors de celle-ci
+        window.onclick = function(event) {
+            const modal = document.getElementById("myModal");
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

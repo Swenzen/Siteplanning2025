@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau en JavaScript</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="content">
+        <h1>Mon Tableau Dynamique</h1>
+        <table id="dynamicTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom de l'événement</th>
+                    <th>Date de l'événement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les lignes seront ajoutées ici dynamiquement -->
+            </tbody>
+        </table>
+    </div>
+    <div id="menu">
+        <h2>Menu</h2>
+        <a href="index.html">Index</a>
+        <a href="base-de-donnee.html">Base de donnée</a>
+        <a href="planning.html">Planning</a>
+    </div>
+    <div id="tooltip"></div>
+    <script>
+        // Sélectionner le tableau et le conteneur du tooltip
+        const tableBody = document.querySelector("#dynamicTable tbody");
+        const tooltip = document.getElementById("tooltip");
+
+        // Variable globale pour stocker toutes les dates
+        let allEventDates = [];
+        let currentCell = null; // Variable pour stocker la cellule actuelle
+
+        // Fonction pour récupérer les données de l'API et les afficher dans le tableau
+        async function fetchData() {
+            try {
+                // Exemple de données simulées
+                const data = [
+                    { id: 1, event_name: 'Event 1', event_date: '2024-12-31T23:00:00.000Z' },
+                    { id: 2, event_name: 'Event 2', event_date: '2025-01-01T23:00:00.000Z' },
+                    { id: 3, event_name: 'Event 3', event_date: '2025-01-02T23:00:00.000Z' }
+                ];
+
+                // Ajouter les données récupérées au tableau
+                data.forEach(rowData => {
+                    allEventDates.push(rowData.event_date); // Stocker les dates globalement
+                    const row = document.createElement("tr");
+                    Object.keys(rowData).forEach((key, index) => {
+                        const cell = document.createElement("td");
+                        cell.textContent = rowData[key];
+                        // Ajouter un gestionnaire de clics à la colonne "Nom de l'événement"
+                        if (index === 1) {
+                            cell.style.cursor = 'pointer';
+                            cell.addEventListener("click", (event) => {
+                                currentCell = cell; // Stocker la cellule actuelle
+                                showTooltip(event);
+                            });
+                        }
+                        row.appendChild(cell);
+                    });
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données :', error);
+            }
+        }
+
+        // Fonction pour afficher le tooltip avec toutes les dates
+        function showTooltip(event) {
+            tooltip.innerHTML = allEventDates.map(date => `<div class="tooltip-date">${date}</div>`).join('');
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${event.pageX + 10}px`; // Slight offset for better visibility
+            tooltip.style.top = `${event.pageY + 10}px`; // Slight offset for better visibility
+
+            // Ajouter un gestionnaire de clics aux éléments de date dans le tooltip
+            document.querySelectorAll('.tooltip-date').forEach(element => {
+                element.addEventListener('click', function() {
+                    currentCell.textContent = this.textContent; // Remplacer le contenu de la cellule
+                    tooltip.style.display = 'none'; // Fermer le tooltip
+                });
+            });
+        }
+
+        // Cacher le tooltip lorsque l'utilisateur clique ailleurs
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('td') && !event.target.closest('#tooltip')) {
+                tooltip.style.display = 'none';
+            }
+        });
+
+        // Appeler la fonction pour récupérer les données lorsque la page est chargée
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+</html>
