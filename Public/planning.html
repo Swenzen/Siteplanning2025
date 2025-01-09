@@ -56,6 +56,16 @@
         let currentHorairesNom = null;
         let currentCompetenceId = null;
 
+        const dayMapping = {
+            '1': 'lundi',
+            '2': 'mardi',
+            '3': 'mercredi',
+            '4': 'jeudi',
+            '5': 'vendredi',
+            '6': 'samedi',
+            '7': 'dimanche'
+        };
+
         // Fonction pour afficher les données dans le tableau
         async function fetchPlanningData() {
             const semaine = document.getElementById("weekNumber").value;
@@ -78,7 +88,7 @@
                     if (!acc[key]) {
                         acc[key] = { ...row, jours: {} };
                     }
-                    acc[key].jours[row.jour.toLowerCase()] = row.nom;
+                    acc[key].jours[row.jour_id] = row.nom;
                     return acc;
                 }, {});
 
@@ -94,7 +104,7 @@
                     horairesCell.textContent = rowData.horaires_nom;
                     row.appendChild(horairesCell);
 
-                    const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+                    const days = ['1', '2', '3', '4', '5', '6', '7']; // Utiliser les IDs des jours
                     days.forEach(day => {
                         const cell = document.createElement("td");
                         cell.textContent = rowData.jours[day] || ''; // Afficher le nom pour chaque jour
@@ -147,21 +157,22 @@
                     currentCell.textContent = this.textContent; // Remplacer le contenu de la cellule
                     const semaine = document.getElementById("weekNumber").value;
                     const annee = document.getElementById("yearNumber").value;
-                    updatePlanning(semaine, annee, currentDay, currentHorairesNom, currentCompetenceId, this.textContent);
+                    const jour_id = currentDay; // Utiliser l'ID du jour
+                    updatePlanning(semaine, annee, jour_id, currentHorairesNom, currentCompetenceId, this.textContent);
                     tooltip.style.display = 'none'; // Fermer le tooltip
                 });
             });
         }
 
         // Fonction pour mettre à jour le planning dans la base de données
-        async function updatePlanning(semaine, annee, jour, horairesNom, competenceId, nom) {
+        async function updatePlanning(semaine, annee, jour_id, horairesNom, competenceId, nom) {
             try {
                 const response = await fetch('/api/update-planning', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ semaine, annee, jour, horaires_nom: horairesNom, competence_id: competenceId, nom })
+                    body: JSON.stringify({ semaine, annee, jour_id, horaires_nom: horairesNom, competence_id: competenceId, nom })
                 });
 
                 if (!response.ok) {
