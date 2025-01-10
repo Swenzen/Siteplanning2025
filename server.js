@@ -140,13 +140,14 @@ app.get('/api/planning-data', (req, res) => {
 
     const query = `
         SELECT h.horaire AS horaires_nom, c.competence, c.competence_id, j.jour_id, j.jour, n.nom
-        FROM Tplanning p
-        JOIN Thoraire h ON p.horaire_id = h.horaire_id
-        JOIN Tcompetence c ON p.competence_id = c.competence_id
-        JOIN Tnom n ON p.nom_id = n.nom_id
-        JOIN Tjour j ON p.jour_id = j.jour_id
-        WHERE p.semaine = ? AND p.annee = ?
-        ORDER BY p.jour_id, h.horaire
+        FROM Tcompetence_nom cn
+        JOIN Tcompetence c ON cn.competence_id = c.competence_id
+        JOIN Thoraire_competence hc ON c.competence_id = hc.competence_id
+        JOIN Thoraire h ON hc.horaire_id = h.horaire_id
+        LEFT JOIN Tplanning p ON c.competence_id = p.competence_id AND h.horaire_id = p.horaire_id AND p.semaine = ? AND p.annee = ?
+        LEFT JOIN Tnom n ON p.nom_id = n.nom_id
+        LEFT JOIN Tjour j ON p.jour_id = j.jour_id
+        ORDER BY c.competence, h.horaire, j.jour_id
     `;
 
     connection.query(query, [semaine, annee], (err, results) => {
