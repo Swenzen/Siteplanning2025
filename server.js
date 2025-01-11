@@ -27,6 +27,12 @@ connection.connect((err) => {
 // Middleware pour parser le corps des requêtes
 app.use(bodyParser.json());
 
+// Importer les routes
+const competencesRoutes = require('./routes/competences');
+
+// Utiliser les routes
+app.use('/api', competencesRoutes);
+
 // Route pour récupérer les données
 app.get('/api/data', (req, res) => {
     connection.query('SELECT nom_id, nom FROM Tnom', (err, results) => {
@@ -258,23 +264,7 @@ app.post('/api/delete-competence2', (req, res) => {
     });
 });
 
-// Route pour ajouter un nom
-app.post('/api/add-nom', (req, res) => {
-    const { nom } = req.body;
-    const query = `
-        INSERT INTO Tnom (nom)
-        VALUES (?)
-    `;
 
-    connection.query(query, [nom], (err, result) => {
-        if (err) {
-            console.error('Erreur lors de l\'ajout du nom :', err.message);
-            res.status(500).send('Erreur lors de l\'ajout du nom');
-        } else {
-            res.send('Nom ajouté avec succès');
-        }
-    });
-});
 
 // Route pour supprimer un nom
 app.post('/api/delete-nom', (req, res) => {
