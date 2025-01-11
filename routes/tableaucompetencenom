@@ -1,0 +1,60 @@
+const express = require('express');
+const router = express.Router();
+const connection = require('../db'); // Importer la connexion à la base de données
+
+// Route pour récupérer les compétences des personnes
+router.get('/competences-personnes', (req, res) => {
+    const query = `
+        SELECT n.nom, n.nom_id, c.competence, c.competence_id
+        FROM Tnom n
+        LEFT JOIN Tcompetence_nom cn ON n.nom_id = cn.nom_id
+        LEFT JOIN Tcompetence c ON cn.competence_id = c.competence_id
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la requête :', err.message);
+            res.status(500).send('Erreur lors de la requête');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Route pour ajouter une compétence à une personne
+router.post('/add-competence', (req, res) => {
+    const { nom_id, competence_id } = req.body;
+    const query = `
+        INSERT INTO Tcompetence_nom (nom_id, competence_id)
+        VALUES (?, ?)
+    `;
+
+    connection.query(query, [nom_id, competence_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout de la compétence :', err.message);
+            res.status(500).send('Erreur lors de l\'ajout de la compétence');
+        } else {
+            res.send('Compétence ajoutée avec succès');
+        }
+    });
+});
+
+// Route pour supprimer une compétence
+router.post('/delete-competence', (req, res) => {
+    const { competence_id } = req.body;
+    const query = `
+        DELETE FROM Tcompetence
+        WHERE competence_id = ?
+    `;
+
+    connection.query(query, [competence_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression de la compétence :', err.message);
+            res.status(500).send('Erreur lors de la suppression de la compétence');
+        } else {
+            res.send('Compétence supprimée avec succès');
+        }
+    });
+});
+
+module.exports = router;
