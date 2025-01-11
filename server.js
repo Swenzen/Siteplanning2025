@@ -42,11 +42,11 @@ app.get('/api/data', (req, res) => {
 // Route pour récupérer les horaires et compétences
 app.get('/api/horaires-competence', (req, res) => {
     const query = `
-        SELECT c.competence, h.horaire AS horaires_nom, h.horaire_id, c.competence_id
+        SELECT c.competence, CONCAT(h.horaire_debut, ' - ', h.horaire_fin) AS horaires_nom, h.horaire_id, c.competence_id
         FROM Thoraire_competence hc
         JOIN Thoraire h ON hc.horaire_id = h.horaire_id
         JOIN Tcompetence c ON hc.competence_id = c.competence_id
-        ORDER BY c.competence, h.horaire
+        ORDER BY c.competence, h.horaire_debut
     `;
 
     connection.query(query, (err, results) => {
@@ -74,14 +74,14 @@ app.post('/api/update-name', (req, res) => {
     });
 });
 
-// Route pour ajouter une nouvelle ligne dans horaires_competence
+// Route pour ajouter une nouvelle ligne dans Thoraire_competence
 app.post('/api/add-horaires-competence', (req, res) => {
-    const { horaires_nom, competence } = req.body;
+    const { horaire_debut, horaire_fin, competence } = req.body;
 
     // Insérer l'horaire dans la table Thoraire
-    const queryHoraires = 'INSERT INTO Thoraire (horaire) VALUES (?)';
+    const queryHoraires = 'INSERT INTO Thoraire (horaire_debut, horaire_fin) VALUES (?, ?)';
 
-    connection.query(queryHoraires, [horaires_nom], (err, resultHoraires) => {
+    connection.query(queryHoraires, [horaire_debut, horaire_fin], (err, resultHoraires) => {
         if (err) {
             console.error('Erreur lors de l\'insertion dans Thoraire :', err.message);
             res.status(500).send('Erreur lors de l\'insertion dans Thoraire');
@@ -116,13 +116,13 @@ app.post('/api/add-horaires-competence', (req, res) => {
 
 // Route pour supprimer une ligne dans Thoraire_competence
 app.post('/api/delete-horaires-competence', (req, res) => {
-    const { horaires_id, competence_id } = req.body;
+    const { horaire_id, competence_id } = req.body;
     const query = `
         DELETE FROM Thoraire_competence
         WHERE horaire_id = ? AND competence_id = ?
     `;
 
-    connection.query(query, [horaires_id, competence_id], (err, result) => {
+    connection.query(query, [horaire_id, competence_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression de la ligne :', err.message);
             res.status(500).send('Erreur lors de la suppression de la ligne');
@@ -160,8 +160,6 @@ app.get('/api/planning-data', (req, res) => {
     });
 });
 
-
-
 // Route pour récupérer les noms des personnes ayant la même competence_id
 app.get('/api/nom-ids', (req, res) => {
     const { competence_id } = req.query;
@@ -181,7 +179,6 @@ app.get('/api/nom-ids', (req, res) => {
         }
     });
 });
-
 
 // Route pour insérer ou mettre à jour le planning
 app.post('/api/update-planning', (req, res) => {
@@ -231,7 +228,6 @@ app.post('/api/update-planning', (req, res) => {
         }
     });
 });
-
 
 // Route pour récupérer les compétences des personnes
 app.get('/api/competences-personnes', (req, res) => {
@@ -306,8 +302,6 @@ app.post('/api/add-nom', (req, res) => {
     });
 });
 
-
-
 // Route pour supprimer un nom
 app.post('/api/delete-nom', (req, res) => {
     const { nom_id } = req.body;
@@ -357,11 +351,6 @@ app.post('/api/delete-nom', (req, res) => {
         }
     });
 });
-
-
-
-
-
 
 // Servir les fichiers statiques
 app.use(express.static(path.join(__dirname, 'public')));
