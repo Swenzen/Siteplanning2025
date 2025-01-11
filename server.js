@@ -220,6 +220,26 @@ app.post('/api/add-competence', (req, res) => {
     });
 });
 
+
+// Route pour supprimer une compétence
+app.post('/api/delete-competence2', (req, res) => {
+    const { competence_id } = req.body;
+    const query = `
+        DELETE FROM Tcompetence
+        WHERE competence_id = ?
+    `;
+
+    connection.query(query, [competence_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression de la compétence :', err.message);
+            res.status(500).send('Erreur lors de la suppression de la compétence');
+        } else {
+            res.send('Compétence supprimée avec succès');
+        }
+    });
+});
+
+
 // Route pour supprimer une compétence d'une personne
 app.post('/api/delete-competence', (req, res) => {
     const { nom_id, competence_id } = req.body;
