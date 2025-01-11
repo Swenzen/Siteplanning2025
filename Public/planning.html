@@ -66,7 +66,6 @@
             '7': 'dimanche'
         };
 
-        // Fonction pour afficher les données dans le tableau
         async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
@@ -84,7 +83,7 @@
 
         // Regrouper les données par compétence et horaire
         const groupedData = data.reduce((acc, row) => {
-            const key = `${row.competence}-${row.horaires_nom}`;
+            const key = `${row.competence}-${row.horaire_debut}-${row.horaire_fin}`;
             if (!acc[key]) {
                 acc[key] = { ...row, jours: {} };
             }
@@ -103,7 +102,7 @@
             row.appendChild(modalitiesCell);
 
             const horairesCell = document.createElement("td");
-            horairesCell.textContent = rowData.horaires_nom;
+            horairesCell.textContent = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
             row.appendChild(horairesCell);
 
             const days = ['1', '2', '3', '4', '5', '6', '7']; // Utiliser les IDs des jours
@@ -114,7 +113,7 @@
                     console.log(`Cellule cliquée : ${day}, ${rowData.competence_id}`);
                     currentCell = cell; // Stocker la cellule actuelle
                     currentDay = day;
-                    currentHorairesNom = rowData.horaires_nom;
+                    currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
                     currentCompetenceId = rowData.competence_id;
                     fetchNomIds(rowData.competence_id, event);
                 });
@@ -146,7 +145,7 @@
             }
         }
 
-        // Fonction pour afficher le tooltip avec les noms
+ // Fonction pour afficher le tooltip avec les noms
 function showTooltip(event, noms) {
     tooltip.innerHTML = noms.map(nom => `<div class="tooltip-date">${nom}</div>`).join('');
     tooltip.style.display = 'block';
@@ -160,22 +159,23 @@ function showTooltip(event, noms) {
             const semaine = document.getElementById("weekNumber").value;
             const annee = document.getElementById("yearNumber").value;
             const jour_id = currentDay; // Utiliser l'ID du jour
-            updatePlanning(semaine, annee, jour_id, currentHorairesNom, currentCompetenceId, this.textContent);
+            const [horaire_debut, horaire_fin] = currentHorairesNom.split(' - '); // Séparer les horaires de début et de fin
+            updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fin, currentCompetenceId, this.textContent);
             tooltip.style.display = 'none'; // Fermer le tooltip
         });
     });
 }
 
-   // Fonction pour mettre à jour le planning dans la base de données
-async function updatePlanning(semaine, annee, jour_id, horairesNom, competenceId, nom) {
-    console.log('Données envoyées pour la mise à jour du planning :', { semaine, annee, jour_id, horairesNom, competenceId, nom });
+// Fonction pour mettre à jour le planning dans la base de données
+async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom) {
+    console.log('Données envoyées pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom });
     try {
         const response = await fetch('/api/update-planning', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ semaine, annee, jour_id, horaires_nom: horairesNom, competence_id: competenceId, nom })
+            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: competenceId, nom })
         });
 
         if (!response.ok) {

@@ -139,7 +139,7 @@ app.get('/api/planning-data', (req, res) => {
     console.log(`Récupération des données pour la semaine ${semaine} de l'année ${annee}`);
 
     const query = `
-        SELECT h.horaire AS horaires_nom, c.competence, c.competence_id, j.jour_id, j.jour, n.nom
+        SELECT h.horaire_debut, h.horaire_fin, c.competence, c.competence_id, j.jour_id, j.jour, n.nom
         FROM Tcompetence_nom cn
         JOIN Tcompetence c ON cn.competence_id = c.competence_id
         JOIN Thoraire_competence hc ON c.competence_id = hc.competence_id
@@ -147,7 +147,7 @@ app.get('/api/planning-data', (req, res) => {
         LEFT JOIN Tplanning p ON c.competence_id = p.competence_id AND h.horaire_id = p.horaire_id AND p.semaine = ? AND p.annee = ?
         LEFT JOIN Tnom n ON p.nom_id = n.nom_id
         LEFT JOIN Tjour j ON p.jour_id = j.jour_id
-        ORDER BY c.competence, h.horaire, j.jour_id
+        ORDER BY c.competence, h.horaire_debut, j.jour_id
     `;
 
     connection.query(query, [semaine, annee], (err, results) => {
@@ -183,20 +183,19 @@ app.get('/api/nom-ids', (req, res) => {
 });
 
 
-
 // Route pour insérer ou mettre à jour le planning
 app.post('/api/update-planning', (req, res) => {
-    const { semaine, annee, jour_id, horaires_nom, competence_id, nom } = req.body;
+    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
 
     const selectQuery = `
         SELECT p.planning_id
         FROM Tplanning p
         JOIN Thoraire h ON p.horaire_id = h.horaire_id
         JOIN Tcompetence c ON p.competence_id = c.competence_id
-        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND h.horaire = ? AND c.competence_id = ?
+        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND h.horaire_debut = ? AND h.horaire_fin = ? AND c.competence_id = ?
     `;
 
-    connection.query(selectQuery, [semaine, annee, jour_id, horaires_nom, competence_id], (err, results) => {
+    connection.query(selectQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id], (err, results) => {
         if (err) {
             console.error('Erreur lors de la requête de sélection :', err.message);
             res.status(500).send('Erreur lors de la requête de sélection');
@@ -219,9 +218,9 @@ app.post('/api/update-planning', (req, res) => {
             // Insérer une nouvelle ligne
             const insertQuery = `
                 INSERT INTO Tplanning (semaine, annee, jour_id, horaire_id, competence_id, nom_id)
-                VALUES (?, ?, ?, (SELECT horaire_id FROM Thoraire WHERE horaire = ? LIMIT 1), ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1))
+                VALUES (?, ?, ?, (SELECT horaire_id FROM Thoraire WHERE horaire_debut = ? AND horaire_fin = ? LIMIT 1), ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1))
             `;
-            connection.query(insertQuery, [semaine, annee, jour_id, horaires_nom, competence_id, nom], (err, result) => {
+            connection.query(insertQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom], (err, result) => {
                 if (err) {
                     console.error('Erreur lors de l\'insertion dans le planning :', err.message);
                     res.status(500).send('Erreur lors de l\'insertion dans le planning');
@@ -232,6 +231,7 @@ app.post('/api/update-planning', (req, res) => {
         }
     });
 });
+
 
 // Route pour récupérer les compétences des personnes
 app.get('/api/competences-personnes', (req, res) => {
