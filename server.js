@@ -39,26 +39,6 @@ app.get('/api/data', (req, res) => {
     });
 });
 
-// Route pour récupérer les horaires et compétences
-app.get('/api/horaires-competence', (req, res) => {
-    const query = `
-        SELECT c.competence, CONCAT(h.horaire_debut, ' - ', h.horaire_fin) AS horaires_nom, h.horaire_id, c.competence_id
-        FROM Thoraire_competence hc
-        JOIN Thoraire h ON hc.horaire_id = h.horaire_id
-        JOIN Tcompetence c ON hc.competence_id = c.competence_id
-        ORDER BY c.competence, h.horaire_debut
-    `;
-
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Erreur lors de la requête :', err.message);
-            res.status(500).send('Erreur lors de la requête');
-        } else {
-            res.json(results);
-        }
-    });
-});
-
 // Route pour mettre à jour le nom
 app.post('/api/update-name', (req, res) => {
     const { nom_id, nom } = req.body;
@@ -74,60 +54,34 @@ app.post('/api/update-name', (req, res) => {
     });
 });
 
-// Route pour ajouter une nouvelle ligne dans Thoraire_competence
-app.post('/api/add-horaires-competence', (req, res) => {
-    const { horaire_debut, horaire_fin, competence } = req.body;
+// Route pour ajouter une compétence
+app.post('/api/add-competence2', (req, res) => {
+    const { competence } = req.body;
+    const query = `
+        INSERT INTO Tcompetence (competence)
+        VALUES (?)
+    `;
 
-    // Insérer l'horaire dans la table Thoraire
-    const queryHoraires = 'INSERT INTO Thoraire (horaire_debut, horaire_fin) VALUES (?, ?)';
-
-    connection.query(queryHoraires, [horaire_debut, horaire_fin], (err, resultHoraires) => {
+    connection.query(query, [competence], (err, result) => {
         if (err) {
-            console.error('Erreur lors de l\'insertion dans Thoraire :', err.message);
-            res.status(500).send('Erreur lors de l\'insertion dans Thoraire');
-            return;
+            console.error('Erreur lors de l\'ajout de la compétence :', err.message);
+            res.status(500).send('Erreur lors de l\'ajout de la compétence');
+        } else {
+            res.send('Compétence ajoutée avec succès');
         }
-
-        // Insérer la compétence dans la table Tcompetence
-        const queryCompetence = 'INSERT INTO Tcompetence (competence) VALUES (?)';
-
-        connection.query(queryCompetence, [competence], (err, resultCompetence) => {
-            if (err) {
-                console.error('Erreur lors de l\'insertion dans Tcompetence :', err.message);
-                res.status(500).send('Erreur lors de l\'insertion dans Tcompetence');
-                return;
-            }
-
-            // Insérer dans la table de liaison Thoraire_competence
-            const queryHorairesCompetence = 'INSERT INTO Thoraire_competence (horaire_id, competence_id) VALUES (?, ?)';
-
-            connection.query(queryHorairesCompetence, [resultHoraires.insertId, resultCompetence.insertId], (err, result) => {
-                if (err) {
-                    console.error('Erreur lors de l\'insertion dans Thoraire_competence :', err.message);
-                    res.status(500).send('Erreur lors de l\'insertion dans Thoraire_competence');
-                    return;
-                }
-
-                res.send('Ligne ajoutée avec succès');
-            });
-        });
     });
 });
 
-// Route pour supprimer une ligne dans Thoraire_competence
-app.post('/api/delete-horaires-competence', (req, res) => {
-    const { horaire_id, competence_id } = req.body;
-    const query = `
-        DELETE FROM Thoraire_competence
-        WHERE horaire_id = ? AND competence_id = ?
-    `;
+// Route pour récupérer les compétences
+app.get('/api/competences', (req, res) => {
+    const query = 'SELECT competence_id, competence FROM Tcompetence';
 
-    connection.query(query, [horaire_id, competence_id], (err, result) => {
+    connection.query(query, (err, results) => {
         if (err) {
-            console.error('Erreur lors de la suppression de la ligne :', err.message);
-            res.status(500).send('Erreur lors de la suppression de la ligne');
+            console.error('Erreur lors de la récupération des compétences :', err.message);
+            res.status(500).send('Erreur lors de la récupération des compétences');
         } else {
-            res.send('Ligne supprimée avec succès');
+            res.json(results);
         }
     });
 });
