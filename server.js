@@ -222,7 +222,7 @@ app.post('/api/add-competence', (req, res) => {
 
 
 // Route pour supprimer une compétence
-app.post('/api/delete-competence2', (req, res) => {
+app.post('/api/delete-competence', (req, res) => {
     const { competence_id } = req.body;
     const query = `
         DELETE FROM Tcompetence
@@ -241,7 +241,7 @@ app.post('/api/delete-competence2', (req, res) => {
 
 
 // Route pour supprimer une compétence d'une personne
-app.post('/api/delete-competence', (req, res) => {
+app.post('/api/delete-competence2', (req, res) => {
     const { nom_id, competence_id } = req.body;
     const query = `
         DELETE FROM Tcompetence_nom
