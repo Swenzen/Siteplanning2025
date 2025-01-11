@@ -34,23 +34,71 @@ router.get('/competences', (req, res) => {
     });
 });
 
-// Route pour supprimer une compétence d'une personne
-router.post('/delete-competence2', (req, res) => {
-    const { nom_id, competence_id } = req.body;
-    const query = `
-        DELETE FROM Tcompetence_nom
-        WHERE nom_id = ? AND competence_id = ?
+
+
+// Route pour supprimer une compétence
+router.post('/delete-competence', (req, res) => {
+    const { competence_id } = req.body;
+
+    // Supprimer les enregistrements associés dans tplanning
+    const deletePlanningQuery = `
+        DELETE FROM Tplanning
+        WHERE competence_id = ?
     `;
 
-    connection.query(query, [nom_id, competence_id], (err, result) => {
+    connection.query(deletePlanningQuery, [competence_id], (err, result) => {
         if (err) {
-            console.error('Erreur lors de la suppression de la compétence :', err.message);
-            res.status(500).send('Erreur lors de la suppression de la compétence');
+            console.error('Erreur lors de la suppression des plannings associés :', err.message);
+            res.status(500).send('Erreur lors de la suppression des plannings associés');
         } else {
-            res.send('Compétence supprimée avec succès');
+            console.log(`Plannings associés supprimés pour competence_id: ${competence_id}`);
+
+            // Supprimer les enregistrements associés dans thoraire_competence
+            const deleteHoraireCompetenceQuery = `
+                DELETE FROM Thoraire_competence
+                WHERE competence_id = ?
+            `;
+
+            connection.query(deleteHoraireCompetenceQuery, [competence_id], (err, result) => {
+                if (err) {
+                    console.error('Erreur lors de la suppression des horaires associés :', err.message);
+                    res.status(500).send('Erreur lors de la suppression des horaires associés');
+                } else {
+                    console.log(`Horaires associés supprimés pour competence_id: ${competence_id}`);
+
+                    // Supprimer les enregistrements associés dans Tcompetence_nom
+                    const deleteCompetenceNomQuery = `
+                        DELETE FROM Tcompetence_nom
+                        WHERE competence_id = ?
+                    `;
+
+                    connection.query(deleteCompetenceNomQuery, [competence_id], (err, result) => {
+                        if (err) {
+                            console.error('Erreur lors de la suppression des compétences associées :', err.message);
+                            res.status(500).send('Erreur lors de la suppression des compétences associées');
+                        } else {
+                            console.log(`Compétences associées supprimées pour competence_id: ${competence_id}`);
+
+                            // Supprimer la compétence dans Tcompetence
+                            const deleteCompetenceQuery = `
+                                DELETE FROM Tcompetence
+                                WHERE competence_id = ?
+                            `;
+
+                            connection.query(deleteCompetenceQuery, [competence_id], (err, result) => {
+                                if (err) {
+                                    console.error('Erreur lors de la suppression de la compétence :', err.message);
+                                    res.status(500).send('Erreur lors de la suppression de la compétence');
+                                } else {
+                                    res.send('Compétence supprimée avec succès');
+                                }
+                            });
+                        }
+                    });
+                }
+            });
         }
     });
 });
-
 
 module.exports = router;

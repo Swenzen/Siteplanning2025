@@ -39,15 +39,15 @@ router.post('/add-competence', (req, res) => {
     });
 });
 
-// Route pour supprimer une compétence
-router.post('/delete-competence', (req, res) => {
-    const { competence_id } = req.body;
+// Route pour supprimer une compétence d'une personne
+router.post('/delete-competence2', (req, res) => {
+    const { nom_id, competence_id } = req.body;
     const query = `
-        DELETE FROM Tcompetence
-        WHERE competence_id = ?
+        DELETE FROM Tcompetence_nom
+        WHERE nom_id = ? AND competence_id = ?
     `;
 
-    connection.query(query, [competence_id], (err, result) => {
+    connection.query(query, [nom_id, competence_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression de la compétence :', err.message);
             res.status(500).send('Erreur lors de la suppression de la compétence');
