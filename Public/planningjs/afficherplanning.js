@@ -45,8 +45,15 @@ async function fetchPlanningData() {
         Object.values(groupedData).forEach(rowData => {
             console.log('Ajout de la ligne :', rowData);
             const row = document.createElement("tr");
+            row.setAttribute('draggable', true); // Rendre la ligne draggable
+            row.addEventListener('dragstart', handleDragStart);
+            row.addEventListener('dragover', handleDragOver);
+            row.addEventListener('drop', handleDrop);
+
             const modalitiesCell = document.createElement("td");
             modalitiesCell.textContent = rowData.competence;
+            modalitiesCell.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence
+            modalitiesCell.dataset.displayOrder = rowData.display_order; // Ajouter l'ordre d'affichage
             row.appendChild(modalitiesCell);
 
             const horairesCell = document.createElement("td");
