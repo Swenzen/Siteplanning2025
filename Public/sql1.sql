@@ -15,8 +15,8 @@ CREATE TABLE Tcompetence_nom (
     competence_nom_id INT AUTO_INCREMENT PRIMARY KEY,
     nom_id INT,
     competence_id INT,
-    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id),
-    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id)
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE,
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE
 );
 
 -- Créer la table Thoraire
@@ -31,8 +31,8 @@ CREATE TABLE Thoraire_competence (
     horaire_competence_id INT AUTO_INCREMENT PRIMARY KEY,
     competence_id INT,
     horaire_id INT,
-    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id),
-    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id)
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
+    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id) ON DELETE CASCADE
 );
 
 -- Créer la table Tjour
@@ -60,10 +60,17 @@ CREATE TABLE Tplanning (
     nom_id INT,
     competence_id INT,
     horaire_id INT,
-    FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id),
-    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id),
-    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id),
-    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id)
+    FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id) ON DELETE CASCADE,
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE,
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
+    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id) ON DELETE CASCADE
+);
+
+-- Créer la table Tcompetence_order
+CREATE TABLE Tcompetence_order (
+    competence_id INT PRIMARY KEY,
+    display_order INT,
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE
 );
 
 -- Insérer des valeurs dans Tnom
@@ -107,3 +114,10 @@ INSERT INTO Tplanning (planning_id, semaine, annee, jour_id, nom_id, competence_
 (3, 1, 2025, 3, 1, 3, 3),
 (4, 1, 2025, 4, 2, 2, 2),
 (5, 1, 2025, 5, 2, 3, 3);
+
+-- Insérer des valeurs dans Tcompetence_order
+INSERT INTO Tcompetence_order (competence_id, display_order) VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 4);
