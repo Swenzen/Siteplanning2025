@@ -21,9 +21,6 @@ async function fetchHorairesCompetences() {
             tableHead.appendChild(th);
         });
 
-        // Récupérer tous les horaires uniques
-        const horaires = [...new Set(data.map(item => item.horaire_id))];
-
         // Grouper les données par horaire
         const groupedData = data.reduce((acc, item) => {
             if (!acc[item.horaire_id]) {
@@ -34,6 +31,13 @@ async function fetchHorairesCompetences() {
             }
             return acc;
         }, {});
+
+        // Récupérer tous les horaires uniques et les trier par ordre croissant
+        const horaires = Object.keys(groupedData).sort((a, b) => {
+            const horaireA = groupedData[a].horaire_debut;
+            const horaireB = groupedData[b].horaire_debut;
+            return new Date(`1970-01-01T${horaireA}`) - new Date(`1970-01-01T${horaireB}`);
+        });
 
         // Ajouter les données récupérées au tableau
         horaires.forEach(horaire_id => {

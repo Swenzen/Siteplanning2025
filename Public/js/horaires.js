@@ -15,6 +15,9 @@ async function fetchHoraires() {
         // Créer un fragment de document pour minimiser les manipulations du DOM
         const fragment = document.createDocumentFragment();
 
+        // Trier les horaires par ordre croissant
+        data.sort((a, b) => new Date(`1970-01-01T${a.horaire_debut}`) - new Date(`1970-01-01T${b.horaire_debut}`));
+
         // Ajouter les données récupérées au tableau
         data.forEach(rowData => {
             console.log('Row data:', rowData); // Ajoutez ce message de console pour vérifier chaque ligne de données
