@@ -5,7 +5,7 @@ const connection = require('../db'); // Importer la connexion à la base de donn
 // Route pour récupérer les compétences des personnes
 router.get('/competences-personnes', (req, res) => {
     const query = `
-        SELECT n.nom, n.nom_id, c.competence, c.competence_id
+        SELECT n.nom_id, n.nom, c.competence_id, c.competence
         FROM Tnom n
         LEFT JOIN Tcompetence_nom cn ON n.nom_id = cn.nom_id
         LEFT JOIN Tcompetence c ON cn.competence_id = c.competence_id
@@ -13,8 +13,25 @@ router.get('/competences-personnes', (req, res) => {
 
     connection.query(query, (err, results) => {
         if (err) {
-            console.error('Erreur lors de la requête :', err.message);
-            res.status(500).send('Erreur lors de la requête');
+            console.error('Erreur lors de la récupération des compétences des personnes :', err.message);
+            res.status(500).send('Erreur lors de la récupération des compétences des personnes');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Route pour récupérer toutes les compétences
+router.get('/competences', (req, res) => {
+    const query = `
+        SELECT competence_id, competence
+        FROM Tcompetence
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des compétences :', err.message);
+            res.status(500).send('Erreur lors de la récupération des compétences');
         } else {
             res.json(results);
         }
