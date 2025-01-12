@@ -77,7 +77,46 @@ async function fetchPlanningData() {
 
             tableBody.appendChild(row);
         });
+
+        // Ajouter les nouvelles lignes sous le tableau
+        addAdditionalRows();
     } catch (error) {
         console.error('Erreur lors de la récupération des données du planning :', error);
+    }
+}
+
+function addAdditionalRows() {
+    const tableBody = document.querySelector("#planningTable tbody");
+
+    // Première ligne ajoutée (style de l'en-tête)
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = `
+        <td><strong>Compétence</strong></td>
+        <td><strong>Horaires</strong></td>
+        <td><strong>Lundi</strong></td>
+        <td><strong>Mardi</strong></td>
+        <td><strong>Mercredi</strong></td>
+        <td><strong>Jeudi</strong></td>
+        <td><strong>Vendredi</strong></td>
+        <td><strong>Samedi</strong></td>
+        <td><strong>Dimanche</strong></td>
+    `;
+    tableBody.appendChild(headerRow);
+
+    // Trois autres lignes ajoutées
+    for (let i = 0; i < 3; i++) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>Compétence ${i + 1}</td>
+            <td>Horaires ${i + 1}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        `;
+        tableBody.appendChild(row);
     }
 }
