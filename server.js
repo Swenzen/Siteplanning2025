@@ -32,12 +32,13 @@ const competencesRoutes = require('./routes/competences');
 const nomsRoutes = require('./routes/tableaunom');
 const planningssemaineRoutes = require('./routes/planningssemaine');
 const tableaucompetencenomRoutes = require('./routes/tableaucompetencenom');
-
+const horairesRoutes = require('./routes/horaires');
 // Utiliser les routes
 app.use('/api', competencesRoutes);
 app.use('/api', nomsRoutes);
 app.use('/api', planningssemaineRoutes);
 app.use('/api', tableaucompetencenomRoutes);
+app.use('/api', horairesRoutes);
 
 // Route pour récupérer les données
 app.get('/api/data', (req, res) => {

@@ -41,6 +41,22 @@
         </table>
         <button id="addCompetenceButton">Ajouter une compétence</button>
 
+
+        <!-- Tableau des horaires -->
+        <h2>Horaires</h2>
+        <table id="horairesTable">
+            <thead>
+                <tr>
+                    <th>Horaires</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                        <!-- Les lignes seront ajoutées ici dynamiquement -->
+            </tbody>
+        </table>
+        <button id="addHoraireButton">Ajouter un horaire</button>
+
         <!-- Tableau des compétences des personnes -->
         <h2>Compétences des personnes</h2>
         <table id="competencesPersonnesTable">
@@ -246,6 +262,7 @@
             }
         }
 
+        
         // TODO: Section pour le tableau des compétences
         // Fonction pour afficher les compétences dans le tableau
         async function fetchCompetences() {
@@ -443,6 +460,14 @@
                 console.error('Erreur lors de la requête:', error);
             }
         }
+    
+    
+    
     </script>
+
+    <!-- Inclure le fichier JavaScript pour les horaires -->
+    <script src="js/horaires.js"></script>
+
+
 </body>
 </html>
