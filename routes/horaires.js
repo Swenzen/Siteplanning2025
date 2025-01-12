@@ -2,6 +2,23 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../db'); // Importer la connexion à la base de données
 
+
+
+
+// Route pour récupérer les horaires
+router.get('/horaires', (req, res) => {
+    const query = 'SELECT horaire_id, horaire_debut, horaire_fin FROM Thoraire'; // Requête SQL correcte
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des horaires :', err.message);
+            res.status(500).send('Erreur lors de la récupération des horaires');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
 // Route pour ajouter un horaire
 router.post('/add-horaires', (req, res) => {
     const { horaire_debut, horaire_fin } = req.body;
@@ -20,19 +37,7 @@ router.post('/add-horaires', (req, res) => {
     });
 });
 
-// Route pour récupérer les horaires
-router.get('/horaires', (req, res) => {
-    const query = 'SELECT horaire_id, horaire_debut FROM Thoraire'; // Requête SQL correcte
 
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Erreur lors de la récupération des horaires :', err.message);
-            res.status(500).send('Erreur lors de la récupération des horaires');
-        } else {
-            res.json(results);
-        }
-    });
-});
 
 
 

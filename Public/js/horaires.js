@@ -19,9 +19,13 @@ async function fetchHoraires() {
         data.forEach(rowData => {
             console.log('Row data:', rowData); // Ajoutez ce message de console pour vérifier chaque ligne de données
             const row = document.createElement("tr");
-            const horaireCell = document.createElement("td");
-            horaireCell.textContent = rowData.horaire_debut; // Utilisez le nom de la colonne correcte
-            row.appendChild(horaireCell);
+            const horaireDebutCell = document.createElement("td");
+            horaireDebutCell.textContent = rowData.horaire_debut; // Utilisez le nom de la colonne correcte
+            row.appendChild(horaireDebutCell);
+
+            const horaireFinCell = document.createElement("td");
+            horaireFinCell.textContent = rowData.horaire_fin; // Utilisez le nom de la colonne correcte
+            row.appendChild(horaireFinCell);
 
             // Ajouter une cellule pour les actions (supprimer)
             const actionCell = document.createElement("td");
