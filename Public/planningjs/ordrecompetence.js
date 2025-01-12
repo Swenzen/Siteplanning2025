@@ -21,17 +21,20 @@ function handleDrop(event) {
         event.stopPropagation(); // Empêcher certains navigateurs de rediriger
     }
 
-    const targetRow = event.target.closest('tr');
-    if (draggedRow !== targetRow) {
-        const endIndex = Array.from(targetRow.parentNode.children).indexOf(targetRow);
-        if (startIndex < endIndex) {
-            targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
-        } else {
-            targetRow.parentNode.insertBefore(draggedRow, targetRow);
-        }
+    const targetCell = event.target.closest('td[data-competence-id]');
+    if (targetCell) {
+        const targetRow = targetCell.closest('tr');
+        if (draggedRow !== targetRow) {
+            const endIndex = Array.from(targetRow.parentNode.children).indexOf(targetRow);
+            if (startIndex < endIndex) {
+                targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
+            } else {
+                targetRow.parentNode.insertBefore(draggedRow, targetRow);
+            }
 
-        // Échanger les display_order des deux compétences
-        exchangeCompetenceOrder(draggedRow, targetRow);
+            // Échanger les display_order des deux compétences
+            exchangeCompetenceOrder(draggedRow, targetRow);
+        }
     }
 
     return false;
