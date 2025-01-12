@@ -42,12 +42,17 @@ async function addCompetence() {
     if (competence) {
         try {
             console.time('addCompetence');
+            // Récupérer le plus grand display_order existant
+            const responseOrder = await fetch('/api/max-display-order');
+            const maxOrderData = await responseOrder.json();
+            const maxDisplayOrder = maxOrderData.maxDisplayOrder || 0;
+
             const response = await fetch('/api/add-competence2', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ competence })
+                body: JSON.stringify({ competence, displayOrder: maxDisplayOrder + 1 })
             });
 
             if (response.ok) {
