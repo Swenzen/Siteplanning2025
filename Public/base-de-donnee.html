@@ -41,7 +41,6 @@
         </table>
         <button id="addCompetenceButton">Ajouter une compétence</button>
 
-
         <!-- Tableau des horaires -->
         <h2>Horaires</h2>
         <table id="horairesTable">
@@ -53,10 +52,24 @@
                 </tr>
             </thead>
             <tbody>
-                        <!-- Les lignes seront ajoutées ici dynamiquement -->
+                <!-- Les lignes seront ajoutées ici dynamiquement -->
             </tbody>
         </table>
         <button id="addHoraireButton">Ajouter un horaire</button>
+
+        <!-- Tableau des horaires par compétence -->
+        <h2>Horaires par compétence</h2>
+        <table id="horairescompetenceTable">
+            <thead>
+                <tr>
+                    <th>Horaires</th>
+                    <!-- Les compétences seront ajoutées ici dynamiquement -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les lignes seront ajoutées ici dynamiquement -->
+            </tbody>
+        </table>
 
         <!-- Tableau des compétences des personnes -->
         <h2>Compétences des personnes</h2>
@@ -71,6 +84,7 @@
                 <!-- Les lignes seront ajoutées ici dynamiquement -->
             </tbody>
         </table>
+        
     </div>
     
     <div id="menu">
@@ -90,12 +104,11 @@
         </div>
     </div>
     
-
-    <!-- Inclure le fichier JavaScript  -->
+    <!-- Inclure les fichiers JavaScript -->
     <script src="js/horaires.js"></script>
     <script src="js/competencespersonnes.js"></script>
     <script src="js/tableaucompetences.js"></script>
     <script src="js/tableaunom.js"></script>
-
+    <script src="js/competenceshoraires.js"></script>
 </body>
 </html>
