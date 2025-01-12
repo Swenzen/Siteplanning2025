@@ -1,7 +1,11 @@
 // Fonction pour récupérer les noms disponibles pour une compétence donnée dans le tooltip
 async function fetchNomIds(competenceId, event) {
+    const semaine = document.getElementById("weekNumber").value;
+    const annee = document.getElementById("yearNumber").value;
+    const jour_id = currentDay; // Utiliser l'ID du jour
+
     try {
-        const response = await fetch(`/api/nom-ids?competence_id=${competenceId}`);
+        const response = await fetch(`/api/nom-ids?competence_id=${competenceId}&semaine=${semaine}&annee=${annee}&jour_id=${jour_id}`);
         if (!response.ok) {
             throw new Error('Erreur lors de la récupération des noms');
         }

@@ -31,25 +31,7 @@ router.get('/planning-data', (req, res) => {
     });
 });
 
-// Route pour récupérer les noms des personnes ayant la même competence_id
-router.get('/nom-ids', (req, res) => {
-    const { competence_id } = req.query;
-    const query = `
-        SELECT n.nom
-        FROM Tcompetence_nom cn
-        JOIN Tnom n ON cn.nom_id = n.nom_id
-        WHERE cn.competence_id = ?
-    `;
 
-    connection.query(query, [competence_id], (err, results) => {
-        if (err) {
-            console.error('Erreur lors de la requête :', err.message);
-            res.status(500).send('Erreur lors de la requête');
-        } else {
-            res.json(results.map(row => row.nom));
-        }
-    });
-});
 
 // Route pour insérer ou mettre à jour le planning
 router.post('/update-planning', (req, res) => {
