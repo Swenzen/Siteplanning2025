@@ -64,6 +64,8 @@ async function fetchPlanningData() {
             days.forEach(day => {
                 const cell = document.createElement("td");
                 cell.textContent = rowData.jours[day] || ''; // Afficher le nom pour chaque jour
+
+                // Gestionnaire de clic gauche pour afficher le tooltip
                 cell.addEventListener('click', (event) => {
                     console.log(`Cellule cliquée : ${day}, ${rowData.competence_id}`);
                     currentCell = cell; // Stocker la cellule actuelle
@@ -72,6 +74,18 @@ async function fetchPlanningData() {
                     currentCompetenceId = rowData.competence_id;
                     fetchNomIds(rowData.competence_id, event);
                 });
+
+                // Gestionnaire de clic droit pour supprimer la valeur
+                cell.addEventListener('contextmenu', (event) => {
+                    event.preventDefault(); // Empêcher le menu contextuel par défaut
+                    console.log(`Clic droit sur la cellule : ${day}, ${rowData.competence_id}`);
+                    currentCell = cell; // Stocker la cellule actuelle
+                    currentDay = day;
+                    currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+                    currentCompetenceId = rowData.competence_id;
+                    removeValueFromPlanning();
+                });
+
                 row.appendChild(cell);
             });
 
@@ -79,5 +93,38 @@ async function fetchPlanningData() {
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des données du planning :', error);
+    }
+}
+
+// Fonction pour supprimer la valeur dans le tableau tplanning
+async function removeValueFromPlanning() {
+    console.log('Appel de la fonction removeValueFromPlanning');
+    const semaine = document.getElementById("weekNumber").value;
+    const annee = document.getElementById("yearNumber").value;
+    const jour_id = currentDay; // Utiliser l'ID du jour
+    const [horaire_debut, horaire_fin] = currentHorairesNom.split(' - '); // Séparer les horaires de début et de fin
+
+    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, currentCompetenceId });
+
+    try {
+        const response = await fetch('/api/remove-planning', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: currentCompetenceId })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression du planning');
+        }
+
+        const result = await response.text();
+        console.log('Résultat de la suppression du planning :', result);
+
+        // Mettre à jour l'interface utilisateur
+        currentCell.textContent = ''; // Supprimer le contenu de la cellule
+    } catch (error) {
+        console.error('Erreur lors de la suppression du planning :', error);
     }
 }
