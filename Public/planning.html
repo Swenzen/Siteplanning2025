@@ -49,138 +49,14 @@
     
     <div id="tooltip"></div>
     
+    <!-- Inclure les fichiers JavaScript -->
+    <script src="planningjs/afficherplanning.js"></script>
+    <script src="planningjs/affichertooltip.js"></script>
+    <script src="planningjs/ordrecompetence.js"></script>
+
     <script>
-        const tooltip = document.getElementById("tooltip");
-        let currentCell = null;
-        let currentDay = null;
-        let currentHorairesNom = null;
-        let currentCompetenceId = null;
-
-        // Fonction pour afficher les données dans le tableau
-        async function fetchPlanningData() {
-            const semaine = document.getElementById("weekNumber").value;
-            const annee = document.getElementById("yearNumber").value;
-
-            try {
-                const response = await fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`);
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la récupération des données');
-                }
-                const data = await response.json();
-                console.log('Données récupérées :', data);
-                
-                const tableBody = document.querySelector("#planningTable tbody");
-                tableBody.innerHTML = ''; // Vider le contenu du tableau
-
-                // Regrouper les données par compétence et horaire
-                const groupedData = data.reduce((acc, row) => {
-                    const key = `${row.competence}-${row.horaires_nom}`;
-                    if (!acc[key]) {
-                        acc[key] = { ...row, jours: {} };
-                    }
-                    acc[key].jours[row.jour.toLowerCase()] = row.nom;
-                    return acc;
-                }, {});
-
-                // Ajouter les données regroupées au tableau
-                Object.values(groupedData).forEach(rowData => {
-                    console.log('Ajout de la ligne :', rowData);
-                    const row = document.createElement("tr");
-                    const modalitiesCell = document.createElement("td");
-                    modalitiesCell.textContent = rowData.competence;
-                    row.appendChild(modalitiesCell);
-
-                    const horairesCell = document.createElement("td");
-                    horairesCell.textContent = rowData.horaires_nom;
-                    row.appendChild(horairesCell);
-
-                    const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-                    days.forEach(day => {
-                        const cell = document.createElement("td");
-                        cell.textContent = rowData.jours[day] || ''; // Afficher le nom pour chaque jour
-                        cell.addEventListener('click', (event) => {
-                            console.log(`Cellule cliquée : ${day}, ${rowData.competence_id}`);
-                            currentCell = cell; // Stocker la cellule actuelle
-                            currentDay = day;
-                            currentHorairesNom = rowData.horaires_nom;
-                            currentCompetenceId = rowData.competence_id;
-                            fetchNomIds(rowData.competence_id, event);
-                        });
-                        row.appendChild(cell);
-                    });
-
-                    tableBody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Erreur lors de la récupération des données du planning :', error);
-            }
-        }
-
         // Ajouter un gestionnaire de clics au bouton pour charger la semaine
         document.getElementById("loadWeekButton").addEventListener("click", fetchPlanningData);
-
-        // Fonction pour récupérer les noms disponibles pour une compétence donnée
-        async function fetchNomIds(competenceId, event) {
-            try {
-                const response = await fetch(`/api/nom-ids?competence_id=${competenceId}`);
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la récupération des noms');
-                }
-                const data = await response.json();
-                console.log('Noms récupérés :', data);
-                showTooltip(event, data);
-            } catch (error) {
-                console.error('Erreur lors de la récupération des noms :', error);
-            }
-        }
-
-        // Fonction pour afficher le tooltip avec les noms
-        function showTooltip(event, noms) {
-            tooltip.innerHTML = noms.map(nom => `<div class="tooltip-date">${nom}</div>`).join('');
-            tooltip.style.display = 'block';
-            tooltip.style.left = `${event.pageX + 10}px`; // Slight offset for better visibility
-            tooltip.style.top = `${event.pageY + 10}px`; // Slight offset for better visibility
-
-            // Ajouter un gestionnaire de clics aux éléments de date dans le tooltip
-            document.querySelectorAll('.tooltip-date').forEach(element => {
-                element.addEventListener('click', function() {
-                    currentCell.textContent = this.textContent; // Remplacer le contenu de la cellule
-                    const semaine = document.getElementById("weekNumber").value;
-                    const annee = document.getElementById("yearNumber").value;
-                    updatePlanning(semaine, annee, currentDay, currentHorairesNom, currentCompetenceId, this.textContent);
-                    tooltip.style.display = 'none'; // Fermer le tooltip
-                });
-            });
-        }
-
-        // Fonction pour mettre à jour le planning dans la base de données
-        async function updatePlanning(semaine, annee, jour, horairesNom, competenceId, nom) {
-            try {
-                const response = await fetch('/api/update-planning', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ semaine, annee, jour, horaires_nom: horairesNom, competence_id: competenceId, nom })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la mise à jour du planning');
-                }
-
-                const result = await response.text();
-                console.log(result);
-            } catch (error) {
-                console.error('Erreur lors de la mise à jour du planning :', error);
-            }
-        }
-
-        // Cacher le tooltip lorsque l'utilisateur clique ailleurs
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('td') && !event.target.closest('#tooltip')) {
-                tooltip.style.display = 'none';
-            }
-        });
 
         // Appeler la fonction pour récupérer les données lorsque la page est chargée
         document.addEventListener('DOMContentLoaded', fetchPlanningData);

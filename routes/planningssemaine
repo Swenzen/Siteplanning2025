@@ -1,0 +1,99 @@
+const express = require('express');
+const router = express.Router();
+const connection = require('../db'); // Assurez-vous que la connexion à la base de données est correctement configurée
+
+// Route pour récupérer les données du planning
+router.get('/planning-data', (req, res) => {
+    const { semaine, annee } = req.query;
+
+    const query = `
+        SELECT p.*, h.horaire_debut, h.horaire_fin, c.competence, j.nom
+        FROM Tplanning p
+        JOIN Thoraire h ON p.horaire_id = h.horaire_id
+        JOIN Tcompetence c ON p.competence_id = c.competence_id
+        LEFT JOIN Tnom j ON p.nom_id = j.nom_id
+        LEFT JOIN Tcompetence_order o ON c.competence_id = o.competence_id
+        ORDER BY o.display_order ASC, c.competence ASC, h.horaire_debut ASC, p.jour_id ASC
+    `;
+
+    connection.query(query, [semaine, annee], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des données du planning :', err.message);
+            res.status(500).send('Erreur lors de la récupération des données du planning');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Route pour insérer ou mettre à jour le planning
+router.post('/update-planning', (req, res) => {
+    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
+
+    const selectQuery = `
+        SELECT p.planning_id
+        FROM Tplanning p
+        JOIN Thoraire h ON p.horaire_id = h.horaire_id
+        JOIN Tcompetence c ON p.competence_id = c.competence_id
+        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND h.horaire_debut = ? AND h.horaire_fin = ? AND c.competence_id = ?
+    `;
+
+    connection.query(selectQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la requête de sélection :', err.message);
+            res.status(500).send('Erreur lors de la requête de sélection');
+        } else if (results.length > 0) {
+            // Mettre à jour la ligne existante
+            const updateQuery = `
+                UPDATE Tplanning
+                SET nom_id = (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
+                WHERE planning_id = ?
+            `;
+            connection.query(updateQuery, [nom, results[0].planning_id], (err, result) => {
+                if (err) {
+                    console.error('Erreur lors de la mise à jour du planning :', err.message);
+                    res.status(500).send('Erreur lors de la mise à jour du planning');
+                } else {
+                    res.send('Planning mis à jour avec succès');
+                }
+            });
+        } else {
+            // Insérer une nouvelle ligne
+            const insertQuery = `
+                INSERT INTO Tplanning (semaine, annee, jour_id, horaire_id, competence_id, nom_id)
+                VALUES (?, ?, ?, (SELECT horaire_id FROM Thoraire WHERE horaire_debut = ? AND horaire_fin = ? LIMIT 1), ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1))
+            `;
+            connection.query(insertQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom], (err, result) => {
+                if (err) {
+                    console.error('Erreur lors de l\'insertion dans le planning :', err.message);
+                    res.status(500).send('Erreur lors de l\'insertion dans le planning');
+                } else {
+                    res.send('Planning inséré avec succès');
+                }
+            });
+        }
+    });
+});
+
+// Route pour supprimer une valeur dans le planning
+router.post('/remove-planning', (req, res) => {
+    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id } = req.body;
+
+    const deleteQuery = `
+        DELETE p
+        FROM Tplanning p
+        JOIN Thoraire h ON p.horaire_id = h.horaire_id
+        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND h.horaire_debut = ? AND h.horaire_fin = ? AND p.competence_id = ?
+    `;
+
+    connection.query(deleteQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression du planning :', err.message);
+            res.status(500).send('Erreur lors de la suppression du planning');
+        } else {
+            res.send('Planning supprimé avec succès');
+        }
+    });
+});
+
+module.exports = router;

@@ -1,1 +1,0 @@
-SELECT * FROM planning2.tplanning;

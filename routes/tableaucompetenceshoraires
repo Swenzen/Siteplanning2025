@@ -1,0 +1,60 @@
+const express = require('express');
+const router = express.Router();
+const connection = require('../db'); // Importer la connexion à la base de données
+
+// Route pour récupérer les horaires par compétence
+router.get('/horaires-competences', (req, res) => {
+    const query = `
+        SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, c.competence_id, c.competence
+        FROM Thoraire h
+        LEFT JOIN Thoraire_competence hc ON h.horaire_id = hc.horaire_id
+        LEFT JOIN Tcompetence c ON hc.competence_id = c.competence_id
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des horaires par compétence :', err.message);
+            res.status(500).send('Erreur lors de la récupération des horaires par compétence');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Route pour ajouter une compétence à un horaire
+router.post('/add-horaire-competence', (req, res) => {
+    const { horaire_id, competence_id } = req.body;
+    const query = `
+        INSERT INTO Thoraire_competence (horaire_id, competence_id)
+        VALUES (?, ?)
+    `;
+
+    connection.query(query, [horaire_id, competence_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout de la compétence à l\'horaire :', err.message);
+            res.status(500).send('Erreur lors de l\'ajout de la compétence à l\'horaire');
+        } else {
+            res.send('Compétence ajoutée à l\'horaire avec succès');
+        }
+    });
+});
+
+// Route pour supprimer une compétence d'un horaire
+router.post('/delete-horaire-competence', (req, res) => {
+    const { horaire_id, competence_id } = req.body;
+    const query = `
+        DELETE FROM Thoraire_competence
+        WHERE horaire_id = ? AND competence_id = ?
+    `;
+
+    connection.query(query, [horaire_id, competence_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression de la compétence de l\'horaire :', err.message);
+            res.status(500).send('Erreur lors de la suppression de la compétence de l\'horaire');
+        } else {
+            res.send('Compétence supprimée de l\'horaire avec succès');
+        }
+    });
+});
+
+module.exports = router;

@@ -16,22 +16,6 @@ connection.connect((err) => {
         return;
     }
     console.log('Connecté à la base de données avec succès. ID de connexion :', connection.threadId);
-
-    // Exemple de requête
-    connection.query('SELECT 1 + 1 AS solution', (err, results) => {
-        if (err) {
-            console.error('Erreur lors de la requête :', err.message);
-        } else {
-            console.log('Résultat de la requête :', results[0].solution);
-        }
-
-        // Fermer la connexion
-        connection.end((err) => {
-            if (err) {
-                console.error('Erreur lors de la fermeture de la connexion :', err.message);
-            } else {
-                console.log('Connexion fermée proprement.');
-            }
-        });
-    });
 });
+
+module.exports = connection;

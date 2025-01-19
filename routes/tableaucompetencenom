@@ -1,0 +1,77 @@
+const express = require('express');
+const router = express.Router();
+const connection = require('../db'); // Importer la connexion à la base de données
+
+// Route pour récupérer les compétences des personnes
+router.get('/competences-personnes', (req, res) => {
+    const query = `
+        SELECT n.nom_id, n.nom, c.competence_id, c.competence
+        FROM Tnom n
+        LEFT JOIN Tcompetence_nom cn ON n.nom_id = cn.nom_id
+        LEFT JOIN Tcompetence c ON cn.competence_id = c.competence_id
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des compétences des personnes :', err.message);
+            res.status(500).send('Erreur lors de la récupération des compétences des personnes');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Route pour récupérer toutes les compétences
+router.get('/competences', (req, res) => {
+    const query = `
+        SELECT competence_id, competence
+        FROM Tcompetence
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des compétences :', err.message);
+            res.status(500).send('Erreur lors de la récupération des compétences');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Route pour ajouter une compétence à une personne
+router.post('/add-competence', (req, res) => {
+    const { nom_id, competence_id } = req.body;
+    const query = `
+        INSERT INTO Tcompetence_nom (nom_id, competence_id)
+        VALUES (?, ?)
+    `;
+
+    connection.query(query, [nom_id, competence_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout de la compétence :', err.message);
+            res.status(500).send('Erreur lors de l\'ajout de la compétence');
+        } else {
+            res.send('Compétence ajoutée avec succès');
+        }
+    });
+});
+
+// Route pour supprimer une compétence d'une personne
+router.post('/delete-competence2', (req, res) => {
+    const { nom_id, competence_id } = req.body;
+    const query = `
+        DELETE FROM Tcompetence_nom
+        WHERE nom_id = ? AND competence_id = ?
+    `;
+
+    connection.query(query, [nom_id, competence_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression de la compétence :', err.message);
+            res.status(500).send('Erreur lors de la suppression de la compétence');
+        } else {
+            res.send('Compétence supprimée avec succès');
+        }
+    });
+});
+
+module.exports = router;
