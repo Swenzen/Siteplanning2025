@@ -15,7 +15,6 @@ const dayMapping = {
 };
 
 
-
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
@@ -44,7 +43,7 @@ async function fetchPlanningData() {
         }, {});
 
         // Ajouter les données regroupées au tableau
-        Object.values(groupedData).forEach(rowData => {
+        Object.values(groupedData).forEach((rowData, index) => { // Ajout de l'index pour définir l'ordre d'affichage
             console.log('Ajout de la ligne :', rowData);
             const row = document.createElement("tr");
             row.setAttribute('draggable', true); // Rendre la ligne draggable
@@ -55,7 +54,8 @@ async function fetchPlanningData() {
             const modalitiesCell = document.createElement("td");
             modalitiesCell.textContent = rowData.competence;
             modalitiesCell.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence
-            modalitiesCell.dataset.displayOrder = rowData.display_order; // Ajouter l'ordre d'affichage
+            modalitiesCell.dataset.displayOrder = index; // Utiliser l'index comme ordre d'affichage
+            console.log(`Compétence ID: ${rowData.competence_id}, Display Order: ${index}`); // Ajouter un log pour vérifier les valeurs
             row.appendChild(modalitiesCell);
 
             const horairesCell = document.createElement("td");

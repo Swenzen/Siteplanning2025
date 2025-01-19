@@ -50,10 +50,30 @@ async function exchangeCompetenceOrder(row1, row2) {
         const displayOrder1 = competenceCell1.dataset.displayOrder;
         const displayOrder2 = competenceCell2.dataset.displayOrder;
 
+        // Vérifier que les valeurs ne sont pas undefined
+        if (competenceId1 === undefined || competenceId2 === undefined || displayOrder1 === undefined || displayOrder2 === undefined) {
+            console.error('Erreur : Les valeurs competenceId ou displayOrder sont undefined');
+            return;
+        }
+
+        // Afficher les valeurs avant de les envoyer
+        console.log('Données à envoyer :', {
+            competenceId1,
+            displayOrder1,
+            competenceId2,
+            displayOrder2
+        });
+
+        // Mettre à jour les attributs data-display-order dans le DOM
+        competenceCell1.dataset.displayOrder = displayOrder2;
+        competenceCell2.dataset.displayOrder = displayOrder1;
+
         const order = [
             { competenceId: competenceId1, displayOrder: displayOrder2 },
             { competenceId: competenceId2, displayOrder: displayOrder1 }
         ];
+
+        console.log('Données envoyées pour la mise à jour de l\'ordre des compétences :', order);
 
         try {
             const response = await fetch('/api/update-competence-order', {
@@ -78,3 +98,11 @@ async function exchangeCompetenceOrder(row1, row2) {
         }
     }
 }
+
+// Ajouter les gestionnaires d'événements aux lignes du tableau
+document.querySelectorAll("#planningTable tbody tr").forEach(row => {
+    row.setAttribute('draggable', true);
+    row.addEventListener('dragstart', handleDragStart);
+    row.addEventListener('dragover', handleDragOver);
+    row.addEventListener('drop', handleDrop);
+});

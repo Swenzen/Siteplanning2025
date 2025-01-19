@@ -6,6 +6,10 @@ const connection = require('../../db'); // Assurez-vous que le chemin est correc
 router.post('/update-competence-order', (req, res) => {
     const order = req.body;
 
+    if (!Array.isArray(order) || order.length === 0) {
+        return res.status(400).send('Données invalides');
+    }
+
     const updateQueries = order.map(({ competenceId, displayOrder }) => {
         return new Promise((resolve, reject) => {
             const query = `
