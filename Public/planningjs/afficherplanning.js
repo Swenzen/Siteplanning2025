@@ -14,6 +14,8 @@ const dayMapping = {
     '7': 'dimanche'
 };
 
+
+
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
