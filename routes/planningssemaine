@@ -159,4 +159,22 @@ router.get('/vacances-data', (req, res) => {
 });
 
 
+// Route pour supprimer une entrée dans Tvacances
+router.post('/remove-vacances', (req, res) => {
+    const { semaine, annee, nom } = req.body;
+    const query = `
+        DELETE FROM Tvacances
+        WHERE semaine = ? AND annee = ? AND nom_id = (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
+    `;
+    connection.query(query, [semaine, annee, nom], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression dans Tvacances :', err.message);
+            res.status(500).send(`Erreur lors de la suppression dans Tvacances : ${err.message}`);
+        } else {
+            res.send('Vacances supprimées avec succès');
+        }
+    });
+});
+
+
 module.exports = router;

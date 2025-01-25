@@ -1,4 +1,3 @@
-
 // Fonction pour créer un tableau supplémentaire avec 9 colonnes
 function createAdditionalTable() {
     const container = document.getElementById("additionalTableContainer"); // Assurez-vous d'avoir un conteneur pour le nouveau tableau
@@ -62,6 +61,10 @@ async function fetchVacancesData() {
         data.forEach(vacance => {
             const div = document.createElement('div');
             div.textContent = vacance.nom;
+            div.addEventListener('contextmenu', (event) => {
+                event.preventDefault(); // Empêcher le menu contextuel par défaut
+                removeVacances(semaine, annee, vacance.nom);
+            });
             vacancesCell.appendChild(div);
         });
     } catch (error) {
@@ -92,5 +95,31 @@ async function addVacances(semaine, annee, nom) {
         fetchVacancesData();
     } catch (error) {
         console.error('Erreur lors de l\'ajout dans Tvacances :', error);
+    }
+}
+
+// Fonction pour supprimer les données dans la table Tvacances
+async function removeVacances(semaine, annee, nom) {
+    console.log('Données envoyées pour la suppression dans Tvacances :', { semaine, annee, nom });
+    try {
+        const response = await fetch('/api/remove-vacances', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ semaine, annee, nom })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression dans Tvacances');
+        }
+
+        const result = await response.text();
+        console.log('Résultat de la suppression dans Tvacances :', result);
+
+        // Mettre à jour la cellule après la suppression
+        fetchVacancesData();
+    } catch (error) {
+        console.error('Erreur lors de la suppression dans Tvacances :', error);
     }
 }
