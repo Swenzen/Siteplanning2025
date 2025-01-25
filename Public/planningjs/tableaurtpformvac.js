@@ -15,7 +15,7 @@ function createAdditionalTable() {
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
 
-    const headers = ["Vacances", "", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+    const headers = ["Vacances", "Repos", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
     headers.forEach(headerText => {
         const th = document.createElement("th");
         th.textContent = headerText;
@@ -27,19 +27,30 @@ function createAdditionalTable() {
 
     const tbody = document.createElement("tbody");
 
-    // Ajouter une ligne vide
-    const emptyRow = document.createElement("tr");
-    for (let i = 0; i < headers.length; i++) {
-        const td = document.createElement("td");
-        if (i === 0) { // Ajouter un gestionnaire de clics à la cellule en dessous de "Vacances"
-            td.addEventListener('click', (event) => {
-                currentCell = td; // Stocker la cellule actuelle
-                fetchNomIdsVacances(event);
-            });
+    // Ajouter trois lignes vides
+    for (let j = 0; j < 3; j++) {
+        const emptyRow = document.createElement("tr");
+        for (let i = 0; i < headers.length; i++) {
+            const td = document.createElement("td");
+            if (i === 0 && j === 0) { // Ajouter un gestionnaire de clics à la cellule en dessous de "Vacances" dans la première ligne
+                td.addEventListener('click', (event) => {
+                    currentCell = td; // Stocker la cellule actuelle
+                    fetchNomIdsVacances(event);
+                });
+            }
+            if (i === 1) { // Ajouter les valeurs sous l'en-tête "Repos"
+                if (j === 0) {
+                    td.textContent = "Formation";
+                } else if (j === 1) {
+                    td.textContent = "RTT";
+                } else if (j === 2) {
+                    td.textContent = "RTP";
+                }
+            }
+            emptyRow.appendChild(td);
         }
-        emptyRow.appendChild(td);
+        tbody.appendChild(emptyRow);
     }
-    tbody.appendChild(emptyRow);
 
     table.appendChild(tbody);
 
