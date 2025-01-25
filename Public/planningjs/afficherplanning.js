@@ -15,6 +15,8 @@ const dayMapping = {
 };
 
 
+
+// Fonction pour récupérer les données du planning
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
@@ -43,7 +45,7 @@ async function fetchPlanningData() {
         }, {});
 
         // Ajouter les données regroupées au tableau
-        Object.values(groupedData).forEach((rowData, index) => { // Ajout de l'index pour définir l'ordre d'affichage
+        Object.values(groupedData).forEach((rowData, index) => {
             console.log('Ajout de la ligne :', rowData);
             const row = document.createElement("tr");
             row.setAttribute('draggable', true); // Rendre la ligne draggable
@@ -93,10 +95,15 @@ async function fetchPlanningData() {
 
             tableBody.appendChild(row);
         });
+
+        // Appeler la fonction pour créer le tableau supplémentaire
+        createAdditionalTable();
+
     } catch (error) {
         console.error('Erreur lors de la récupération des données du planning :', error);
     }
 }
+
 
 // Fonction pour supprimer la valeur dans le tableau tplanning
 async function removeValueFromPlanning() {

@@ -73,6 +73,15 @@ CREATE TABLE Tcompetence_order (
     FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE
 );
 
+-- Créer la table Tvacances
+CREATE TABLE Tvacances (
+    vacances_id INT AUTO_INCREMENT PRIMARY KEY,
+    semaine INT NOT NULL,
+    annee INT NOT NULL,
+    nom_id INT,
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE
+);
+
 -- Insérer des valeurs dans Tnom
 INSERT INTO Tnom (nom_id, nom) VALUES
 (1, 'Pierre'),

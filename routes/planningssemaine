@@ -100,4 +100,63 @@ router.post('/remove-planning', (req, res) => {
     });
 });
 
+// Route pour récupérer les noms disponibles pour les vacances
+router.get('/nom-ids-vacances', (req, res) => {
+    const { semaine, annee } = req.query;
+    const query = `
+        SELECT n.nom
+        FROM Tnom n
+        WHERE n.nom_id NOT IN (
+            SELECT v.nom_id
+            FROM Tvacances v
+            WHERE v.semaine = ? AND v.annee = ?
+        )
+    `;
+    connection.query(query, [semaine, annee], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des noms :', err.message);
+            res.status(500).send('Erreur lors de la récupération des noms');
+        } else {
+            res.json(results.map(row => row.nom));
+        }
+    });
+});
+
+// Route pour ajouter une entrée dans Tvacances
+router.post('/add-vacances', (req, res) => {
+    const { semaine, annee, nom } = req.body;
+    const query = `
+        INSERT INTO Tvacances (semaine, annee, nom_id)
+        VALUES (?, ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1))
+    `;
+    connection.query(query, [semaine, annee, nom], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout dans Tvacances :', err.message);
+            res.status(500).send(`Erreur lors de l'ajout dans Tvacances : ${err.message}`);
+        } else {
+            res.send('Vacances ajoutées avec succès');
+        }
+    });
+});
+
+// Route pour récupérer les données de vacances
+router.get('/vacances-data', (req, res) => {
+    const { semaine, annee } = req.query;
+    const query = `
+        SELECT v.vacances_id, v.semaine, v.annee, n.nom
+        FROM Tvacances v
+        LEFT JOIN Tnom n ON v.nom_id = n.nom_id
+        WHERE v.semaine = ? AND v.annee = ?
+    `;
+    connection.query(query, [semaine, annee], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des données de vacances :', err.message);
+            res.status(500).send('Erreur lors de la récupération des données de vacances');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+
 module.exports = router;
