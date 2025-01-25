@@ -16,8 +16,13 @@ router.get('/nom-ids', (req, res) => {
             FROM Tplanning p
             WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ?
         )
+        AND n.nom_id NOT IN (
+            SELECT v.nom_id
+            FROM Tvacances v
+            WHERE v.semaine = ? AND v.annee = ?
+        )
     `;
-    connection.query(query, [competence_id, semaine, annee, jour_id], (err, results) => {
+    connection.query(query, [competence_id, semaine, annee, jour_id, semaine, annee], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des noms :', err.message);
             res.status(500).send('Erreur lors de la récupération des noms');
