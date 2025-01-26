@@ -1,3 +1,5 @@
+
+
 // Fonction pour créer un tableau supplémentaire avec 9 colonnes
 async function createAdditionalTable() {
     const container = document.getElementById("additionalTableContainer"); // Assurez-vous d'avoir un conteneur pour le nouveau tableau
@@ -83,6 +85,13 @@ async function createAdditionalTable() {
                     const cell = row.cells[data.jour_id + 1]; // Trouver la cellule correspondant au jour_id
                     const div = document.createElement('div');
                     div.textContent = data.nom; // Afficher le nom dans la cellule
+                    div.dataset.nomId = data.nom_id; // Stocker le nom_id dans un attribut de données
+                    div.dataset.nom = data.nom; // Stocker le nom dans un attribut de données pour vérification
+                    div.addEventListener('contextmenu', (event) => {
+                        event.preventDefault(); // Empêcher le menu contextuel par défaut
+                        console.log('Clic droit détecté sur:', div.dataset.nom, 'nom_id:', div.dataset.nomId); // Ajouter un log pour vérifier le nom_id
+                        fetchNomIdAndRemoveReposData(data.tableName, data.semaine, data.annee, data.jour_id, div.dataset.nom);
+                    });
                     cell.appendChild(div);
                 }
             }
@@ -96,6 +105,51 @@ async function createAdditionalTable() {
 
     // Appeler la fonction pour récupérer et afficher les données de vacances
     fetchVacancesData();
+}
+
+// Fonction pour récupérer le nom_id et supprimer les données dans la table Tjrepos_*
+async function fetchNomIdAndRemoveReposData(tableName, semaine, annee, jourId, nom) {
+    try {
+        const response = await fetch(`/api/get-nom-id?nom=${encodeURIComponent(nom)}`);
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération du nom_id');
+        }
+
+        const data = await response.json();
+        const nomId = data.nom_id;
+
+        console.log('Nom_id récupéré pour', nom, ':', nomId);
+
+        removeReposData(tableName, semaine, annee, jourId, nomId);
+    } catch (error) {
+        console.error('Erreur lors de la récupération du nom_id :', error);
+    }
+}
+
+// Fonction pour supprimer les données dans la table Tjrepos_*
+async function removeReposData(tableName, semaine, annee, jourId, nomId) {
+    console.log('Données envoyées pour la suppression dans', tableName, ':', { semaine, annee, jourId, nomId });
+    try {
+        const response = await fetch('/api/remove-repos-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tableName, semaine, annee, jourId, nomId })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression dans ' + tableName);
+        }
+
+        const result = await response.text();
+        console.log('Résultat de la suppression dans', tableName, ':', result);
+
+        // Réactualiser le tableau après la suppression
+        createAdditionalTable();
+    } catch (error) {
+        console.error('Erreur lors de la suppression dans', tableName, ':', error);
+    }
 }
 
 

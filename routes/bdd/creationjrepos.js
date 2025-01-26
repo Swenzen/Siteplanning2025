@@ -183,4 +183,46 @@ router.get('/repos-data', (req, res) => {
     });
 });
 
+// Route pour supprimer des données dans la table Tjrepos_*
+router.post('/remove-repos-data', (req, res) => {
+    const { tableName, semaine, annee, jourId, nomId } = req.body;
+
+    const query = `
+        DELETE FROM ??
+        WHERE semaine = ? AND annee = ? AND jour_id = ? AND nom_id = ?
+    `;
+
+    connection.query(query, [tableName, semaine, annee, jourId, nomId], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression des données dans', tableName, ':', err.message);
+            res.status(500).send(`Erreur lors de la suppression des données dans ${tableName} : ${err.message}`);
+        } else {
+            res.send('Données supprimées avec succès');
+        }
+    });
+});
+
+// Route pour récupérer le nom_id à partir du nom
+router.get('/get-nom-id', (req, res) => {
+    const { nom } = req.query;
+
+    const query = `
+        SELECT nom_id
+        FROM Tnom
+        WHERE nom = ?
+    `;
+
+    connection.query(query, [nom], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération du nom_id :', err.message);
+            res.status(500).send(`Erreur lors de la récupération du nom_id : ${err.message}`);
+        } else if (results.length === 0) {
+            res.status(404).send('Nom non trouvé');
+        } else {
+            res.json(results[0]);
+        }
+    });
+});
+
+
 module.exports = router;
