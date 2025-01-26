@@ -14,7 +14,6 @@ const dayMapping = {
     '7': 'dimanche'
 };
 
-
 // Fonction pour récupérer les données du planning
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
@@ -46,8 +45,19 @@ async function fetchPlanningData() {
             return acc;
         }, {});
 
-        // Ajouter les données regroupées au tableau
-        Object.values(groupedData).forEach((rowData, index) => {
+        // Trier les données regroupées par display_order, heure de début et heure de fin
+        const sortedData = Object.values(groupedData).sort((a, b) => {
+            if (a.display_order < b.display_order) return -1;
+            if (a.display_order > b.display_order) return 1;
+            if (a.horaire_debut < b.horaire_debut) return -1;
+            if (a.horaire_debut > b.horaire_debut) return 1;
+            if (a.horaire_fin < b.horaire_fin) return -1;
+            if (a.horaire_fin > b.horaire_fin) return 1;
+            return 0;
+        });
+
+        // Ajouter les données triées au tableau
+        sortedData.forEach((rowData) => {
             console.log('Ajout de la ligne :', rowData);
             const row = document.createElement("tr");
             row.setAttribute('draggable', true); // Rendre la ligne draggable
@@ -58,8 +68,8 @@ async function fetchPlanningData() {
             const modalitiesCell = document.createElement("td");
             modalitiesCell.textContent = rowData.competence;
             modalitiesCell.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence
-            modalitiesCell.dataset.displayOrder = index; // Utiliser l'index comme ordre d'affichage
-            console.log(`Compétence ID: ${rowData.competence_id}, Display Order: ${index}`); // Ajouter un log pour vérifier les valeurs
+            modalitiesCell.dataset.displayOrder = rowData.display_order; // Utiliser l'ordre d'affichage depuis les données
+            console.log(`Compétence ID: ${rowData.competence_id}, Display Order: ${rowData.display_order}`); // Ajouter un log pour vérifier les valeurs
             row.appendChild(modalitiesCell);
 
             const horairesCell = document.createElement("td");

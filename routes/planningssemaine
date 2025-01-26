@@ -10,14 +10,14 @@ router.get('/planning-data', (req, res) => {
         SELECT 
             h.horaire_debut, h.horaire_fin, 
             c.competence, c.competence_id, 
-            p.jour_id, j.nom
+            p.jour_id, j.nom, o.display_order
         FROM Thoraire_competence hc
         JOIN Thoraire h ON hc.horaire_id = h.horaire_id
         JOIN Tcompetence c ON hc.competence_id = c.competence_id
         LEFT JOIN Tplanning p ON h.horaire_id = p.horaire_id AND c.competence_id = p.competence_id AND p.semaine = ? AND p.annee = ?
         LEFT JOIN Tnom j ON p.nom_id = j.nom_id
         LEFT JOIN Tcompetence_order o ON c.competence_id = o.competence_id
-        ORDER BY o.display_order ASC, c.competence ASC, h.horaire_debut ASC, p.jour_id ASC
+        ORDER BY o.display_order ASC, c.competence ASC, h.horaire_debut ASC, h.horaire_fin ASC, p.jour_id ASC
     `;
 
     connection.query(query, [semaine, annee], (err, results) => {
