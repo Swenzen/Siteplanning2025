@@ -1,4 +1,3 @@
-
 // Fonction pour créer un tableau supplémentaire avec 9 colonnes
 async function createAdditionalTable() {
     const container = document.getElementById("additionalTableContainer"); // Assurez-vous d'avoir un conteneur pour le nouveau tableau
@@ -82,8 +81,9 @@ async function createAdditionalTable() {
                 const reposCell = row.cells[1];
                 if (reposCell && reposCell.textContent === tableName) {
                     const cell = row.cells[data.jour_id + 1]; // Trouver la cellule correspondant au jour_id
-                    cell.textContent = data.nom_id; // Afficher le nom_id dans la cellule
-                    break;
+                    const div = document.createElement('div');
+                    div.textContent = data.nom; // Afficher le nom dans la cellule
+                    cell.appendChild(div);
                 }
             }
         });

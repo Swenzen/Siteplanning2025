@@ -162,8 +162,9 @@ router.get('/repos-data', (req, res) => {
 
             // Construire la requête pour récupérer les données dans toutes les tables Tjrepos_ existantes
             const queries = tableNames.map(tableName => `
-                SELECT ${connection.escape(tableName)} AS tableName, semaine, annee, jour_id, nom_id
+                SELECT ${connection.escape(tableName)} AS tableName, semaine, annee, jour_id, Tnom.nom
                 FROM ${tableName}
+                JOIN Tnom ON ${tableName}.nom_id = Tnom.nom_id
                 WHERE semaine = ${connection.escape(semaine)} AND annee = ${connection.escape(annee)}
             `).join(' UNION ');
 
