@@ -15,7 +15,6 @@ const dayMapping = {
 };
 
 
-
 // Fonction pour récupérer les données du planning
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
@@ -39,7 +38,10 @@ async function fetchPlanningData() {
                 acc[key] = { ...row, jours: {} };
             }
             if (row.jour_id) {
-                acc[key].jours[row.jour_id] = row.nom;
+                if (!acc[key].jours[row.jour_id]) {
+                    acc[key].jours[row.jour_id] = [];
+                }
+                acc[key].jours[row.jour_id].push(row.nom);
             }
             return acc;
         }, {});
@@ -67,7 +69,13 @@ async function fetchPlanningData() {
             const days = ['1', '2', '3', '4', '5', '6', '7']; // Utiliser les IDs des jours
             days.forEach(day => {
                 const cell = document.createElement("td");
-                cell.textContent = rowData.jours[day] || ''; // Afficher le nom pour chaque jour
+                if (rowData.jours[day]) {
+                    rowData.jours[day].forEach(nom => {
+                        const div = document.createElement('div');
+                        div.textContent = nom;
+                        cell.appendChild(div);
+                    });
+                }
 
                 // Gestionnaire de clic gauche pour afficher le tooltip
                 cell.addEventListener('click', (event) => {
@@ -104,7 +112,6 @@ async function fetchPlanningData() {
     }
 }
 
-
 // Fonction pour supprimer la valeur dans le tableau tplanning
 async function removeValueFromPlanning() {
     console.log('Appel de la fonction removeValueFromPlanning');
@@ -132,7 +139,7 @@ async function removeValueFromPlanning() {
         console.log('Résultat de la suppression du planning :', result);
 
         // Mettre à jour l'interface utilisateur
-        currentCell.textContent = ''; // Supprimer le contenu de la cellule
+        currentCell.innerHTML = ''; // Supprimer le contenu de la cellule
     } catch (error) {
         console.error('Erreur lors de la suppression du planning :', error);
     }

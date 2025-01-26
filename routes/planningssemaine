@@ -34,47 +34,17 @@ router.get('/planning-data', (req, res) => {
 router.post('/update-planning', (req, res) => {
     const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
 
-    const selectQuery = `
-        SELECT p.planning_id
-        FROM Tplanning p
-        JOIN Thoraire h ON p.horaire_id = h.horaire_id
-        JOIN Tcompetence c ON p.competence_id = c.competence_id
-        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND h.horaire_debut = ? AND h.horaire_fin = ? AND c.competence_id = ?
+    // Insérer une nouvelle ligne
+    const insertQuery = `
+        INSERT INTO Tplanning (semaine, annee, jour_id, horaire_id, competence_id, nom_id)
+        VALUES (?, ?, ?, (SELECT horaire_id FROM Thoraire WHERE horaire_debut = ? AND horaire_fin = ? LIMIT 1), ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1))
     `;
-
-    connection.query(selectQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id], (err, results) => {
+    connection.query(insertQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom], (err, result) => {
         if (err) {
-            console.error('Erreur lors de la requête de sélection :', err.message);
-            res.status(500).send('Erreur lors de la requête de sélection');
-        } else if (results.length > 0) {
-            // Mettre à jour la ligne existante
-            const updateQuery = `
-                UPDATE Tplanning
-                SET nom_id = (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
-                WHERE planning_id = ?
-            `;
-            connection.query(updateQuery, [nom, results[0].planning_id], (err, result) => {
-                if (err) {
-                    console.error('Erreur lors de la mise à jour du planning :', err.message);
-                    res.status(500).send('Erreur lors de la mise à jour du planning');
-                } else {
-                    res.send('Planning mis à jour avec succès');
-                }
-            });
+            console.error('Erreur lors de l\'insertion dans le planning :', err.message);
+            res.status(500).send('Erreur lors de l\'insertion dans le planning');
         } else {
-            // Insérer une nouvelle ligne
-            const insertQuery = `
-                INSERT INTO Tplanning (semaine, annee, jour_id, horaire_id, competence_id, nom_id)
-                VALUES (?, ?, ?, (SELECT horaire_id FROM Thoraire WHERE horaire_debut = ? AND horaire_fin = ? LIMIT 1), ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1))
-            `;
-            connection.query(insertQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom], (err, result) => {
-                if (err) {
-                    console.error('Erreur lors de l\'insertion dans le planning :', err.message);
-                    res.status(500).send('Erreur lors de l\'insertion dans le planning');
-                } else {
-                    res.send('Planning inséré avec succès');
-                }
-            });
+            res.send('Planning inséré avec succès');
         }
     });
 });
@@ -158,7 +128,6 @@ router.get('/vacances-data', (req, res) => {
     });
 });
 
-
 // Route pour supprimer une entrée dans Tvacances
 router.post('/remove-vacances', (req, res) => {
     const { semaine, annee, nom } = req.body;
@@ -175,6 +144,5 @@ router.post('/remove-vacances', (req, res) => {
         }
     });
 });
-
 
 module.exports = router;

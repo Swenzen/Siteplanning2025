@@ -28,7 +28,9 @@ function showTooltip(event, noms) {
     // Ajouter un gestionnaire de clics aux éléments de date dans le tooltip
     document.querySelectorAll('.tooltip-date').forEach(element => {
         element.addEventListener('click', function() {
-            currentCell.textContent = this.textContent; // Remplacer le contenu de la cellule
+            const div = document.createElement('div');
+            div.textContent = this.textContent;
+            currentCell.appendChild(div); // Ajouter le nouveau nom dans la cellule
             const semaine = document.getElementById("weekNumber").value;
             const annee = document.getElementById("yearNumber").value;
             const jour_id = currentDay; // Utiliser l'ID du jour
