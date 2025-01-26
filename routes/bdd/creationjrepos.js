@@ -48,4 +48,20 @@ router.get('/get-repos-tables', (req, res) => {
     });
 });
 
+// Route pour supprimer une table de repos
+router.post('/delete-repos-table', (req, res) => {
+    const { tableName } = req.body;
+
+    const query = `DROP TABLE ??`;
+
+    connection.query(query, [tableName], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression de la table de repos :', err.message);
+            res.status(500).send(`Erreur lors de la suppression de la table de repos : ${err.message}`);
+        } else {
+            res.send('Table de repos supprimée avec succès');
+        }
+    });
+});
+
 module.exports = router;

@@ -46,7 +46,12 @@ async function loadReposTables() {
                 row.appendChild(cellAbsence);
 
                 const cellActions = document.createElement('td');
-                // Ajouter des actions ici si nécessaire
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Supprimer';
+                deleteButton.addEventListener('click', () => {
+                    deleteReposTable(table);
+                });
+                cellActions.appendChild(deleteButton);
                 row.appendChild(cellActions);
 
                 tbody.appendChild(row);
@@ -54,6 +59,31 @@ async function loadReposTables() {
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des tables de repos :', error);
+    }
+}
+
+// Fonction pour supprimer une table de repos
+async function deleteReposTable(tableName) {
+    try {
+        const response = await fetch('/api/delete-repos-table', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tableName })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression de la table de repos');
+        }
+
+        const result = await response.text();
+        console.log('Résultat de la suppression de la table de repos :', result);
+        alert('Table de repos supprimée avec succès');
+        loadReposTables(); // Recharger les tables de repos après la suppression
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la table de repos :', error);
+        alert('Erreur lors de la suppression de la table de repos');
     }
 }
 
