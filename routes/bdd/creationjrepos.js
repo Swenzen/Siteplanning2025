@@ -42,8 +42,7 @@ router.get('/get-repos-tables', (req, res) => {
             console.error('Erreur lors de la récupération des tables de repos :', err.message);
             res.status(500).send(`Erreur lors de la récupération des tables de repos : ${err.message}`);
         } else {
-            console.log('Tables trouvées :', results); // Journal de débogage
-            res.json(results.map(row => row.TABLE_NAME));
+           res.json(results.map(row => row.TABLE_NAME));
         }
     });
 });
@@ -154,7 +153,7 @@ router.get('/repos-data', (req, res) => {
 
     connection.query(getTablesQuery, (err, tables) => {
         if (err) {
-            console.error('Erreur lors de la récupération des tables de repos :', err.message);
+            // console.error('Erreur lors de la récupération des tables de repos :', err.message);
             res.status(500).send(`Erreur lors de la récupération des tables de repos : ${err.message}`);
         } else {
             const tableNames = tables.map(row => row.TABLE_NAME);
@@ -173,7 +172,7 @@ router.get('/repos-data', (req, res) => {
 
             connection.query(queries, (err, results) => {
                 if (err) {
-                    console.error('Erreur lors de la récupération des données :', err.message);
+                    // console.error('Erreur lors de la récupération des données :', err.message);
                     res.status(500).send(`Erreur lors de la récupération des données : ${err.message}`);
                 } else {
                     res.json(results);
@@ -194,7 +193,7 @@ router.post('/remove-repos-data', (req, res) => {
 
     connection.query(query, [tableName, semaine, annee, jourId, nomId], (err, result) => {
         if (err) {
-            console.error('Erreur lors de la suppression des données dans', tableName, ':', err.message);
+            // console.error('Erreur lors de la suppression des données dans', tableName, ':', err.message);
             res.status(500).send(`Erreur lors de la suppression des données dans ${tableName} : ${err.message}`);
         } else {
             res.send('Données supprimées avec succès');
@@ -214,7 +213,7 @@ router.get('/get-nom-id', (req, res) => {
 
     connection.query(query, [nom], (err, results) => {
         if (err) {
-            console.error('Erreur lors de la récupération du nom_id :', err.message);
+            // console.error('Erreur lors de la récupération du nom_id :', err.message);
             res.status(500).send(`Erreur lors de la récupération du nom_id : ${err.message}`);
         } else if (results.length === 0) {
             res.status(404).send('Nom non trouvé');
