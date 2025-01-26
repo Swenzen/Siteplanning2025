@@ -1,3 +1,6 @@
+// Inclure la fonction showEmptyTooltip depuis clicdroit.js
+// Assurez-vous que clicdroit.js est inclus avant afficherplanning.js dans planning.html
+
 const tooltip = document.getElementById("tooltip");
 let currentCell = null;
 let currentDay = null;
@@ -90,7 +93,7 @@ async function fetchPlanningData() {
                             currentDay = day;
                             currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
                             currentCompetenceId = rowData.competence_id;
-                            removeValueFromPlanning(nom);
+                            showEmptyTooltip(event, nom);
                         });
                         cell.appendChild(div);
                     });
