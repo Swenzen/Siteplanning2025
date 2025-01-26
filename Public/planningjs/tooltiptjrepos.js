@@ -4,7 +4,7 @@ async function fetchNomIdsRepos(event, tableName, jourId) {
     const annee = document.getElementById("yearNumber").value;
 
     try {
-        const response = await fetch(`/api/nom-ids-repos?semaine=${semaine}&annee=${annee}`);
+        const response = await fetch(`/api/nom-ids-repos?semaine=${semaine}&annee=${annee}&jourId=${jourId}`);
         if (!response.ok) {
             throw new Error('Erreur lors de la récupération des nom_id');
         }
@@ -55,9 +55,10 @@ async function addReposData(tableName, semaine, annee, jourId, nomId) {
 
         const result = await response.text();
         console.log('Résultat de l\'ajout dans', tableName, ':', result);
-        alert('Données ajoutées avec succès');
+
+        // Réactualiser le tableau après l'ajout
+        createAdditionalTable();
     } catch (error) {
         console.error('Erreur lors de l\'ajout dans', tableName, ':', error);
-        alert('Erreur lors de l\'ajout dans ' + tableName);
     }
 }

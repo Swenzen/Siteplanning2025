@@ -85,7 +85,7 @@ router.post('/add-repos-data', (req, res) => {
 
 // Route pour récupérer les nom_id disponibles pour les repos
 router.get('/nom-ids-repos', (req, res) => {
-    const { semaine, annee } = req.query;
+    const { semaine, annee, jourId } = req.query;
 
     // Récupérer les noms des tables Tjrepos_
     const getTablesQuery = `
@@ -105,11 +105,11 @@ router.get('/nom-ids-repos', (req, res) => {
                 return;
             }
 
-            // Construire la requête pour vérifier les nom_id dans toutes les tables Tjrepos_ existantes
+            // Construire la requête pour vérifier les nom_id dans toutes les tables Tjrepos_ existantes pour le jour spécifique
             const queries = tableNames.map(tableName => `
                 SELECT nom_id
                 FROM ${tableName}
-                WHERE semaine = ${connection.escape(semaine)} AND annee = ${connection.escape(annee)}
+                WHERE semaine = ${connection.escape(semaine)} AND annee = ${connection.escape(annee)} AND jour_id = ${connection.escape(jourId)}
             `).join(' UNION ');
 
             connection.query(queries, (err, results) => {
@@ -118,10 +118,13 @@ router.get('/nom-ids-repos', (req, res) => {
                     res.status(500).send(`Erreur lors de la récupération des nom_id : ${err.message}`);
                 } else {
                     const usedNomIds = results.map(row => row.nom_id);
-                    const getNomIdsQuery = `
+                    const getNomIdsQuery = usedNomIds.length > 0 ? `
                         SELECT nom_id, nom
                         FROM Tnom
                         WHERE nom_id NOT IN (?)
+                    ` : `
+                        SELECT nom_id, nom
+                        FROM Tnom
                     `;
 
                     connection.query(getNomIdsQuery, [usedNomIds], (err, nomIds) => {
