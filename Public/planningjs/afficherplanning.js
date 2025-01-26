@@ -163,3 +163,35 @@ async function removeValueFromPlanning(nom) {
         console.error('Erreur lors de la suppression du planning :', error);
     }
 }
+
+// Fonction pour ajouter un commentaire dans le planning
+async function addCommentToPlanning(nom, commentaire) {
+    console.log('Appel de la fonction addCommentToPlanning');
+    const semaine = document.getElementById("weekNumber").value;
+    const annee = document.getElementById("yearNumber").value;
+    const jour_id = currentDay; // Utiliser l'ID du jour
+
+    console.log('Données envoyées pour l\'ajout du commentaire :', { semaine, annee, jour_id, nom, commentaire });
+
+    try {
+        const response = await fetch('/api/add-comment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ semaine, annee, jour_id, nom, commentaire })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de l\'ajout du commentaire');
+        }
+
+        const result = await response.text();
+        console.log('Résultat de l\'ajout du commentaire :', result);
+
+        // Actualiser le tableau après l'ajout du commentaire
+        fetchPlanningData();
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout du commentaire :', error);
+    }
+}

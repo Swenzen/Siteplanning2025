@@ -82,6 +82,18 @@ CREATE TABLE Tvacances (
     FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE
 );
 
+-- Créer la table Tcommentaire
+CREATE TABLE Tcommentaire (
+    commentaire_id INT AUTO_INCREMENT PRIMARY KEY,
+    semaine INT NOT NULL,
+    annee INT NOT NULL,
+    jour_id INT,
+    nom_id INT,
+    commentaire TEXT,
+    FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id) ON DELETE CASCADE,
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE
+);
+
 -- Insérer des valeurs dans Tnom
 INSERT INTO Tnom (nom_id, nom) VALUES
 (1, 'Pierre'),

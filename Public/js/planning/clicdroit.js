@@ -1,10 +1,11 @@
-// Fonction pour afficher un tooltip avec une option de suppression lors d'un clic droit
+// Fonction pour afficher un tooltip avec des options de suppression et d'ajout de commentaire lors d'un clic droit
 function showEmptyTooltip(event, nom) {
     const emptyTooltip = document.createElement('div');
     emptyTooltip.id = 'emptyTooltip';
     emptyTooltip.innerHTML = `
         <div>${nom}</div>
         <button id="deleteButton">Supprimer</button>
+        <button id="commentButton">Commentaire</button>
     `;
     emptyTooltip.style.position = 'absolute';
     emptyTooltip.style.left = `${event.pageX + 10}px`; // Slight offset for better visibility
@@ -17,6 +18,15 @@ function showEmptyTooltip(event, nom) {
     // Ajouter un gestionnaire de clic au bouton de suppression
     document.getElementById('deleteButton').addEventListener('click', () => {
         removeValueFromPlanning(nom);
+        emptyTooltip.remove();
+    });
+
+    // Ajouter un gestionnaire de clic au bouton de commentaire
+    document.getElementById('commentButton').addEventListener('click', () => {
+        const commentaire = prompt('Entrez votre commentaire :');
+        if (commentaire) {
+            addCommentToPlanning(nom, commentaire);
+        }
         emptyTooltip.remove();
     });
 

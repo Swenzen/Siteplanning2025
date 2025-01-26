@@ -145,4 +145,24 @@ router.post('/remove-vacances', (req, res) => {
     });
 });
 
+// Route pour ajouter un commentaire
+router.post('/add-comment', (req, res) => {
+    const { semaine, annee, jour_id, nom, commentaire } = req.body;
+
+    const query = `
+        INSERT INTO Tcommentaire (semaine, annee, jour_id, nom_id, commentaire)
+        VALUES (?, ?, ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1), ?)
+    `;
+
+    connection.query(query, [semaine, annee, jour_id, nom, commentaire], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout du commentaire :', err.message);
+            res.status(500).send(`Erreur lors de l'ajout du commentaire : ${err.message}`);
+        } else {
+            res.send('Commentaire ajouté avec succès');
+        }
+    });
+});
+
+
 module.exports = router;
