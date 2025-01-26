@@ -1,5 +1,5 @@
 // Fonction pour créer un tableau supplémentaire avec 9 colonnes
-function createAdditionalTable() {
+async function createAdditionalTable() {
     const container = document.getElementById("additionalTableContainer"); // Assurez-vous d'avoir un conteneur pour le nouveau tableau
 
     // Supprimer le tableau existant s'il y en a un
@@ -27,33 +27,41 @@ function createAdditionalTable() {
 
     const tbody = document.createElement("tbody");
 
-    // Ajouter trois lignes vides
-    for (let j = 0; j < 3; j++) {
-        const emptyRow = document.createElement("tr");
-        for (let i = 0; i < headers.length; i++) {
-            const td = document.createElement("td");
-            if (i === 0 && j === 0) { // Ajouter un gestionnaire de clics à la cellule en dessous de "Vacances" dans la première ligne
-                td.addEventListener('click', (event) => {
-                    currentCell = td; // Stocker la cellule actuelle
-                    fetchNomIdsVacances(event);
-                });
-            }
-            if (i === 1) { // Ajouter les valeurs sous l'en-tête "Repos"
-                if (j === 0) {
-                    td.textContent = "Formation";
-                } else if (j === 1) {
-                    td.textContent = "RTT";
-                } else if (j === 2) {
-                    td.textContent = "RTP";
-                }
-            }
-            emptyRow.appendChild(td);
+    // Récupérer les noms des tables Tjrepos_ existantes
+    try {
+        const response = await fetch('/api/get-repos-tables');
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des tables de repos');
         }
-        tbody.appendChild(emptyRow);
+
+        const tables = await response.json();
+        console.log('Tables récupérées :', tables); // Journal de débogage
+
+        // Ajouter des lignes dynamiques sous la colonne "Repos"
+        tables.forEach((table, index) => {
+            if (table) { // Vérifier que table n'est pas null ou undefined
+                const row = document.createElement("tr");
+                for (let i = 0; i < headers.length; i++) {
+                    const td = document.createElement("td");
+                    if (i === 0 && index === 0) { // Ajouter un gestionnaire de clics à la cellule en dessous de "Vacances" dans la première ligne
+                        td.addEventListener('click', (event) => {
+                            currentCell = td; // Stocker la cellule actuelle
+                            fetchNomIdsVacances(event);
+                        });
+                    }
+                    if (i === 1) { // Ajouter les valeurs sous l'en-tête "Repos"
+                        td.textContent = table.replace(/^Tjrepos_/i, '').toUpperCase(); // Afficher le nom sans le préfixe et en majuscules
+                    }
+                    row.appendChild(td);
+                }
+                tbody.appendChild(row);
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des tables de repos :', error);
     }
 
     table.appendChild(tbody);
-
     container.appendChild(table);
 
     // Appeler la fonction pour récupérer et afficher les données de vacances
