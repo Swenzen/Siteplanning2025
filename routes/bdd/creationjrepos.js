@@ -64,4 +64,119 @@ router.post('/delete-repos-table', (req, res) => {
     });
 });
 
+// Route pour ajouter des données dans la table Tjrepos_*
+router.post('/add-repos-data', (req, res) => {
+    const { tableName, semaine, annee, jourId, nomId } = req.body;
+
+    const query = `
+        INSERT INTO ?? (semaine, annee, jour_id, nom_id)
+        VALUES (?, ?, ?, ?)
+    `;
+
+    connection.query(query, [tableName, semaine, annee, jourId, nomId], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout des données dans', tableName, ':', err.message);
+            res.status(500).send(`Erreur lors de l'ajout des données dans ${tableName} : ${err.message}`);
+        } else {
+            res.send('Données ajoutées avec succès');
+        }
+    });
+});
+
+// Route pour récupérer les nom_id disponibles pour les repos
+router.get('/nom-ids-repos', (req, res) => {
+    const { semaine, annee } = req.query;
+
+    // Récupérer les noms des tables Tjrepos_
+    const getTablesQuery = `
+        SELECT TABLE_NAME
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE() AND TABLE_NAME LIKE 'Tjrepos_%'
+    `;
+
+    connection.query(getTablesQuery, (err, tables) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des tables de repos :', err.message);
+            res.status(500).send(`Erreur lors de la récupération des tables de repos : ${err.message}`);
+        } else {
+            const tableNames = tables.map(row => row.TABLE_NAME);
+            if (tableNames.length === 0) {
+                res.json([]);
+                return;
+            }
+
+            // Construire la requête pour vérifier les nom_id dans toutes les tables Tjrepos_ existantes
+            const queries = tableNames.map(tableName => `
+                SELECT nom_id
+                FROM ${tableName}
+                WHERE semaine = ${connection.escape(semaine)} AND annee = ${connection.escape(annee)}
+            `).join(' UNION ');
+
+            connection.query(queries, (err, results) => {
+                if (err) {
+                    console.error('Erreur lors de la récupération des nom_id :', err.message);
+                    res.status(500).send(`Erreur lors de la récupération des nom_id : ${err.message}`);
+                } else {
+                    const usedNomIds = results.map(row => row.nom_id);
+                    const getNomIdsQuery = `
+                        SELECT nom_id, nom
+                        FROM Tnom
+                        WHERE nom_id NOT IN (?)
+                    `;
+
+                    connection.query(getNomIdsQuery, [usedNomIds], (err, nomIds) => {
+                        if (err) {
+                            console.error('Erreur lors de la récupération des nom_id :', err.message);
+                            res.status(500).send(`Erreur lors de la récupération des nom_id : ${err.message}`);
+                        } else {
+                            res.json(nomIds);
+                        }
+                    });
+                }
+            });
+        }
+    });
+});
+
+// Route pour récupérer les données des tables Tjrepos_*
+router.get('/repos-data', (req, res) => {
+    const { semaine, annee } = req.query;
+
+    // Récupérer les noms des tables Tjrepos_
+    const getTablesQuery = `
+        SELECT TABLE_NAME
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE() AND TABLE_NAME LIKE 'Tjrepos_%'
+    `;
+
+    connection.query(getTablesQuery, (err, tables) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des tables de repos :', err.message);
+            res.status(500).send(`Erreur lors de la récupération des tables de repos : ${err.message}`);
+        } else {
+            const tableNames = tables.map(row => row.TABLE_NAME);
+            if (tableNames.length === 0) {
+                res.json([]);
+                return;
+            }
+
+            // Construire la requête pour récupérer les données dans toutes les tables Tjrepos_ existantes
+            const queries = tableNames.map(tableName => `
+                SELECT ${connection.escape(tableName)} AS tableName, semaine, annee, jour_id, nom_id
+                FROM ${tableName}
+                WHERE semaine = ${connection.escape(semaine)} AND annee = ${connection.escape(annee)}
+            `).join(' UNION ');
+
+            connection.query(queries, (err, results) => {
+                if (err) {
+                    console.error('Erreur lors de la récupération des données :', err.message);
+                    res.status(500).send(`Erreur lors de la récupération des données : ${err.message}`);
+                } else {
+                    res.json(results);
+                }
+            });
+        }
+    });
+});
+
 module.exports = router;
