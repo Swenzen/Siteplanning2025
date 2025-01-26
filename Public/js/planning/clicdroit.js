@@ -3,7 +3,7 @@ function showEmptyTooltip(event, nom) {
     const emptyTooltip = document.createElement('div');
     emptyTooltip.id = 'emptyTooltip';
     emptyTooltip.innerHTML = `
-        <div>Options</div>
+        <div>${nom}</div>
         <button id="deleteButton">Supprimer</button>
     `;
     emptyTooltip.style.position = 'absolute';
