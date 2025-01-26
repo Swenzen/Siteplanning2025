@@ -153,6 +153,9 @@ async function removeValueFromPlanning(nom) {
                 currentCell.removeChild(div);
             }
         });
+
+        // Actualiser le tableau après la suppression
+        fetchPlanningData();
     } catch (error) {
         console.error('Erreur lors de la suppression du planning :', error);
     }

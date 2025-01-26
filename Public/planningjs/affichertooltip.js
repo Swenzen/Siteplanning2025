@@ -59,6 +59,9 @@ async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fi
 
         const result = await response.text();
         console.log('Résultat de la mise à jour du planning :', result);
+
+        // Actualiser le tableau après l'ajout
+        fetchPlanningData();
     } catch (error) {
         console.error('Erreur lors de la mise à jour du planning :', error);
     }
