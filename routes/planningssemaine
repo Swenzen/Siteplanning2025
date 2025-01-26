@@ -51,16 +51,16 @@ router.post('/update-planning', (req, res) => {
 
 // Route pour supprimer une valeur dans le planning
 router.post('/remove-planning', (req, res) => {
-    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id } = req.body;
+    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
 
     const deleteQuery = `
         DELETE p
         FROM Tplanning p
         JOIN Thoraire h ON p.horaire_id = h.horaire_id
-        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND h.horaire_debut = ? AND h.horaire_fin = ? AND p.competence_id = ?
+        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND h.horaire_debut = ? AND h.horaire_fin = ? AND p.competence_id = ? AND p.nom_id = (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
     `;
 
-    connection.query(deleteQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id], (err, result) => {
+    connection.query(deleteQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression du planning :', err.message);
             res.status(500).send('Erreur lors de la suppression du planning');

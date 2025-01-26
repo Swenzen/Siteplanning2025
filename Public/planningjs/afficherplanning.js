@@ -73,6 +73,15 @@ async function fetchPlanningData() {
                     rowData.jours[day].forEach(nom => {
                         const div = document.createElement('div');
                         div.textContent = nom;
+                        div.addEventListener('contextmenu', (event) => {
+                            event.preventDefault(); // Empêcher le menu contextuel par défaut
+                            console.log(`Clic droit sur le nom : ${nom}`);
+                            currentCell = cell; // Stocker la cellule actuelle
+                            currentDay = day;
+                            currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+                            currentCompetenceId = rowData.competence_id;
+                            removeValueFromPlanning(nom);
+                        });
                         cell.appendChild(div);
                     });
                 }
@@ -85,17 +94,6 @@ async function fetchPlanningData() {
                     currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
                     currentCompetenceId = rowData.competence_id;
                     fetchNomIds(rowData.competence_id, event);
-                });
-
-                // Gestionnaire de clic droit pour supprimer la valeur
-                cell.addEventListener('contextmenu', (event) => {
-                    event.preventDefault(); // Empêcher le menu contextuel par défaut
-                    console.log(`Clic droit sur la cellule : ${day}, ${rowData.competence_id}`);
-                    currentCell = cell; // Stocker la cellule actuelle
-                    currentDay = day;
-                    currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
-                    currentCompetenceId = rowData.competence_id;
-                    removeValueFromPlanning();
                 });
 
                 row.appendChild(cell);
@@ -113,14 +111,14 @@ async function fetchPlanningData() {
 }
 
 // Fonction pour supprimer la valeur dans le tableau tplanning
-async function removeValueFromPlanning() {
+async function removeValueFromPlanning(nom) {
     console.log('Appel de la fonction removeValueFromPlanning');
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const jour_id = currentDay; // Utiliser l'ID du jour
     const [horaire_debut, horaire_fin] = currentHorairesNom.split(' - '); // Séparer les horaires de début et de fin
 
-    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, currentCompetenceId });
+    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, currentCompetenceId, nom });
 
     try {
         const response = await fetch('/api/remove-planning', {
@@ -128,7 +126,7 @@ async function removeValueFromPlanning() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: currentCompetenceId })
+            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: currentCompetenceId, nom })
         });
 
         if (!response.ok) {
@@ -139,7 +137,12 @@ async function removeValueFromPlanning() {
         console.log('Résultat de la suppression du planning :', result);
 
         // Mettre à jour l'interface utilisateur
-        currentCell.innerHTML = ''; // Supprimer le contenu de la cellule
+        const divs = currentCell.querySelectorAll('div');
+        divs.forEach(div => {
+            if (div.textContent === nom) {
+                currentCell.removeChild(div);
+            }
+        });
     } catch (error) {
         console.error('Erreur lors de la suppression du planning :', error);
     }
