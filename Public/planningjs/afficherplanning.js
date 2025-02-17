@@ -17,24 +17,36 @@ const dayMapping = {
     '7': 'dimanche'
 };
 
+
 // Fonction pour récupérer les données du planning
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
 
     try {
-        const response = await fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`);
-        if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des données');
+        const [planningResponse, commentsResponse] = await Promise.all([
+            fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`),
+            fetch(`/api/comments?semaine=${semaine}&annee=${annee}`)
+        ]);
+
+        if (!planningResponse.ok) {
+            throw new Error('Erreur lors de la récupération des données du planning');
         }
-        const data = await response.json();
-        console.log('Données récupérées :', data);
+        if (!commentsResponse.ok) {
+            throw new Error('Erreur lors de la récupération des commentaires');
+        }
+
+        const planningData = await planningResponse.json();
+        const commentsData = await commentsResponse.json();
+
+        console.log('Données du planning récupérées :', planningData);
+        console.log('Commentaires récupérés :', commentsData);
 
         const tableBody = document.querySelector("#planningTable tbody");
         tableBody.innerHTML = ''; // Vider le contenu du tableau
 
         // Regrouper les données par compétence et horaire
-        const groupedData = data.reduce((acc, row) => {
+        const groupedData = planningData.reduce((acc, row) => {
             const key = `${row.competence}-${row.horaire_debut}-${row.horaire_fin}`;
             if (!acc[key]) {
                 acc[key] = { ...row, jours: {} };
@@ -43,10 +55,22 @@ async function fetchPlanningData() {
                 if (!acc[key].jours[row.jour_id]) {
                     acc[key].jours[row.jour_id] = [];
                 }
-                acc[key].jours[row.jour_id].push(row.nom);
+                acc[key].jours[row.jour_id].push({ nom: row.nom, nom_id: row.nom_id });
             }
             return acc;
         }, {});
+
+        // Ajouter les commentaires aux données regroupées
+        commentsData.forEach(comment => {
+            const key = `${comment.competence}-${comment.horaire_debut}-${comment.horaire_fin}`;
+            if (!groupedData[key]) {
+                groupedData[key] = { competence: comment.competence, horaire_debut: comment.horaire_debut, horaire_fin: comment.horaire_fin, jours: {} };
+            }
+            if (!groupedData[key].jours[comment.jour_id]) {
+                groupedData[key].jours[comment.jour_id] = [];
+            }
+            groupedData[key].jours[comment.jour_id].push({ nom: comment.nom, nom_id: comment.nom_id, commentaire: comment.commentaire });
+        });
 
         // Trier les données regroupées par display_order, heure de début et heure de fin
         const sortedData = Object.values(groupedData).sort((a, b) => {
@@ -83,9 +107,19 @@ async function fetchPlanningData() {
             days.forEach(day => {
                 const cell = document.createElement("td");
                 if (rowData.jours[day]) {
-                    rowData.jours[day].forEach(nom => {
+                    rowData.jours[day].forEach(({ nom, nom_id, commentaire }) => {
                         const div = document.createElement('div');
                         div.textContent = nom;
+                        cell.appendChild(div);
+
+                        // Ajouter les commentaires correspondants
+                        if (commentaire) {
+                            const commentDiv = document.createElement('div');
+                            commentDiv.textContent = commentaire;
+                            commentDiv.style.fontStyle = 'italic'; // Optionnel : pour différencier visuellement le commentaire
+                            cell.insertBefore(commentDiv, div);
+                        }
+
                         div.addEventListener('contextmenu', (event) => {
                             event.preventDefault(); // Empêcher le menu contextuel par défaut
                             console.log(`Clic droit sur le nom : ${nom}`);
@@ -95,7 +129,6 @@ async function fetchPlanningData() {
                             currentCompetenceId = rowData.competence_id;
                             showEmptyTooltip(event, nom);
                         });
-                        cell.appendChild(div);
                     });
                 }
 

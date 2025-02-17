@@ -165,5 +165,36 @@ router.post('/add-comment', (req, res) => {
 });
 
 
+// Route pour récupérer les commentaires
+router.get('/comments', (req, res) => {
+    const { semaine, annee } = req.query;
+
+    const query = `
+        SELECT 
+            c.semaine, c.annee, c.jour_id, c.nom_id, c.commentaire, 
+            comp.competence, h.horaire_debut, h.horaire_fin
+        FROM 
+            Tcommentaire c
+        JOIN 
+            Tplanning p ON c.nom_id = p.nom_id AND c.semaine = p.semaine AND c.annee = p.annee AND c.jour_id = p.jour_id
+        JOIN 
+            Tcompetence comp ON p.competence_id = comp.competence_id
+        JOIN 
+            Thoraire h ON p.horaire_id = h.horaire_id
+        WHERE 
+            c.semaine = ? AND c.annee = ?
+    `;
+
+    connection.query(query, [semaine, annee], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des commentaires :', err.message);
+            res.status(500).send('Erreur lors de la récupération des commentaires');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+
 
 module.exports = router;
