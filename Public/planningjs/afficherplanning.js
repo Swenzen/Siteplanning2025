@@ -189,8 +189,17 @@ async function addCommentToPlanning(nom, commentaire) {
         const result = await response.text();
         console.log('Résultat de l\'ajout du commentaire :', result);
 
-        // Actualiser le tableau après l'ajout du commentaire
-        fetchPlanningData();
+        // Ajouter le commentaire au-dessus du nom dans la cellule
+        const divs = currentCell.querySelectorAll('div');
+        divs.forEach(div => {
+            if (div.textContent === nom) {
+                const commentDiv = document.createElement('div');
+                commentDiv.textContent = commentaire;
+                commentDiv.style.fontStyle = 'italic'; // Optionnel : pour différencier visuellement le commentaire
+                currentCell.insertBefore(commentDiv, div);
+            }
+        });
+
     } catch (error) {
         console.error('Erreur lors de l\'ajout du commentaire :', error);
     }
