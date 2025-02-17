@@ -109,3 +109,41 @@ tr:nth-child(even) {
     text-decoration: none;
     cursor: pointer;
 }
+
+/* CSS pour le tooltip de clic droit */
+#emptyTooltip {
+    display: block; /* Assurez-vous que le tooltip est visible */
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    pointer-events: auto; /* Allows the tooltip to receive mouse events */
+}
+
+.tooltip-item {
+    margin-bottom: 10px;
+}
+
+.tooltip-date {
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.tooltip-options {
+    display: flex;
+    flex-direction: column;
+    margin-top: 5px;
+}
+
+.tooltip-option {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+    margin-top: 5px;
+    background: none;
+    border: none;
+    padding: 5px;
+    text-align: left;
+}

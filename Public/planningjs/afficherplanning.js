@@ -110,15 +110,16 @@ async function fetchPlanningData() {
                     rowData.jours[day].forEach(({ nom, nom_id, commentaire }) => {
                         const div = document.createElement('div');
                         div.textContent = nom;
-                        cell.appendChild(div);
 
                         // Ajouter les commentaires correspondants
                         if (commentaire) {
                             const commentDiv = document.createElement('div');
                             commentDiv.textContent = commentaire;
                             commentDiv.style.fontStyle = 'italic'; // Optionnel : pour différencier visuellement le commentaire
-                            cell.insertBefore(commentDiv, div);
+                            cell.appendChild(commentDiv);
                         }
+
+                        cell.appendChild(div);
 
                         div.addEventListener('contextmenu', (event) => {
                             event.preventDefault(); // Empêcher le menu contextuel par défaut
