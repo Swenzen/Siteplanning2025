@@ -44,8 +44,10 @@ function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competenc
             document.querySelectorAll('.delete-comment-button').forEach(button => {
                 button.addEventListener('click', () => {
                     const commentId = button.dataset.commentId;
-                    deleteComment(commentId);
-                    button.parentElement.remove();
+                    deleteComment(commentId, () => {
+                        // Fermer le tooltip après la suppression du commentaire
+                        emptyTooltip.remove();
+                    });
                 });
             });
 
@@ -77,7 +79,7 @@ function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competenc
 }
 
 // Fonction pour supprimer un commentaire
-function deleteComment(commentId) {
+function deleteComment(commentId, callback) {
     fetch(`/api/delete-comment?comment_id=${commentId}`, {
         method: 'DELETE'
     })
@@ -86,6 +88,8 @@ function deleteComment(commentId) {
             throw new Error('Erreur lors de la suppression du commentaire');
         }
         console.log(`Commentaire ${commentId} supprimé`);
+        if (callback) callback();
+        fetchPlanningData(); // Rafraîchir le tableau principal
     })
     .catch(error => {
         console.error('Erreur lors de la suppression du commentaire :', error);
