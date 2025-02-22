@@ -295,14 +295,25 @@ router.delete('/remove-fermeture', (req, res) => {
 
 // Route pour compter le nombre de horaire_competence
 router.get('/count-horaire-competence', (req, res) => {
-    console.log('Route /count-horaire-competence appelée'); // Log pour indiquer que la route a été appelée
+    const { jour_id, semaine, annee } = req.query;
+    console.log('Route /count-horaire-competence appelée avec les paramètres :', { jour_id, semaine, annee });
 
     const query = `
         SELECT COUNT(*) AS count
-        FROM Thoraire_competence
+        FROM Thoraire_competence hc
+        WHERE hc.competence_id NOT IN (
+            SELECT f.competence_id
+            FROM Tfermeture f
+            WHERE f.jour_id = ? AND f.semaine = ? AND f.annee = ?
+        )
     `;
 
-    connection.query(query, (err, results) => {
+    const params = [jour_id, semaine, annee];
+
+    console.log('Requête SQL construite :', query);
+    console.log('Paramètres de la requête SQL :', params);
+
+    connection.query(query, params, (err, results) => {
         if (err) {
             console.error('Erreur lors du comptage des horaire_competence :', err.message);
             res.status(500).send('Erreur lors du comptage des horaire_competence');
