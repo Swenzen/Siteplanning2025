@@ -296,8 +296,6 @@ router.delete('/remove-fermeture', (req, res) => {
 // Route pour compter le nombre de horaire_competence
 router.get('/count-horaire-competence', (req, res) => {
     const { jour_id, semaine, annee } = req.query;
-    console.log('Route /count-horaire-competence appelée avec les paramètres :', { jour_id, semaine, annee });
-
     const query = `
         SELECT COUNT(*) AS count
         FROM Thoraire_competence hc
@@ -306,19 +304,21 @@ router.get('/count-horaire-competence', (req, res) => {
             FROM Tfermeture f
             WHERE f.jour_id = ? AND f.semaine = ? AND f.annee = ?
         )
+        AND hc.competence_id NOT IN (
+            SELECT p.competence_id
+            FROM Tplanning p
+            WHERE p.jour_id = ? AND p.semaine = ? AND p.annee = ?
+        )
     `;
 
-    const params = [jour_id, semaine, annee];
+    const params = [jour_id, semaine, annee, jour_id, semaine, annee];
 
-    console.log('Requête SQL construite :', query);
-    console.log('Paramètres de la requête SQL :', params);
 
     connection.query(query, params, (err, results) => {
         if (err) {
             console.error('Erreur lors du comptage des horaire_competence :', err.message);
             res.status(500).send('Erreur lors du comptage des horaire_competence');
         } else {
-            console.log(`Nombre de horaire_competence : ${results[0].count}`); // Log pour afficher le nombre de horaire_competence
             res.json(results[0]);
         }
     });
@@ -329,7 +329,6 @@ router.get('/available-names', async (req, res) => {
     const { jour_id, semaine, annee } = req.query;
 
     try {
-        console.log('Requête reçue pour /available-names avec les paramètres :', { jour_id, semaine, annee });
 
         // Récupérer la liste des tables Tjrepos_
         const tablesQuery = `
@@ -338,16 +337,9 @@ router.get('/available-names', async (req, res) => {
             WHERE table_schema = 'planning2' AND table_name LIKE 'tjrepos_%'
         `;
         const [tablesResults] = await connection.promise().query(tablesQuery);
-        console.log('Résultats de tablesQuery :', tablesResults); // Log pour vérifier les résultats de tablesQuery
         const tables = tablesResults.map(row => row.TABLE_NAME);
 
-        // Vérifier que les noms des tables sont correctement récupérés
-        if (tables.length === 0) {
-            console.log('Aucune table Tjrepos_ trouvée');
-        } else {
-            console.log('Tables Tjrepos_ trouvées :', tables);
-        }
-
+        
         // Construire dynamiquement la requête SQL pour exclure les noms dans les tables Tjrepos_
         const unionQueries = tables.map(table => `
             SELECT nom_id FROM ${table} WHERE jour_id = ? AND semaine = ? AND annee = ?
@@ -371,15 +363,13 @@ router.get('/available-names', async (req, res) => {
 
         const params = [jour_id, semaine, annee, semaine, annee, ...tables.flatMap(() => [jour_id, semaine, annee])];
 
-        console.log('Requête SQL construite :', query);
-        console.log('Paramètres de la requête SQL :', params);
+
 
         connection.query(query, params, (err, results) => {
             if (err) {
                 console.error('Erreur lors de la récupération des noms disponibles :', err.message);
                 res.status(500).send('Erreur lors de la récupération des noms disponibles');
             } else {
-                console.log('Résultats de la requête :', results);
                 res.json(results.map(row => row.nom));
             }
         });

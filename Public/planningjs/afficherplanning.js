@@ -243,6 +243,7 @@ async function fetchPlanningData() {
 
         // Appeler la fonction pour créer le tableau supplémentaire
         createAdditionalTable();
+        createCompetenceTable(semaine, annee);
 
     } catch (error) {
         console.error('Erreur lors de la récupération des données du planning :', error);
@@ -354,4 +355,103 @@ async function removeFermeture(jour_id, semaine, annee, competence_id, horaire_d
     } catch (error) {
         console.error('Erreur lors de la suppression dans Tfermeture :', error);
     }
+}
+
+// Fonction pour créer le tableau des compétences
+async function createCompetenceTable(semaine, annee) {
+    const competenceTableContainer = document.getElementById("competenceTableContainer");
+    if (!competenceTableContainer) {
+        console.error('Conteneur competenceTableContainer non trouvé');
+        return;
+    }
+    competenceTableContainer.innerHTML = ''; // Vider le contenu du conteneur
+
+    const table = document.createElement("table");
+    table.id = "competenceTable";
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const headers = ["Disponible", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+    headers.forEach(headerText => {
+        const th = document.createElement("th");
+        th.textContent = headerText;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    // Première ligne : résultats de la fonction /count-horaire-competence
+    const firstRow = document.createElement("tr");
+    const firstRowHeader = document.createElement("td");
+    firstRowHeader.textContent = "Salles restantes";
+    firstRow.appendChild(firstRowHeader);
+
+    const days = ['1', '2', '3', '4', '5', '6', '7'];
+    const countHoraireCompetence = [];
+
+    for (const day of days) {
+        const cell = document.createElement("td");
+        try {
+            const response = await fetch(`/api/count-horaire-competence?jour_id=${day}&semaine=${semaine}&annee=${annee}`);
+            if (!response.ok) {
+                throw new Error('Erreur lors de la récupération du comptage des horaire_competence');
+            }
+            const data = await response.json();
+            cell.textContent = data.count;
+            countHoraireCompetence.push(data.count);
+        } catch (error) {
+            console.error(`Erreur lors de la récupération du comptage des horaire_competence pour le jour ${day} :`, error);
+            cell.textContent = 'Erreur';
+            countHoraireCompetence.push(0);
+        }
+        firstRow.appendChild(cell);
+    }
+    tbody.appendChild(firstRow);
+
+    // Deuxième ligne : résultats de la fonction /available-names
+    const secondRow = document.createElement("tr");
+    const secondRowHeader = document.createElement("td");
+    secondRowHeader.textContent = "Noms disponibles";
+    secondRow.appendChild(secondRowHeader);
+
+    const availableNamesCount = [];
+
+    for (const day of days) {
+        const cell = document.createElement("td");
+        try {
+            const response = await fetch(`/api/available-names?jour_id=${day}&semaine=${semaine}&annee=${annee}`);
+            if (!response.ok) {
+                throw new Error('Erreur lors de la récupération des noms disponibles');
+            }
+            const data = await response.json();
+            cell.textContent = data.length; // Afficher le nombre de noms disponibles
+            availableNamesCount.push(data.length);
+        } catch (error) {
+            console.error(`Erreur lors de la récupération des noms disponibles pour le jour ${day} :`, error);
+            cell.textContent = 'Erreur';
+            availableNamesCount.push(0);
+        }
+        secondRow.appendChild(cell);
+    }
+    tbody.appendChild(secondRow);
+
+    // Troisième ligne : différence entre la première et la deuxième ligne
+    const thirdRow = document.createElement("tr");
+    const thirdRowHeader = document.createElement("td");
+    thirdRowHeader.textContent = "Différence";
+    thirdRow.appendChild(thirdRowHeader);
+
+    for (let i = 0; i < days.length; i++) {
+        const cell = document.createElement("td");
+        const difference =  availableNamesCount[i] - countHoraireCompetence[i];
+        cell.textContent = difference;
+        thirdRow.appendChild(cell);
+    }
+    tbody.appendChild(thirdRow);
+
+    table.appendChild(tbody);
+    competenceTableContainer.appendChild(table);
+    console.log('Tableau des compétences créé avec succès');
 }
