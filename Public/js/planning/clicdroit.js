@@ -2,23 +2,23 @@
 function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
     console.log(`Appel de showEmptyTooltip avec les paramètres : nom=${nom}, nom_id=${nom_id}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
     
-    // Récupérer le commentaire correspondant à partir de la base de données
+    // Récupérer les commentaires correspondants à partir de la base de données
     fetch(`/api/comment?nom_id=${nom_id}&jour_id=${jour_id}&semaine=${semaine}&annee=${annee}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Erreur lors de la récupération du commentaire');
+                throw new Error('Erreur lors de la récupération des commentaires');
             }
             return response.json();
         })
         .then(data => {
-            const commentaire = data.commentaire || 'Aucun commentaire';
-            console.log(`Commentaire récupéré pour nom_id=${nom_id}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee} : ${commentaire}`);
+            const commentaires = data.map(item => item.commentaire).join('<br>');
+            console.log(`Commentaires récupérés pour nom_id=${nom_id}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee} : ${commentaires}`);
             const emptyTooltip = document.createElement('div');
             emptyTooltip.id = 'emptyTooltip';
             emptyTooltip.innerHTML = `
                 <div class="tooltip-item">
                     <div class="tooltip-date">${nom}</div>
-                    <div class="tooltip-comment">${commentaire}</div>
+                    <div class="tooltip-comment">${commentaires}</div>
                     <div class="tooltip-options">
                         <button class="tooltip-option" id="deleteButton">Supprimer</button>
                         <button class="tooltip-option" id="commentButton">Commentaire</button>
@@ -58,6 +58,6 @@ function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competenc
             }, { once: true });
         })
         .catch(error => {
-            console.error('Erreur lors de la récupération du commentaire :', error);
+            console.error('Erreur lors de la récupération des commentaires :', error);
         });
 }

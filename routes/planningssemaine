@@ -195,7 +195,7 @@ router.get('/comments', (req, res) => {
     });
 });
 
-// Route pour récupérer un commentaire spécifique
+// Route pour récupérer tous les commentaires spécifiques
 router.get('/comment', (req, res) => {
     const { nom_id, jour_id, semaine, annee } = req.query;
 
@@ -207,14 +207,10 @@ router.get('/comment', (req, res) => {
 
     connection.query(query, [nom_id, jour_id, semaine, annee], (err, results) => {
         if (err) {
-            console.error('Erreur lors de la récupération du commentaire :', err.message);
-            res.status(500).send('Erreur lors de la récupération du commentaire');
+            console.error('Erreur lors de la récupération des commentaires :', err.message);
+            res.status(500).send('Erreur lors de la récupération des commentaires');
         } else {
-            if (results.length > 0) {
-                res.json(results[0]);
-            } else {
-                res.json({ commentaire: 'Aucun commentaire' });
-            }
+            res.json(results);
         }
     });
 });
