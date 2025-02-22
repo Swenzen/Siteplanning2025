@@ -229,7 +229,7 @@ async function removeValueFromPlanning(nom) {
         // Mettre à jour l'interface utilisateur
         const divs = currentCell.querySelectorAll('div');
         divs.forEach(div => {
-            if (div.textContent === nom) {
+            if (div.textContent === nom && div.parentNode === currentCell) {
                 currentCell.removeChild(div);
             }
         });
