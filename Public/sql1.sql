@@ -142,3 +142,22 @@ INSERT INTO Tcompetence_order (competence_id, display_order) VALUES
 (2, 2),
 (3, 3),
 (4, 4);
+
+-- Créer la table Tfermeture
+CREATE TABLE Tfermeture (
+    fermeture_id INT AUTO_INCREMENT PRIMARY KEY,
+    fermeture BOOLEAN NOT NULL,
+    jour_id INT,
+    semaine INT NOT NULL,
+    annee INT NOT NULL,
+    competence_id INT,
+    horaire_debut TIME NOT NULL,
+    horaire_fin TIME NOT NULL,
+    FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id) ON DELETE CASCADE,
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE
+);
+
+-- Insérer des valeurs dans Tfermeture (exemple)
+INSERT INTO Tfermeture (fermeture, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) VALUES
+(true, 1, 1, 2025, 1, '08:00:00', '16:00:00'),
+(false, 2, 1, 2025, 2, '10:00:00', '18:00:00');

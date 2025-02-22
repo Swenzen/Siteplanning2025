@@ -235,4 +235,63 @@ router.delete('/delete-comment', (req, res) => {
     });
 });
 
+// Route pour ajouter une entrée dans Tfermeture
+router.post('/add-fermeture', (req, res) => {
+    const { jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin } = req.body;
+
+    const query = `
+        INSERT INTO Tfermeture (fermeture, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin)
+        VALUES (true, ?, ?, ?, ?, ?, ?)
+    `;
+
+    connection.query(query, [jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout dans Tfermeture :', err.message);
+            res.status(500).send(`Erreur lors de l'ajout dans Tfermeture : ${err.message}`);
+        } else {
+            res.send('Fermeture ajoutée avec succès');
+        }
+    });
+});
+
+// Route pour récupérer les fermetures
+router.get('/fermetures', (req, res) => {
+    const { semaine, annee } = req.query;
+
+    const query = `
+        SELECT jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin
+        FROM Tfermeture
+        WHERE semaine = ? AND annee = ?
+    `;
+
+    connection.query(query, [semaine, annee], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des fermetures :', err.message);
+            res.status(500).send('Erreur lors de la récupération des fermetures');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Route pour supprimer une entrée dans Tfermeture
+router.delete('/remove-fermeture', (req, res) => {
+    const { jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin } = req.body;
+
+    const query = `
+        DELETE FROM Tfermeture
+        WHERE jour_id = ? AND semaine = ? AND annee = ? AND competence_id = ? AND horaire_debut = ? AND horaire_fin = ?
+    `;
+
+    connection.query(query, [jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression dans Tfermeture :', err.message);
+            res.status(500).send(`Erreur lors de la suppression dans Tfermeture : ${err.message}`);
+        } else {
+            res.send('Fermeture supprimée avec succès');
+        }
+    });
+});
+
+
 module.exports = router;

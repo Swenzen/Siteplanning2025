@@ -101,3 +101,74 @@ function removeValueFromPlanning(nom) {
     // Ajoutez ici la logique pour supprimer le nom du planning
     console.log(`Nom ${nom} supprimé du planning`);
 }
+
+// Nouvelle fonction pour afficher un tooltip spécifique pour les cellules vides
+function showTooltipForEmptyCell(event, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
+    console.log(`Appel de showTooltipForEmptyCell avec les paramètres : jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
+    
+    const emptyTooltip = document.createElement('div');
+    emptyTooltip.id = 'emptyTooltip';
+    emptyTooltip.innerHTML = `
+        <div class="tooltip-item">
+            <div class="tooltip-options">
+                <button class="tooltip-option" id="closeButton">FERMER</button>
+            </div>
+        </div>
+    `;
+    emptyTooltip.style.position = 'absolute';
+    emptyTooltip.style.left = `${event.pageX + 10}px`; // Slight offset for better visibility
+    emptyTooltip.style.top = `${event.pageY + 10}px`; // Slight offset for better visibility
+    emptyTooltip.style.backgroundColor = 'white';
+    emptyTooltip.style.border = '1px solid black';
+    emptyTooltip.style.padding = '10px';
+    emptyTooltip.style.borderRadius = '5px';
+    emptyTooltip.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
+    document.body.appendChild(emptyTooltip);
+
+    // Ajouter un gestionnaire de clic au bouton de fermeture
+    document.getElementById('closeButton').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/add-fermeture', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin })
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de l\'ajout dans Tfermeture');
+            }
+
+            const result = await response.text();
+            console.log('Résultat de l\'ajout dans Tfermeture :', result);
+
+            // Fermer le tooltip après l'ajout
+            emptyTooltip.remove();
+
+            // Relancer la fonction fetchPlanningData pour recharger le tableau
+            fetchPlanningData();
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout dans Tfermeture :', error);
+        }
+    });
+
+    // Cacher le tooltip lorsque l'utilisateur clique ailleurs
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('#emptyTooltip')) {
+            emptyTooltip.remove();
+        }
+    }, { once: true });
+}
+
+// Fonction pour ajouter un nom au planning
+function addNameToPlanning(nom, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
+    // Ajoutez ici la logique pour ajouter le nom au planning
+    console.log(`Nom ${nom} ajouté au planning pour jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
+}
+
+// Fonction pour ajouter un commentaire au planning
+function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
+    // Ajoutez ici la logique pour ajouter le commentaire au planning
+    console.log(`Commentaire ajouté au planning pour nom=${nom}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
+}

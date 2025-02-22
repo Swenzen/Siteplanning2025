@@ -1,8 +1,11 @@
-
-
 // Fonction pour créer un tableau supplémentaire avec 9 colonnes
 async function createAdditionalTable() {
     const container = document.getElementById("additionalTableContainer"); // Assurez-vous d'avoir un conteneur pour le nouveau tableau
+
+    if (!container) {
+        console.error('Élément #additionalTableContainer non trouvé');
+        return;
+    }
 
     // Supprimer le tableau existant s'il y en a un
     const existingTable = document.getElementById("additionalTable");

@@ -23,9 +23,10 @@ async function fetchPlanningData() {
     const annee = document.getElementById("yearNumber").value;
 
     try {
-        const [planningResponse, commentsResponse] = await Promise.all([
+        const [planningResponse, commentsResponse, fermeturesResponse] = await Promise.all([
             fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`),
-            fetch(`/api/comments?semaine=${semaine}&annee=${annee}`)
+            fetch(`/api/comments?semaine=${semaine}&annee=${annee}`),
+            fetch(`/api/fermetures?semaine=${semaine}&annee=${annee}`)
         ]);
 
         if (!planningResponse.ok) {
@@ -34,12 +35,17 @@ async function fetchPlanningData() {
         if (!commentsResponse.ok) {
             throw new Error('Erreur lors de la récupération des commentaires');
         }
+        if (!fermeturesResponse.ok) {
+            throw new Error('Erreur lors de la récupération des fermetures');
+        }
 
         const planningData = await planningResponse.json();
         const commentsData = await commentsResponse.json();
+        const fermeturesData = await fermeturesResponse.json();
 
         console.log('Données du planning récupérées :', planningData);
         console.log('Commentaires récupérés :', commentsData);
+        console.log('Fermetures récupérées :', fermeturesData);
 
         const tableBody = document.querySelector("#planningTable tbody");
         tableBody.innerHTML = ''; // Vider le contenu du tableau
@@ -173,6 +179,27 @@ async function fetchPlanningData() {
 
                     // Ajouter un log pour afficher le contenu de la cellule
                     console.log(`Contenu de la cellule pour le jour ${day}:`, cell.innerHTML);
+                } else {
+                    // Vérifier si la cellule doit être marquée comme "FERMEE"
+                    const isFermeture = fermeturesData.some(fermeture => 
+                        fermeture.jour_id == day &&
+                        fermeture.semaine == semaine &&
+                        fermeture.annee == annee &&
+                        fermeture.competence_id == rowData.competence_id &&
+                        fermeture.horaire_debut == rowData.horaire_debut &&
+                        fermeture.horaire_fin == rowData.horaire_fin
+                    );
+
+                    if (isFermeture) {
+                        cell.textContent = 'FERMEE';
+
+                        // Ajouter un gestionnaire de clic droit pour supprimer la fermeture
+                        cell.addEventListener('contextmenu', (event) => {
+                            event.preventDefault(); // Empêcher le menu contextuel par défaut
+                            console.log(`Clic droit sur FERMEE : ${day}`);
+                            removeFermeture(day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
+                        });
+                    }
                 }
 
                 // Gestionnaire de clic gauche pour afficher le tooltip
@@ -185,11 +212,25 @@ async function fetchPlanningData() {
                     fetchNomIds(rowData.competence_id, event);
                 });
 
+                // Gestionnaire de clic droit pour afficher le tooltip sur les cellules vides
+                cell.addEventListener('contextmenu', (event) => {
+                    event.preventDefault(); // Empêcher le menu contextuel par défaut
+                    if (cell.innerHTML.trim() === '') {
+                        console.log(`Clic droit sur une cellule vide : ${day}`);
+                        currentCell = cell; // Stocker la cellule actuelle
+                        currentDay = day;
+                        currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+                        currentCompetenceId = rowData.competence_id;
+                        showTooltipForEmptyCell(event, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
+                    }
+                });
+
                 row.appendChild(cell);
             });
 
             tableBody.appendChild(row);
         });
+
         // Calculer le nombre de cellules vides dans la colonne "lundi"
         const lundiCells = document.querySelectorAll("#planningTable tbody tr td:nth-child(3)"); // 3ème colonne pour "lundi"
         let emptyCellsCount = 0;
@@ -207,7 +248,6 @@ async function fetchPlanningData() {
         console.error('Erreur lors de la récupération des données du planning :', error);
     }
 }
-
 
 // Fonction pour supprimer la valeur dans le tableau tplanning
 async function removeValueFromPlanning(nom) {
@@ -288,5 +328,30 @@ async function addCommentToPlanning(nom, commentaire) {
 
     } catch (error) {
         console.error('Erreur lors de l\'ajout du commentaire :', error);
+    }
+}
+
+// Fonction pour supprimer une fermeture
+async function removeFermeture(jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
+    try {
+        const response = await fetch('/api/remove-fermeture', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression dans Tfermeture');
+        }
+
+        const result = await response.text();
+        console.log('Résultat de la suppression dans Tfermeture :', result);
+
+        // Relancer la fonction fetchPlanningData pour recharger le tableau
+        fetchPlanningData();
+    } catch (error) {
+        console.error('Erreur lors de la suppression dans Tfermeture :', error);
     }
 }

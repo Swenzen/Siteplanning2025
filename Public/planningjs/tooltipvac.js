@@ -102,18 +102,22 @@ async function fetchVacancesData() {
         const data = await response.json();
         console.log('Données de vacances récupérées :', data);
 
-        // Afficher les données de vacances dans la cellule correspondante
+        // Sélectionner la cellule de vacances
         const vacancesCell = document.querySelector("#additionalTableContainer td");
-        vacancesCell.innerHTML = ''; // Vider le contenu de la cellule avant d'ajouter les noms
-        data.forEach(vacance => {
-            const div = document.createElement('div');
-            div.textContent = vacance.nom;
-            div.addEventListener('contextmenu', (event) => {
-                event.preventDefault(); // Empêcher le menu contextuel par défaut
-                removeVacances(semaine, annee, vacance.nom);
+        if (vacancesCell) {
+            vacancesCell.innerHTML = ''; // Vider le contenu de la cellule avant d'ajouter les noms
+            data.forEach(vacance => {
+                const div = document.createElement('div');
+                div.textContent = vacance.nom;
+                div.addEventListener('contextmenu', (event) => {
+                    event.preventDefault(); // Empêcher le menu contextuel par défaut
+                    removeVacances(semaine, annee, vacance.nom);
+                });
+                vacancesCell.appendChild(div);
             });
-            vacancesCell.appendChild(div);
-        });
+        } else {
+            console.error('Élément #additionalTableContainer td non trouvé');
+        }
     } catch (error) {
         console.error('Erreur lors de la récupération des données de vacances :', error);
     }
