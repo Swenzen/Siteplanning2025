@@ -10,7 +10,7 @@ router.get('/planning-data', (req, res) => {
         SELECT 
             h.horaire_debut, h.horaire_fin, 
             c.competence, c.competence_id, 
-            p.jour_id, j.nom, o.display_order
+            p.jour_id, j.nom, j.nom_id, o.display_order
         FROM Thoraire_competence hc
         JOIN Thoraire h ON hc.horaire_id = h.horaire_id
         JOIN Tcompetence c ON hc.competence_id = c.competence_id
@@ -195,6 +195,28 @@ router.get('/comments', (req, res) => {
     });
 });
 
+// Route pour récupérer un commentaire spécifique
+router.get('/comment', (req, res) => {
+    const { nom_id, jour_id, semaine, annee } = req.query;
 
+    const query = `
+        SELECT commentaire
+        FROM Tcommentaire
+        WHERE nom_id = ? AND jour_id = ? AND semaine = ? AND annee = ?
+    `;
+
+    connection.query(query, [nom_id, jour_id, semaine, annee], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération du commentaire :', err.message);
+            res.status(500).send('Erreur lors de la récupération du commentaire');
+        } else {
+            if (results.length > 0) {
+                res.json(results[0]);
+            } else {
+                res.json({ commentaire: 'Aucun commentaire' });
+            }
+        }
+    });
+});
 
 module.exports = router;

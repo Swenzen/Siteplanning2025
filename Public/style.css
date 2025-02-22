@@ -131,10 +131,16 @@ tr:nth-child(even) {
     cursor: pointer;
 }
 
+.tooltip-comment {
+    margin-top: 5px;
+    font-style: italic;
+    color: #555;
+}
+
 .tooltip-options {
     display: flex;
     flex-direction: column;
-    margin-top: 5px;
+    margin-top: 10px;
 }
 
 .tooltip-option {

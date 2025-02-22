@@ -110,6 +110,13 @@ async function fetchPlanningData() {
                     rowData.jours[day].forEach(({ nom, nom_id, commentaire }) => {
                         const div = document.createElement('div');
                         div.textContent = nom;
+                        div.dataset.nomId = nom_id; // Ajouter l'ID du nom comme attribut de données
+                        div.dataset.jourId = day; // Ajouter l'ID du jour comme attribut de données
+                        div.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence comme attribut de données
+                        div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
+                        div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
+
+                        console.log(`Nom: ${nom}, Nom ID: ${nom_id}, Jour ID: ${day}, Compétence ID: ${rowData.competence_id}, Horaire Début: ${rowData.horaire_debut}, Horaire Fin: ${rowData.horaire_fin}`);
 
                         // Ajouter les commentaires correspondants
                         if (commentaire) {
@@ -128,7 +135,13 @@ async function fetchPlanningData() {
                             currentDay = day;
                             currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
                             currentCompetenceId = rowData.competence_id;
-                            showEmptyTooltip(event, nom);
+                            const nom_id = div.dataset.nomId; // Récupérer l'ID du nom
+                            const jour_id = div.dataset.jourId; // Récupérer l'ID du jour
+                            const competence_id = div.dataset.competenceId; // Récupérer l'ID de la compétence
+                            const horaire_debut = div.dataset.horaireDebut; // Récupérer l'horaire de début
+                            const horaire_fin = div.dataset.horaireFin; // Récupérer l'horaire de fin
+                            console.log(`Nom ID récupéré: ${nom_id}`);
+                            showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin);
                         });
                     });
                 }
