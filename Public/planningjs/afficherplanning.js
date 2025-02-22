@@ -17,7 +17,6 @@ const dayMapping = {
     '7': 'dimanche'
 };
 
-
 // Fonction pour récupérer les données du planning
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
@@ -107,21 +106,37 @@ async function fetchPlanningData() {
             days.forEach(day => {
                 const cell = document.createElement("td");
 
-                // Créer des conteneurs pour les commentaires et les noms
-                const commentsContainer = document.createElement('div');
-                const namesContainer = document.createElement('div');
-
                 if (rowData.jours[day]) {
+                    const pairs = {};
+
+                    // Créer des paires commentaire-nom regroupées par nom_id
                     rowData.jours[day].forEach(({ nom, nom_id, commentaire }) => {
-                        // Ajouter les commentaires dans le conteneur des commentaires
+                        if (!pairs[nom_id]) {
+                            pairs[nom_id] = { nom: undefined, commentaire: undefined };
+                        }
+                        if (nom) {
+                            pairs[nom_id].nom = nom;
+                        }
+                        if (commentaire) {
+                            pairs[nom_id].commentaire = commentaire;
+                        }
+                    });
+
+                    // Ajouter des logs pour vérifier les paires créées
+                    console.log(`Paires créées pour le jour ${day}:`, pairs);
+
+                    // Ajouter chaque paire dans un conteneur
+                    Object.entries(pairs).forEach(([nom_id, { nom, commentaire }]) => {
+                        const container = document.createElement('div');
+
                         if (commentaire) {
                             const commentDiv = document.createElement('div');
                             commentDiv.textContent = commentaire;
                             commentDiv.style.fontStyle = 'italic'; // Optionnel : pour différencier visuellement le commentaire
-                            commentsContainer.appendChild(commentDiv);
+                            console.log(`Commentaire créé: ${commentaire}`);
+                            container.appendChild(commentDiv);
                         }
 
-                        // Ajouter les noms dans le conteneur des noms
                         if (nom) {
                             const div = document.createElement('div');
                             div.textContent = nom;
@@ -131,9 +146,9 @@ async function fetchPlanningData() {
                             div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
                             div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
 
-                            console.log(`Nom: ${nom}, Nom ID: ${nom_id}, Jour ID: ${day}, Compétence ID: ${rowData.competence_id}, Horaire Début: ${rowData.horaire_debut}, Horaire Fin: ${rowData.horaire_fin}`);
+                            console.log(`Nom créé: ${nom}, Nom ID: ${nom_id}, Jour ID: ${day}, Compétence ID: ${rowData.competence_id}, Horaire Début: ${rowData.horaire_debut}, Horaire Fin: ${rowData.horaire_fin}`);
 
-                            namesContainer.appendChild(div);
+                            container.appendChild(div);
 
                             div.addEventListener('contextmenu', (event) => {
                                 event.preventDefault(); // Empêcher le menu contextuel par défaut
@@ -151,11 +166,10 @@ async function fetchPlanningData() {
                                 showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin);
                             });
                         }
-                    });
 
-                    // Ajouter les conteneurs à la cellule dans le bon ordre
-                    cell.appendChild(commentsContainer);
-                    cell.appendChild(namesContainer);
+                        // Ajouter le conteneur à la cellule
+                        cell.appendChild(container);
+                    });
 
                     // Ajouter un log pour afficher le contenu de la cellule
                     console.log(`Contenu de la cellule pour le jour ${day}:`, cell.innerHTML);
@@ -184,6 +198,7 @@ async function fetchPlanningData() {
         console.error('Erreur lors de la récupération des données du planning :', error);
     }
 }
+
 
 // Fonction pour supprimer la valeur dans le tableau tplanning
 async function removeValueFromPlanning(nom) {
