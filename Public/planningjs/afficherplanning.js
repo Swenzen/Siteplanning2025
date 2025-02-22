@@ -190,6 +190,15 @@ async function fetchPlanningData() {
 
             tableBody.appendChild(row);
         });
+        // Calculer le nombre de cellules vides dans la colonne "lundi"
+        const lundiCells = document.querySelectorAll("#planningTable tbody tr td:nth-child(3)"); // 3ème colonne pour "lundi"
+        let emptyCellsCount = 0;
+        lundiCells.forEach(cell => {
+            if (cell.innerHTML.trim() === '') {
+                emptyCellsCount++;
+            }
+        });
+        console.log(`Pour le tableau fetchplanning : Le nombre de cellules vides dans la colonne lundi est de : ${emptyCellsCount}`);
 
         // Appeler la fonction pour créer le tableau supplémentaire
         createAdditionalTable();
