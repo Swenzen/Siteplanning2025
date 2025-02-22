@@ -106,44 +106,59 @@ async function fetchPlanningData() {
             const days = ['1', '2', '3', '4', '5', '6', '7']; // Utiliser les IDs des jours
             days.forEach(day => {
                 const cell = document.createElement("td");
+
+                // Créer des conteneurs pour les commentaires et les noms
+                const commentsContainer = document.createElement('div');
+                const namesContainer = document.createElement('div');
+
                 if (rowData.jours[day]) {
                     rowData.jours[day].forEach(({ nom, nom_id, commentaire }) => {
-                        const div = document.createElement('div');
-                        div.textContent = nom;
-                        div.dataset.nomId = nom_id; // Ajouter l'ID du nom comme attribut de données
-                        div.dataset.jourId = day; // Ajouter l'ID du jour comme attribut de données
-                        div.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence comme attribut de données
-                        div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
-                        div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
-
-                        console.log(`Nom: ${nom}, Nom ID: ${nom_id}, Jour ID: ${day}, Compétence ID: ${rowData.competence_id}, Horaire Début: ${rowData.horaire_debut}, Horaire Fin: ${rowData.horaire_fin}`);
-
-                        // Ajouter les commentaires correspondants
+                        // Ajouter les commentaires dans le conteneur des commentaires
                         if (commentaire) {
                             const commentDiv = document.createElement('div');
                             commentDiv.textContent = commentaire;
                             commentDiv.style.fontStyle = 'italic'; // Optionnel : pour différencier visuellement le commentaire
-                            cell.appendChild(commentDiv);
+                            commentsContainer.appendChild(commentDiv);
                         }
 
-                        cell.appendChild(div);
+                        // Ajouter les noms dans le conteneur des noms
+                        if (nom) {
+                            const div = document.createElement('div');
+                            div.textContent = nom;
+                            div.dataset.nomId = nom_id; // Ajouter l'ID du nom comme attribut de données
+                            div.dataset.jourId = day; // Ajouter l'ID du jour comme attribut de données
+                            div.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence comme attribut de données
+                            div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
+                            div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
 
-                        div.addEventListener('contextmenu', (event) => {
-                            event.preventDefault(); // Empêcher le menu contextuel par défaut
-                            console.log(`Clic droit sur le nom : ${nom}`);
-                            currentCell = cell; // Stocker la cellule actuelle
-                            currentDay = day;
-                            currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
-                            currentCompetenceId = rowData.competence_id;
-                            const nom_id = div.dataset.nomId; // Récupérer l'ID du nom
-                            const jour_id = div.dataset.jourId; // Récupérer l'ID du jour
-                            const competence_id = div.dataset.competenceId; // Récupérer l'ID de la compétence
-                            const horaire_debut = div.dataset.horaireDebut; // Récupérer l'horaire de début
-                            const horaire_fin = div.dataset.horaireFin; // Récupérer l'horaire de fin
-                            console.log(`Nom ID récupéré: ${nom_id}`);
-                            showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin);
-                        });
+                            console.log(`Nom: ${nom}, Nom ID: ${nom_id}, Jour ID: ${day}, Compétence ID: ${rowData.competence_id}, Horaire Début: ${rowData.horaire_debut}, Horaire Fin: ${rowData.horaire_fin}`);
+
+                            namesContainer.appendChild(div);
+
+                            div.addEventListener('contextmenu', (event) => {
+                                event.preventDefault(); // Empêcher le menu contextuel par défaut
+                                console.log(`Clic droit sur le nom : ${nom}`);
+                                currentCell = cell; // Stocker la cellule actuelle
+                                currentDay = day;
+                                currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+                                currentCompetenceId = rowData.competence_id;
+                                const nom_id = div.dataset.nomId; // Récupérer l'ID du nom
+                                const jour_id = div.dataset.jourId; // Récupérer l'ID du jour
+                                const competence_id = div.dataset.competenceId; // Récupérer l'ID de la compétence
+                                const horaire_debut = div.dataset.horaireDebut; // Récupérer l'horaire de début
+                                const horaire_fin = div.dataset.horaireFin; // Récupérer l'horaire de fin
+                                console.log(`Nom ID récupéré: ${nom_id}`);
+                                showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin);
+                            });
+                        }
                     });
+
+                    // Ajouter les conteneurs à la cellule dans le bon ordre
+                    cell.appendChild(commentsContainer);
+                    cell.appendChild(namesContainer);
+
+                    // Ajouter un log pour afficher le contenu de la cellule
+                    console.log(`Contenu de la cellule pour le jour ${day}:`, cell.innerHTML);
                 }
 
                 // Gestionnaire de clic gauche pour afficher le tooltip
@@ -236,7 +251,7 @@ async function addCommentToPlanning(nom, commentaire) {
         const result = await response.text();
         console.log('Résultat de l\'ajout du commentaire :', result);
 
-        // Ajouter le commentaire au-dessus du nom dans la cellule
+        // Ajouter le commentaire avant le nom dans la cellule
         const divs = currentCell.querySelectorAll('div');
         divs.forEach(div => {
             if (div.textContent === nom) {
