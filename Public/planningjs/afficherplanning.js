@@ -132,7 +132,7 @@ async function fetchPlanningData() {
                         if (commentaire) {
                             const commentDiv = document.createElement('div');
                             commentDiv.textContent = commentaire;
-                            commentDiv.style.fontStyle = 'italic'; // Optionnel : pour différencier visuellement le commentaire
+                            commentDiv.style.fontWeight = 'bold'; // Changer le style pour gras
                             console.log(`Commentaire créé: ${commentaire}`);
                             container.appendChild(commentDiv);
                         }
