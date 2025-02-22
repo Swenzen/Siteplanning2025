@@ -200,7 +200,7 @@ router.get('/comment', (req, res) => {
     const { nom_id, jour_id, semaine, annee } = req.query;
 
     const query = `
-        SELECT commentaire
+        SELECT commentaire_id, commentaire
         FROM Tcommentaire
         WHERE nom_id = ? AND jour_id = ? AND semaine = ? AND annee = ?
     `;
@@ -211,6 +211,26 @@ router.get('/comment', (req, res) => {
             res.status(500).send('Erreur lors de la récupération des commentaires');
         } else {
             res.json(results);
+        }
+    });
+});
+
+
+// Route pour supprimer un commentaire spécifique
+router.delete('/delete-comment', (req, res) => {
+    const { comment_id } = req.query;
+
+    const query = `
+        DELETE FROM Tcommentaire
+        WHERE commentaire_id = ?
+    `;
+
+    connection.query(query, [comment_id], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la suppression du commentaire :', err.message);
+            res.status(500).send('Erreur lors de la suppression du commentaire');
+        } else {
+            res.sendStatus(204); // No Content
         }
     });
 });

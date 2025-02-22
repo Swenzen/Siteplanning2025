@@ -11,7 +11,12 @@ function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competenc
             return response.json();
         })
         .then(data => {
-            const commentaires = data.map(item => item.commentaire).join('<br>');
+            const commentaires = data.map(item => `
+                <div class="comment-item">
+                    <span class="comment-text">${item.commentaire}</span>
+                    <button class="delete-comment-button" data-comment-id="${item.commentaire_id}">Supprimer</button>
+                </div>
+            `).join('');
             console.log(`Commentaires récupérés pour nom_id=${nom_id}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee} : ${commentaires}`);
             const emptyTooltip = document.createElement('div');
             emptyTooltip.id = 'emptyTooltip';
@@ -20,8 +25,8 @@ function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competenc
                     <div class="tooltip-date">${nom}</div>
                     <div class="tooltip-comment">${commentaires}</div>
                     <div class="tooltip-options">
-                        <button class="tooltip-option" id="deleteButton">Supprimer</button>
-                        <button class="tooltip-option" id="commentButton">Commentaire</button>
+                        <button class="tooltip-option" id="deleteNameButton">Supprimer Nom</button>
+                        <button class="tooltip-option" id="commentButton">Ajouter Commentaire</button>
                     </div>
                 </div>
             `;
@@ -35,8 +40,17 @@ function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competenc
             emptyTooltip.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
             document.body.appendChild(emptyTooltip);
 
-            // Ajouter un gestionnaire de clic au bouton de suppression
-            document.getElementById('deleteButton').addEventListener('click', () => {
+            // Ajouter un gestionnaire de clic au bouton de suppression pour chaque commentaire
+            document.querySelectorAll('.delete-comment-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const commentId = button.dataset.commentId;
+                    deleteComment(commentId);
+                    button.parentElement.remove();
+                });
+            });
+
+            // Ajouter un gestionnaire de clic au bouton de suppression du nom
+            document.getElementById('deleteNameButton').addEventListener('click', () => {
                 removeValueFromPlanning(nom);
                 emptyTooltip.remove();
             });
@@ -60,4 +74,26 @@ function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competenc
         .catch(error => {
             console.error('Erreur lors de la récupération des commentaires :', error);
         });
+}
+
+// Fonction pour supprimer un commentaire
+function deleteComment(commentId) {
+    fetch(`/api/delete-comment?comment_id=${commentId}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression du commentaire');
+        }
+        console.log(`Commentaire ${commentId} supprimé`);
+    })
+    .catch(error => {
+        console.error('Erreur lors de la suppression du commentaire :', error);
+    });
+}
+
+// Fonction pour supprimer un nom du planning
+function removeValueFromPlanning(nom) {
+    // Ajoutez ici la logique pour supprimer le nom du planning
+    console.log(`Nom ${nom} supprimé du planning`);
 }
