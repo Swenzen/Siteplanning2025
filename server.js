@@ -72,6 +72,7 @@ app.get('/api/data', (req, res) => {
 
 app.use(express.static(__dirname));
 
+// Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index2.html'));
 });
