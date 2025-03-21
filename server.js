@@ -4,7 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 const app = express();
-const PORT = process.env.PORT || 3306;
+const PORT = process.env.PORT || 3000;
 
 // Configuration de la connexion
 console.log('MYSQLHOST:', process.env.MYSQLHOST);
@@ -72,9 +72,13 @@ app.get('/api/data', (req, res) => {
 // Servir les fichiers statiques depuis le dossier "public"
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Route par défaut pour servir "index.html"
+// Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index2.html'));
+});
+
+app.get('/health', (req, res) => {
+    res.send('Application is running');
 });
 
 // Démarrer le serveur
