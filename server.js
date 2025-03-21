@@ -13,6 +13,12 @@ console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD);
 console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE);
 console.log('MYSQLPORT:', process.env.MYSQLPORT);
 
+
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
 const connection = mysql.createConnection({
     host: process.env.MYSQLHOST, // Hôte fourni par Railway
     user: process.env.MYSQLUSER, // Utilisateur fourni par Railway
