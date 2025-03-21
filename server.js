@@ -4,7 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 const app = express();
-const PORT = process.env.PORT || 3006;
+const PORT = process.env.PORT || 3306;
 
 // Configuration de la connexion
 console.log('MYSQLHOST:', process.env.MYSQLHOST);
