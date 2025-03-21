@@ -71,6 +71,16 @@ app.get('/api/data', (req, res) => {
     });
 });
 
+// Route par défaut pour servir "index2.html"
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index2.html'));
+});
+
+// Route de vérification de santé
+app.get('/health', (req, res) => {
+    res.send('Application is running');
+});
+
 // Démarrer le serveur web
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
