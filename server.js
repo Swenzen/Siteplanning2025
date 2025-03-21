@@ -8,11 +8,11 @@ const PORT = process.env.PORT || 3000;
 
 // Configuration de la connexion
 const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'Testtest',
-    database: 'planning2',
-    port: 3306
+    host: process.env.MYSQLHOST || 'localhost',
+    user: process.env.MYSQLUSER || 'root',
+    password: process.env.MYSQLPASSWORD || 'Testtest',
+    database: process.env.MYSQLDATABASE || 'planning2',
+    port: process.env.MYSQLPORT || 3306
 });
 
 // Test de la connexion
