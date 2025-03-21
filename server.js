@@ -33,6 +33,9 @@ connection.connect((err) => {
 // Middleware pour parser le corps des requêtes
 app.use(bodyParser.json());
 
+// Servir les fichiers statiques depuis le dossier "public"
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Importer les routes
 const competencesRoutes = require('./routes/competences');
 const nomsRoutes = require('./routes/tableaunom');
@@ -67,10 +70,8 @@ app.get('/api/data', (req, res) => {
     });
 });
 
-// Servir les fichiers statiques depuis le dossier "public"
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
-// Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index2.html'));
 });
