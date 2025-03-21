@@ -8,20 +8,21 @@ const PORT = process.env.PORT || 3000;
 
 // Configuration de la connexion
 const connection = mysql.createConnection({
-    host: process.env.MYSQLHOST || 'localhost',
-    user: process.env.MYSQLUSER || 'root',
-    password: process.env.MYSQLPASSWORD || 'Testtest',
-    database: process.env.MYSQLDATABASE || 'planning2',
-    port: process.env.MYSQLPORT || 3306
+    host: process.env.MYSQLHOST, // Hôte fourni par Railway
+    user: process.env.MYSQLUSER, // Utilisateur fourni par Railway
+    password: process.env.MYSQLPASSWORD, // Mot de passe fourni par Railway
+    database: process.env.MYSQLDATABASE, // Nom de la base de données fourni par Railway
+    port: process.env.MYSQLPORT // Port fourni par Railway
 });
 
 // Test de la connexion
 connection.connect((err) => {
     if (err) {
-        console.error('Erreur de connexion :', err.message);
-        return;
+        console.error('Erreur de connexion à la base de données :', err.message);
+        process.exit(1); // Arrête l'application si la connexion échoue
+    } else {
+        console.log('Connecté à la base de données avec succès.');
     }
-    console.log('Connecté à la base de données avec succès. ID de connexion :', connection.threadId);
 });
 
 // Middleware pour parser le corps des requêtes
