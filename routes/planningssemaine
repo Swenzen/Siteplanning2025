@@ -329,7 +329,6 @@ router.get('/available-names', async (req, res) => {
     const { jour_id, semaine, annee } = req.query;
 
     try {
-
         // Récupérer la liste des tables Tjrepos_
         const tablesQuery = `
             SELECT TABLE_NAME
@@ -339,7 +338,6 @@ router.get('/available-names', async (req, res) => {
         const [tablesResults] = await connection.promise().query(tablesQuery);
         const tables = tablesResults.map(row => row.TABLE_NAME);
 
-        
         // Construire dynamiquement la requête SQL pour exclure les noms dans les tables Tjrepos_
         const unionQueries = tables.map(table => `
             SELECT nom_id FROM ${table} WHERE jour_id = ? AND semaine = ? AND annee = ?
@@ -361,9 +359,11 @@ router.get('/available-names', async (req, res) => {
             ${unionQueries ? `AND n.nom_id NOT IN (${unionQueries})` : ''}
         `;
 
-        const params = [jour_id, semaine, annee, semaine, annee, ...tables.flatMap(() => [jour_id, semaine, annee])];
-
-
+        const params = [
+            jour_id, semaine, annee, // Pour Tplanning
+            semaine, annee,          // Pour Tvacances
+            ...tables.flatMap(() => [jour_id, semaine, annee]) // Pour les tables Tjrepos_
+        ];
 
         connection.query(query, params, (err, results) => {
             if (err) {
