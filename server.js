@@ -6,13 +6,14 @@ const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuration de la connexion
+// Logs pour vérifier les variables d'environnement MySQL
 console.log('MYSQLHOST:', process.env.MYSQLHOST);
 console.log('MYSQLUSER:', process.env.MYSQLUSER);
 console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD);
 console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE);
 console.log('MYSQLPORT:', process.env.MYSQLPORT);
 
+// Configuration de la connexion MySQL
 const connection = mysql.createConnection({
     host: process.env.MYSQLHOST,
     user: process.env.MYSQLUSER,
@@ -21,7 +22,7 @@ const connection = mysql.createConnection({
     port: process.env.MYSQLPORT
 });
 
-// Test de la connexion
+// Test de la connexion MySQL
 connection.connect((err) => {
     if (err) {
         console.error('Erreur de connexion à la base de données :', err.message);
@@ -70,19 +71,7 @@ app.get('/api/data', (req, res) => {
     });
 });
 
-app.use(express.static(__dirname));
-
-// Route par défaut pour servir "index2.html"
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index2.html'));
-});
-
-// Route de vérification de santé
-app.get('/health', (req, res) => {
-    res.send('Application is running');
-});
-
-// Démarrer le serveur
+// Démarrer le serveur web
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 }).on('error', (err) => {
