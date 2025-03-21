@@ -4,7 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Configuration de la connexion
 const connection = mysql.createConnection({
@@ -62,14 +62,15 @@ app.get('/api/data', (req, res) => {
     });
 });
 
-// Servir les fichiers statiques
+// Servir les fichiers statiques depuis le dossier "public"
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Route par défaut pour servir "index.html"
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Démarrer le serveur
-app.listen(port, () => {
-    console.log(`Serveur démarré sur http://localhost:${port}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
