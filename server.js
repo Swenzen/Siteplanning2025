@@ -44,7 +44,7 @@ app.use(express.static(path.join(__dirname, 'Public')));
 const competencesRoutes = require('./routes/bdd/competences');
 const nomsRoutes = require('./routes/tableaunom');
 const planningssemaineRoutes = require('./routes/planningssemaine');
-const tableaucompetencenomRoutes = require('./routes/tableaucompetencenom');
+const tableaucompetencenomRoutes = require('./routes/bdd/tableaucompetencenom');
 const horairesRoutes = require('./routes/bdd/horaires');
 const tableaucompetenceshorairesRoutes = require('./routes/bdd/tableaucompetenceshoraires');
 const ordreRoutes = require('./routes/planning/ordre');

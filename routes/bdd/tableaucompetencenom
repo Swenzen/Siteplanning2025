@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const connection = require('../db'); // Importer la connexion à la base de données
-const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
+const connection = require('../../db'); // Importer la connexion à la base de données
+const authenticateToken = require('../../middleware/auth'); // Importer le middleware d'authentification
 
 // Route pour récupérer les compétences des personnes par site
 router.get('/competences-personnes', authenticateToken, (req, res) => {
