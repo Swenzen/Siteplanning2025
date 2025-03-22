@@ -182,3 +182,12 @@ CREATE TABLE Tuser_planning (
     FOREIGN KEY (user_id) REFERENCES Tuser(user_id) ON DELETE CASCADE,
     FOREIGN KEY (planning_id) REFERENCES Tplanning(planning_id) ON DELETE CASCADE
 );
+
+-- Table pour associer les utilisateurs aux noms
+CREATE TABLE Tuser_Tnom (
+    user_id INT NOT NULL,
+    nom_id INT NOT NULL,
+    PRIMARY KEY (user_id, nom_id),
+    FOREIGN KEY (user_id) REFERENCES Tuser(user_id),
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id)
+);

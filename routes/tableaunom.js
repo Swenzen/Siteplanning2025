@@ -108,8 +108,15 @@ async function fetchNoms() {
 }
 
 router.get('/data', authenticateToken, (req, res) => {
-    const query = 'SELECT nom_id, nom FROM Tnom';
-    connection.query(query, (err, results) => {
+    const userId = req.user.userId; // Récupérer l'ID de l'utilisateur depuis le middleware
+
+    const query = `
+        SELECT t.nom_id, t.nom
+        FROM Tnom t
+        JOIN Tuser_Tnom ut ON t.nom_id = ut.nom_id
+        WHERE ut.user_id = ?
+    `;
+    connection.query(query, [userId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des noms :', err.message);
             res.status(500).send('Erreur lors de la récupération des noms');
