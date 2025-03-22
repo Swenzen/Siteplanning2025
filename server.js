@@ -75,7 +75,12 @@ app.get('/api/data', (req, res) => {
 app.get('/', (req, res) => {
     const filePath = path.join(__dirname, 'public', 'index2.html');
     console.log('Chemin du fichier index2.html :', filePath);
-    res.sendFile(filePath);
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error('Erreur lors de l\'envoi du fichier index2.html :', err.message);
+            res.status(404).send('Fichier introuvable');
+        }
+    });
 });
 
 // Route de vérification de santé
