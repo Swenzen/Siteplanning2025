@@ -114,6 +114,38 @@ async function addName() {
     }
 }
 
+// Fonction pour ajouter un nom avec site_id
+async function addNom() {
+    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+    const nom = document.getElementById('nomInput').value; // Récupérer le nom saisi par l'utilisateur
+    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id stocké (par exemple, après avoir affiché le site)
+
+    if (!nom || !siteId) {
+        alert('Veuillez saisir un nom et vérifier que le site est chargé.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/add-nom', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nom, site_id: siteId }) // Envoyer le nom et le site_id
+        });
+
+        if (response.ok) {
+            alert('Nom ajouté avec succès !');
+        } else {
+            const error = await response.text();
+            alert(`Erreur : ${error}`);
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout du nom :', error);
+    }
+}
+
 // Fonction pour supprimer un nom
 async function deleteName(nom_id) {
     const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage

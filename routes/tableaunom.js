@@ -18,22 +18,33 @@ router.post('/update-name', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour ajouter un nom (protégée)
 router.post('/add-nom', authenticateToken, (req, res) => {
-    const { nom } = req.body;
+    const { nom, site_id } = req.body;
 
-    if (!nom) {
-        return res.status(400).send('Le champ "nom" est requis');
+    if (!nom || !site_id) {
+        return res.status(400).send('Les champs "nom" et "site_id" sont requis');
     }
 
-    const query = 'INSERT INTO Tnom (nom) VALUES (?)';
-    connection.query(query, [nom], (err, result) => {
+    // Étape 1 : Ajouter le nom dans la table Tnom
+    const insertNomQuery = 'INSERT INTO Tnom (nom) VALUES (?)';
+    connection.query(insertNomQuery, [nom], (err, nomResult) => {
         if (err) {
             console.error('Erreur lors de l\'ajout du nom :', err.message);
-            res.status(500).send('Erreur lors de l\'ajout du nom');
-        } else {
-            res.status(201).send('Nom ajouté avec succès');
+            return res.status(500).send('Erreur lors de l\'ajout du nom');
         }
+
+        const nomId = nomResult.insertId; // Récupérer l'ID du nom inséré
+
+        // Étape 2 : Associer le nom au site dans Tnom_Tsite
+        const insertNomSiteQuery = 'INSERT INTO Tnom_Tsite (nom_id, site_id) VALUES (?, ?)';
+        connection.query(insertNomSiteQuery, [nomId, site_id], (err) => {
+            if (err) {
+                console.error('Erreur lors de l\'association du nom au site :', err.message);
+                return res.status(500).send('Erreur lors de l\'association du nom au site');
+            }
+
+            res.status(201).send('Nom ajouté et associé au site avec succès');
+        });
     });
 });
 
