@@ -111,11 +111,12 @@ router.get('/data', authenticateToken, (req, res) => {
     const userId = req.user.userId; // Récupérer l'ID de l'utilisateur depuis le middleware
 
     const query = `
-        SELECT t.nom_id, t.nom, s.site_name
-        FROM Tnom t
-        JOIN Tsite s ON t.site_id = s.site_id
-        JOIN Tsite_Tuser st ON s.site_id = st.site_id
-        WHERE st.user_id = ?
+SELECT t.nom_id, t.nom, s.site_name
+FROM Tnom t
+JOIN Tnom_Tsite nts ON t.nom_id = nts.nom_id
+JOIN Tsite s ON nts.site_id = s.site_id
+JOIN Tsite_Tuser st ON s.site_id = st.site_id
+WHERE st.user_id = ?;
     `;
     connection.query(query, [userId], (err, results) => {
         if (err) {

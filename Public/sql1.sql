@@ -174,25 +174,6 @@ CREATE TABLE Tuser (
     email VARCHAR(255) NOT NULL UNIQUE
 );
 
--- Table pour associer les utilisateurs aux plannings
-CREATE TABLE Tuser_planning (
-    user_planning_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    planning_id INT,
-    FOREIGN KEY (user_id) REFERENCES Tuser(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (planning_id) REFERENCES Tplanning(planning_id) ON DELETE CASCADE
-);
-
--- Table pour associer les utilisateurs aux noms
-CREATE TABLE Tuser_Tnom (
-    user_id INT NOT NULL,
-    nom_id INT NOT NULL,
-    PRIMARY KEY (user_id, nom_id),
-    FOREIGN KEY (user_id) REFERENCES Tuser(user_id),
-    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id)
-);
-
-
 CREATE TABLE Tsite (
     site_id INT AUTO_INCREMENT PRIMARY KEY,
     site_name VARCHAR(255) NOT NULL
@@ -204,4 +185,12 @@ CREATE TABLE Tsite_Tuser (
     user_id INT NOT NULL,
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id),
     FOREIGN KEY (user_id) REFERENCES Tuser(user_id)
+);
+
+CREATE TABLE Tnom_Tsite (
+    nom_id INT NOT NULL,
+    site_id INT NOT NULL,
+    PRIMARY KEY (nom_id, site_id),
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id),
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id)
 );
