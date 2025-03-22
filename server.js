@@ -35,7 +35,7 @@ connection.connect((err) => {
 app.use(bodyParser.json());
 
 // Servir les fichiers statiques depuis le dossier "public"
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'Public')));
 
 // Importer les routes
 const competencesRoutes = require('./routes/competences');
