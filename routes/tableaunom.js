@@ -140,7 +140,7 @@ router.get('/api/data', authenticateToken, (req, res) => {
     });
 });
 
-app.get('/site', authenticateToken, (req, res) => {
+router.get('/site', authenticateToken, (req, res) => {
     const userId = req.user.userId; // Récupérer l'ID de l'utilisateur depuis le middleware
 
     const query = `
