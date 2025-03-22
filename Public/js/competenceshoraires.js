@@ -10,7 +10,7 @@ async function fetchHorairesCompetences() {
         }
 
         const [competencesResponse, horairesResponse] = await Promise.all([
-            fetch(`/api/competences`, {
+            fetch(`/api/competences?site_id=${siteId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
             fetch(`/api/horaires-competences?site_id=${siteId}`, {
