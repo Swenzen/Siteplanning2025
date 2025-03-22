@@ -140,4 +140,29 @@ router.get('/api/data', authenticateToken, (req, res) => {
     });
 });
 
+app.get('/site', authenticateToken, (req, res) => {
+    const userId = req.user.userId; // Récupérer l'ID de l'utilisateur depuis le middleware
+
+    const query = `
+        SELECT s.site_id, s.site_name
+        FROM Tsite s
+        JOIN Tsite_Tuser st ON s.site_id = st.site_id
+        WHERE st.user_id = ?
+    `;
+
+    connection.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération du site :', err.message);
+            res.status(500).send('Erreur lors de la récupération du site');
+        } else {
+            if (results.length > 0) {
+                const site = results[0]; // Récupérer le premier site associé à l'utilisateur
+                res.json({ site }); // Envoyer les informations du site au client
+            } else {
+                res.status(404).send('Aucun site associé à cet utilisateur');
+            }
+        }
+    });
+});
+
 module.exports = router;

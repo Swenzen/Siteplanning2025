@@ -124,6 +124,10 @@
         <button id="logoutButton">Se déconnecter</button>
     </div>
     
+    <div id="site-info">
+        <p id="site-display">Site : </p>
+    </div>
+    
     <!-- Inclure les fichiers JavaScript -->
     <script src="js/horaires.js"></script>
     <script src="js/competencespersonnes.js"></script>
@@ -153,6 +157,44 @@
 
         // Appeler la fonction pour afficher l'utilisateur connecté au chargement de la page
         document.addEventListener('DOMContentLoaded', displayUser);
+
+        async function fetchSite() {
+            const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+
+            if (!token) {
+                console.error('Utilisateur non connecté. Aucun jeton disponible.');
+                return; // Ne pas appeler la route si l'utilisateur n'est pas connecté
+            }
+
+            try {
+                const response = await fetch('/site', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const { site } = await response.json();
+                    console.log('Site récupéré :', site);
+
+                    // Afficher le site dans l'interface utilisateur
+                    const siteElement = document.getElementById('site-display');
+                    siteElement.textContent = `Site : ${site.site_name}`;
+                } else if (response.status === 401) {
+                    console.error('Utilisateur non authentifié. Veuillez vous connecter.');
+                    window.location.href = 'index.html'; // Rediriger vers la page de connexion
+                } else {
+                    console.error('Erreur lors de la récupération du site');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la requête :', error);
+            }
+        }
+
+        // Appeler la fonction pour récupérer le site au chargement de la page
+        document.addEventListener('DOMContentLoaded', fetchSite);
     </script>
 </body>
 </html>
