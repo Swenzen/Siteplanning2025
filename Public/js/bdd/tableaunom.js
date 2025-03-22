@@ -24,11 +24,25 @@ async function fetchData() {
             // Ajouter les données récupérées au tableau
             data.forEach(rowData => {
                 const row = document.createElement("tr");
-                Object.keys(rowData).forEach(key => {
-                    const cell = document.createElement("td");
-                    cell.textContent = rowData[key];
-                    row.appendChild(cell);
-                });
+
+                // Ajouter les colonnes pour chaque donnée
+                const nomCell = document.createElement("td");
+                nomCell.textContent = rowData.nom;
+                row.appendChild(nomCell);
+
+                const siteCell = document.createElement("td");
+                siteCell.textContent = rowData.site_name;
+                row.appendChild(siteCell);
+
+                // Ajouter une colonne pour les actions (bouton "Supprimer")
+                const actionCell = document.createElement("td");
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Supprimer";
+                deleteButton.dataset.nomId = rowData.nom_id; // Stocker l'ID du nom dans le bouton
+                deleteButton.classList.add("delete-button"); // Ajouter une classe pour le style
+                actionCell.appendChild(deleteButton);
+                row.appendChild(actionCell);
+
                 tableBody.appendChild(row);
             });
         } else {
@@ -158,6 +172,14 @@ async function deleteName(nom_id) {
         console.error('Erreur lors de la requête :', error);
     }
 }
+
+// Utiliser la délégation d'événements pour gérer les clics sur les boutons de suppression
+document.querySelector("#databaseTable tbody").addEventListener("click", (event) => {
+    if (event.target.tagName === "BUTTON" && event.target.textContent === "Supprimer") {
+        const nomId = event.target.dataset.nomId; // Récupérer l'ID du nom à partir du bouton
+        deleteName(nomId); // Appeler la fonction pour supprimer le nom
+    }
+});
 
 // Gestionnaire d'événements pour fermer la fenêtre modale
 document.querySelector(".close").addEventListener("click", closeModal);
