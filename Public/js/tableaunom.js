@@ -3,53 +3,39 @@ let currentId = null;
 
 // Fonction pour afficher les données dans le tableau des noms
 async function fetchData() {
+    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+
     try {
-        console.time('fetchData');
-        const response = await fetch('/api/data');
-        const data = await response.json();
-        
-        const tableBody = document.querySelector("#databaseTable tbody");
-        tableBody.innerHTML = ''; // Vider le contenu du tableau
-
-        // Créer un fragment de document pour minimiser les manipulations du DOM
-        const fragment = document.createDocumentFragment();
-
-        // Ajouter les données récupérées au tableau
-        data.forEach(rowData => {
-            const row = document.createElement("tr");
-            Object.keys(rowData).forEach(key => {
-                const cell = document.createElement("td");
-                cell.textContent = rowData[key];
-                // Ajouter un gestionnaire de clics à la colonne "nom"
-                if (key === 'nom') {
-                    cell.style.cursor = 'pointer';
-                    cell.addEventListener("click", () => {
-                        currentCell = cell; // Stocker la cellule actuelle
-                        currentId = rowData.nom_id; // Stocker l'ID actuel
-                        showModal();
-                    });
-                }
-                row.appendChild(cell);
-            });
-            // Ajouter une cellule pour les actions (supprimer)
-            const actionCell = document.createElement("td");
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Supprimer";
-            deleteButton.addEventListener("click", () => deleteName(rowData.nom_id));
-            actionCell.appendChild(deleteButton);
-            row.appendChild(actionCell);
-            fragment.appendChild(row);
+        const response = await fetch('/api/data', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                'Content-Type': 'application/json'
+            }
         });
 
-        tableBody.appendChild(fragment); // Ajouter le fragment au DOM en une seule opération
-        console.timeEnd('fetchData');
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Données récupérées :', data);
 
-        // Appel de la fonction pour récupérer les compétences des personnes
-        fetchCompetencesPersonnes();
-        // Appel de la fonction pour récupérer les compétences
-        fetchCompetences();
+            const tableBody = document.querySelector("#databaseTable tbody");
+            tableBody.innerHTML = ''; // Vider le contenu du tableau
+
+            // Ajouter les données récupérées au tableau
+            data.forEach(rowData => {
+                const row = document.createElement("tr");
+                Object.keys(rowData).forEach(key => {
+                    const cell = document.createElement("td");
+                    cell.textContent = rowData[key];
+                    row.appendChild(cell);
+                });
+                tableBody.appendChild(row);
+            });
+        } else {
+            console.error('Erreur lors de la récupération des données');
+        }
     } catch (error) {
-        console.error('Erreur lors de la récupération des données :', error);
+        console.error('Erreur lors de la requête :', error);
     }
 }
 
