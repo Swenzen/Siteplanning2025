@@ -2,14 +2,14 @@ const mysql = require('mysql2');
 
 // Configuration du pool de connexions
 const pool = mysql.createPool({
-    host: 'localhost',    // Même hôte que dans MySQL Workbench
-    user: 'root',         // Même utilisateur
-    password: 'Testtest', // Remplacez par le mot de passe que vous utilisez dans Workbench
-    database: 'planning2', // Remplacez par le nom de votre base de données
-    port: 3306,           // Port par défaut
+    host: process.env.MYSQLHOST || 'mysql.railway.internal', // Hôte correct
+    user: process.env.MYSQLUSER || 'root',                  // Utilisateur
+    password: process.env.MYSQLPASSWORD || 'MenOioKySFCFTvpXIOvZqghlQttdjsbf', // Mot de passe
+    database: process.env.MYSQLDATABASE || 'railway',       // Nom de la base de données
+    port: process.env.MYSQLPORT || 3306,                   // Port
     waitForConnections: true,
-    connectionLimit: 10,  // Nombre maximum de connexions simultanées
-    queueLimit: 0         // Pas de limite pour les requêtes en attente
+    connectionLimit: 10,                                   // Nombre maximum de connexions simultanées
+    queueLimit: 0                                          // Pas de limite pour les requêtes en attente
 });
 
 // Test de la connexion
