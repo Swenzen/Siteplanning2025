@@ -62,17 +62,7 @@ app.use('/api', ordreRoutes);
 app.use('/api', tooltipRoutes);
 app.use('/api', creationjreposRoutes);
 
-// Route pour récupérer les données
-app.get('/api/data', (req, res) => {
-    connection.query('SELECT nom_id, nom FROM Tnom', (err, results) => {
-        if (err) {
-            console.error('Erreur lors de la requête :', err.message);
-            res.status(500).send('Erreur lors de la requête');
-        } else {
-            res.json(results);
-        }
-    });
-});
+
 
 // Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {
