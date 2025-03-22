@@ -16,18 +16,24 @@ body {
     background-color: #f4f4f4;
     padding: 20px;
     border-left: 1px solid #ccc;
+    margin-bottom: 20px; /* Espacement avec les autres sections */
 }
 
 #menu h2 {
     margin-top: 0;
+    font-size: 20px;
+    margin-bottom: 10px;
 }
 
 #menu a {
     display: block;
-    margin: 10px 0;
+    margin: 5px 0; /* Espacement entre les liens */
     text-decoration: none;
-    color: #333;
-    font-size: 16px;
+    color: #007bff; /* Couleur des liens */
+}
+
+#menu a:hover {
+    text-decoration: underline; /* Souligner au survol */
 }
 
 h1 {
@@ -168,4 +174,23 @@ tr:nth-child(even) {
     font-size: 18px; /* Taille de police plus grande */
     font-weight: bold; /* Texte en gras */
     color: #333; /* Couleur du texte */
+}
+
+/* Conteneur principal pour regrouper les éléments */
+#main-column {
+    display: flex;
+    flex-direction: column; /* Aligner les éléments verticalement */
+    align-items: center; /* Centrer les éléments horizontalement */
+    margin: 20px auto; /* Ajouter un espacement autour */
+    max-width: 300px; /* Limiter la largeur */
+    text-align: center; /* Centrer le texte */
+}
+
+/* Style pour les informations utilisateur */
+#user-info {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

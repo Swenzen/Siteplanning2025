@@ -102,15 +102,25 @@
         
     </div>
     
-    <div id="site-info" style="text-align: center; margin-bottom: 20px;">
-        <p id="site-display" style="font-size: 18px; font-weight: bold;">Site : </p>
-    </div>
+    <div id="main-column">
+        <!-- Affichage du site -->
+        <div id="site-info">
+            <p id="site-display">Site : </p>
+        </div>
 
-    <div id="menu">
-        <h2>Menu</h2>
-        <a href="index.html">Index</a>
-        <a href="base-de-donnee.html">Base de donnée</a>
-        <a href="planning.html">Planning</a>
+        <!-- Menu -->
+        <div id="menu">
+            <h2>Menu</h2>
+            <a href="index.html">Index</a>
+            <a href="base-de-donnee.html">Base de donnée</a>
+            <a href="planning.html">Planning</a>
+        </div>
+
+        <!-- Informations utilisateur -->
+        <div id="user-info" style="display: none;">
+            <p>Connecté en tant que : <span id="username-display"></span></p>
+            <button id="logoutButton">Se déconnecter</button>
+        </div>
     </div>
     
     <!-- Fenêtre modale -->
@@ -121,11 +131,6 @@
             <input type="text" id="newName" placeholder="Entrez le nouveau nom">
             <button id="saveName">Sauvegarder</button>
         </div>
-    </div>
-    
-    <div id="user-info" style="display: none;">
-        <p>Connecté en tant que : <span id="username-display"></span></p>
-        <button id="logoutButton">Se déconnecter</button>
     </div>
     
     <!-- Inclure les fichiers JavaScript -->
