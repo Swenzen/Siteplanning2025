@@ -68,27 +68,53 @@ async function fetchHoraires() {
 
 // Fonction pour ajouter un horaire
 async function addHoraire() {
-    const horaire_debut = prompt("Entrez l'horaire de début");
-    const horaire_fin = prompt("Entrez l'horaire de fin");
-    if (horaire_debut && horaire_fin) {
+    const horaireDebut = prompt("Entrez l'horaire de début (HH:MM)");
+    const horaireFin = prompt("Entrez l'horaire de fin (HH:MM)");
+
+    if (horaireDebut && horaireFin) {
         try {
             console.time('addHoraire');
+
+            // Récupérer le site_id depuis le localStorage
+            const siteId = localStorage.getItem('site_id');
+            if (!siteId) {
+                console.error('Erreur : le site_id est introuvable.');
+                alert('Erreur : le site n\'est pas chargé.');
+                return;
+            }
+
+            // Récupérer le token depuis le localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Erreur : le token d\'authentification est introuvable.');
+                alert('Erreur : vous n\'êtes pas authentifié.');
+                return;
+            }
+
+            // Envoyer la requête pour ajouter l'horaire
             const response = await fetch('/api/add-horaires', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ horaire_debut, horaire_fin })
+                body: JSON.stringify({
+                    horaire_debut: horaireDebut,
+                    horaire_fin: horaireFin,
+                    site_id: siteId
+                })
             });
 
             if (response.ok) {
-                fetchHoraires();
+                alert('Horaire ajouté avec succès');
+                fetchHoraires(); // Rafraîchir la liste des horaires
             } else {
                 console.error('Erreur lors de l\'ajout de l\'horaire');
             }
+
             console.timeEnd('addHoraire');
         } catch (error) {
-            console.error('Erreur lors de la requête:', error);
+            console.error('Erreur lors de la requête :', error);
         }
     }
 }
