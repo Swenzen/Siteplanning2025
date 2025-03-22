@@ -73,7 +73,9 @@ app.get('/api/data', (req, res) => {
 
 // Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index2.html'));
+    const filePath = path.join(__dirname, 'public', 'index2.html');
+    console.log('Chemin du fichier index2.html :', filePath);
+    res.sendFile(filePath);
 });
 
 // Route de vérification de santé
