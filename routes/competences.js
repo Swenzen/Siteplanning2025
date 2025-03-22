@@ -3,7 +3,6 @@ const router = express.Router();
 const connection = require('../db'); // Assurez-vous que le chemin est correct
 const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
-// Route pour récupérer les compétences
 router.get('/competences', authenticateToken, (req, res) => {
     const siteId = req.query.site_id;
 
@@ -27,6 +26,7 @@ router.get('/competences', authenticateToken, (req, res) => {
         res.json(results);
     });
 });
+
 
 // Route pour ajouter une compétence
 router.post('/add-competence2', (req, res) => {

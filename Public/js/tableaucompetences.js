@@ -11,38 +11,54 @@ async function fetchCompetences() {
             return;
         }
 
+        // Récupérer le token depuis le localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('Erreur : le token d\'authentification est introuvable.');
+            alert('Erreur : vous n\'êtes pas authentifié.');
+            return;
+        }
+
         // Effectuer une requête pour récupérer les compétences liées au site
-        const response = await fetch(`/competences?site_id=${siteId}`);
-        const data = await response.json();
-
-        const tableBody = document.querySelector("#competencesTable tbody");
-        tableBody.innerHTML = ''; // Vider le contenu du tableau
-
-        // Créer un fragment de document pour minimiser les manipulations du DOM
-        const fragment = document.createDocumentFragment();
-
-        // Ajouter les données récupérées au tableau
-        data.forEach(rowData => {
-            const row = document.createElement("tr");
-
-            // Ajouter une cellule pour la compétence
-            const competenceCell = document.createElement("td");
-            competenceCell.textContent = rowData.competence;
-            row.appendChild(competenceCell);
-
-            // Ajouter une cellule pour les actions (supprimer)
-            const actionCell = document.createElement("td");
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Supprimer";
-            deleteButton.dataset.competenceId = rowData.competence_id; // Utiliser dataset pour stocker l'ID
-            actionCell.appendChild(deleteButton);
-            row.appendChild(actionCell);
-
-            fragment.appendChild(row);
+        const response = await fetch(`/api/competences?site_id=${siteId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                'Content-Type': 'application/json'
+            }
         });
 
-        tableBody.appendChild(fragment); // Ajouter le fragment au DOM en une seule opération
-        console.timeEnd('fetchCompetences');
+        if (response.ok) {
+            const data = await response.json();
+
+            const tableBody = document.querySelector("#competencesTable tbody");
+            tableBody.innerHTML = ''; // Vider le contenu du tableau
+
+            // Ajouter les données récupérées au tableau
+            data.forEach(rowData => {
+                const row = document.createElement("tr");
+
+                const competenceCell = document.createElement("td");
+                competenceCell.textContent = rowData.competence;
+                row.appendChild(competenceCell);
+
+                const actionCell = document.createElement("td");
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Supprimer";
+                deleteButton.dataset.competenceId = rowData.competence_id;
+                actionCell.appendChild(deleteButton);
+                row.appendChild(actionCell);
+
+                tableBody.appendChild(row);
+            });
+
+            console.timeEnd('fetchCompetences');
+        } else if (response.status === 401) {
+            console.error('Erreur 401 : Non autorisé. Vérifiez votre authentification.');
+            alert('Erreur : Vous n\'êtes pas autorisé à accéder à cette ressource.');
+        } else {
+            console.error('Erreur lors de la récupération des compétences :', response.status);
+        }
     } catch (error) {
         console.error('Erreur lors de la récupération des compétences :', error);
     }
