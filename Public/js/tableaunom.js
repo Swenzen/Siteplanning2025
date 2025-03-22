@@ -82,46 +82,14 @@ async function saveName() {
     }
 }
 
-// Fonction pour ajouter un nom
-async function addName() {
-    const nom = prompt("Entrez le nom");
-    if (nom) {
-        const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
-
-        try {
-            console.time('addName');
-            const response = await fetch('/api/add-nom', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ nom }) // Envoyer le nom dans le corps de la requête
-            });
-
-            if (response.ok) {
-                console.log('Nom ajouté avec succès');
-                fetchData(); // Rafraîchir la liste des noms
-            } else {
-                console.error('Erreur lors de l\'ajout du nom');
-                const error = await response.text();
-                console.error('Détails de l\'erreur :', error);
-            }
-            console.timeEnd('addName');
-        } catch (error) {
-            console.error('Erreur lors de la requête :', error);
-        }
-    }
-}
-
-// Fonction pour ajouter un nom avec site_id
+//Fonction pour ajouter un nom
 async function addNom() {
     const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
     const nom = document.getElementById('nomInput').value; // Récupérer le nom saisi par l'utilisateur
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id stocké (par exemple, après avoir affiché le site)
+    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id stocké
 
     console.log('Nom saisi :', nom); // Log pour vérifier le nom
-    console.log('Site ID récupéré :', siteId); // Log pour vérifier le site_id
+    console.log('Site ID récupéré depuis localStorage :', siteId); // Log pour vérifier le site_id
 
     if (!nom || !siteId) {
         alert('Veuillez saisir un nom et vérifier que le site est chargé.');
@@ -183,7 +151,7 @@ document.querySelector(".close").addEventListener("click", closeModal);
 document.getElementById("saveName").addEventListener("click", saveName);
 
 // Gestionnaire d'événements pour ajouter un nom
-document.getElementById("addNameButton").addEventListener("click", addName);
+document.getElementById("addNameButton").addEventListener("click", addNom);
 
 // Appeler la fonction pour récupérer les données lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', fetchData);
