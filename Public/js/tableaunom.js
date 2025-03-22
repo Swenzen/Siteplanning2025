@@ -124,26 +124,28 @@ async function addName() {
 
 // Fonction pour supprimer un nom
 async function deleteName(nom_id) {
-    if (confirm("Êtes-vous sûr de vouloir supprimer ce nom ?")) {
-        try {
-            console.time('deleteName');
-            const response = await fetch('/api/delete-nom', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ nom_id })
-            });
+    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
 
-            if (response.ok) {
-                fetchData();
-            } else {
-                console.error('Erreur lors de la suppression du nom');
-            }
-            console.timeEnd('deleteName');
-        } catch (error) {
-            console.error('Erreur lors de la requête:', error);
+    try {
+        const response = await fetch('/api/delete-nom', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nom_id })
+        });
+
+        if (response.ok) {
+            alert('Nom supprimé avec succès');
+            // Rafraîchir la liste des noms ou mettre à jour l'interface
+        } else {
+            console.error('Erreur lors de la suppression du nom');
+            const error = await response.text();
+            console.error('Détails de l\'erreur :', error);
         }
+    } catch (error) {
+        console.error('Erreur lors de la requête :', error);
     }
 }
 
