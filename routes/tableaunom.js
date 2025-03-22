@@ -86,4 +86,24 @@ router.post('/delete-nom', authenticateToken, (req, res) => {
     });
 });
 
+async function fetchNoms() {
+    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+
+    const response = await fetch('/api/noms', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (response.ok) {
+        const noms = await response.json();
+        console.log('Noms récupérés :', noms);
+        // Afficher les noms dans le tableau
+    } else {
+        console.error('Erreur lors de la récupération des noms');
+    }
+}
+
 module.exports = router;
