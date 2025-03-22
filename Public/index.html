@@ -55,6 +55,10 @@
             <button type="submit">S'inscrire</button>
         </form>
     </div>
+    <div id="user-info" style="display: none;">
+        <p>Bienvenue, <span id="username-display"></span>!</p>
+        <button id="logoutButton">Se déconnecter</button>
+    </div>
     <script>
         // Sélectionner le tableau et le conteneur du tooltip
         const tableBody = document.querySelector("#dynamicTable tbody");
@@ -157,12 +161,37 @@
             if (response.ok) {
                 alert('Connexion réussie !');
                 console.log('Token JWT :', result.token);
-                // Stocker le token dans le localStorage pour les requêtes futures
+                // Stocker le token et le nom de l'utilisateur dans le localStorage
                 localStorage.setItem('token', result.token);
+                localStorage.setItem('username', result.username);
+
+                // Afficher le nom de l'utilisateur connecté
+                displayUser();
             } else {
                 alert(result);
             }
         });
+
+        // Fonction pour afficher le nom de l'utilisateur connecté
+        function displayUser() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('username-display').textContent = username;
+                document.getElementById('auth-section').style.display = 'none'; // Masquer les formulaires de connexion/inscription
+            }
+        }
+
+        // Fonction pour gérer la déconnexion
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'block'; // Réafficher les formulaires
+        });
+
+        // Appeler la fonction pour afficher l'utilisateur connecté au chargement de la page
+        document.addEventListener('DOMContentLoaded', displayUser);
     </script>
 </body>
 </html>

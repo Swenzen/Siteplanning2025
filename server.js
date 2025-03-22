@@ -137,7 +137,9 @@ app.post('/login', (req, res) => {
 
         // Générer un jeton JWT
         const token = jwt.sign({ userId: user.user_id }, 'votre_secret', { expiresIn: '1h' });
-        res.json({ token });
+
+        // Renvoyer le jeton et le nom de l'utilisateur
+        res.json({ token, username: user.username });
     });
 });
 
