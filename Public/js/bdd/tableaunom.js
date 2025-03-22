@@ -1,7 +1,7 @@
 let currentCell = null;
 let currentId = null;
 
-// Fonction pour afficher les données dans le tableau des noms
+// Fonction pour afficher les données dans le tableau des noms *
 async function fetchData() {
     const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
 
@@ -82,7 +82,7 @@ async function saveName() {
     }
 }
 
-//Fonction pour ajouter un nom
+//Fonction pour ajouter un nom *
 async function addNom() {
     const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
     const nomInput = document.getElementById('nomInput'); // Récupérer l'élément input
