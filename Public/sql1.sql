@@ -196,3 +196,11 @@ CREATE TABLE Tnom_Tsite (
     FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE,
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
+
+CREATE TABLE Tcompetence_Tsite (
+    competence_id INT NOT NULL,
+    site_id INT NOT NULL,
+    PRIMARY KEY (competence_id, site_id),
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);

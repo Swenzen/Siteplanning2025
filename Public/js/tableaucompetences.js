@@ -2,9 +2,19 @@
 async function fetchCompetences() {
     try {
         console.time('fetchCompetences');
-        const response = await fetch('/api/competences');
+
+        // Récupérer le site_id depuis le localStorage
+        const siteId = localStorage.getItem('site_id');
+        if (!siteId) {
+            console.error('Erreur : le site_id est introuvable.');
+            alert('Erreur : le site n\'est pas chargé.');
+            return;
+        }
+
+        // Effectuer une requête pour récupérer les compétences liées au site
+        const response = await fetch(`/api/competences?site_id=${siteId}`);
         const data = await response.json();
-        
+
         const tableBody = document.querySelector("#competencesTable tbody");
         tableBody.innerHTML = ''; // Vider le contenu du tableau
 
@@ -14,6 +24,8 @@ async function fetchCompetences() {
         // Ajouter les données récupérées au tableau
         data.forEach(rowData => {
             const row = document.createElement("tr");
+
+            // Ajouter une cellule pour la compétence
             const competenceCell = document.createElement("td");
             competenceCell.textContent = rowData.competence;
             row.appendChild(competenceCell);

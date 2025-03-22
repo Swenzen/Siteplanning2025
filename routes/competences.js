@@ -3,15 +3,27 @@ const router = express.Router();
 const connection = require('../db'); // Assurez-vous que le chemin est correct
 
 // Route pour récupérer les compétences
-router.get('/competences', (req, res) => {
-    const query = 'SELECT * FROM Tcompetence';
-    connection.query(query, (err, results) => {
+router.get('/api/competences', authenticateToken, (req, res) => {
+    const siteId = req.query.site_id;
+
+    if (!siteId) {
+        return res.status(400).send('Le champ "site_id" est requis');
+    }
+
+    const query = `
+        SELECT c.competence_id, c.competence
+        FROM Tcompetence c
+        JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
+        WHERE ct.site_id = ?
+    `;
+
+    connection.query(query, [siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des compétences :', err.message);
-            res.status(500).send('Erreur lors de la récupération des compétences');
-        } else {
-            res.json(results);
+            return res.status(500).send('Erreur lors de la récupération des compétences');
         }
+
+        res.json(results);
     });
 });
 
