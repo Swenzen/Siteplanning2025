@@ -3,6 +3,8 @@ const router = express.Router();
 const connection = require('../db'); // Assurez-vous que le chemin est correct
 const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
+
+//route pour compétences tableau *
 router.get('/competences', authenticateToken, (req, res) => {
     const siteId = req.query.site_id;
 
@@ -28,26 +30,43 @@ router.get('/competences', authenticateToken, (req, res) => {
 });
 
 
-// Route pour ajouter une compétence
+// Route pour ajouter une compétence avec liaison à Tsite
 router.post('/add-competence2', (req, res) => {
-    const { competence, displayOrder } = req.body;
+    const { competence, displayOrder, site_id } = req.body;
+
+    if (!competence || !site_id) {
+        return res.status(400).send('Les champs "competence" et "site_id" sont requis');
+    }
+
+    // Étape 1 : Ajouter la compétence dans Tcompetence
     const query = 'INSERT INTO Tcompetence (competence) VALUES (?)';
     connection.query(query, [competence], (err, result) => {
         if (err) {
             console.error('Erreur lors de l\'ajout de la compétence :', err.message);
-            res.status(500).send('Erreur lors de l\'ajout de la compétence');
-        } else {
-            const competenceId = result.insertId;
-            const orderQuery = 'INSERT INTO Tcompetence_order (competence_id, display_order) VALUES (?, ?)';
-            connection.query(orderQuery, [competenceId, displayOrder], (err, result) => {
-                if (err) {
-                    console.error('Erreur lors de l\'ajout de l\'ordre de la compétence :', err.message);
-                    res.status(500).send('Erreur lors de l\'ajout de l\'ordre de la compétence');
-                } else {
-                    res.send('Compétence ajoutée avec succès');
-                }
-            });
+            return res.status(500).send('Erreur lors de l\'ajout de la compétence');
         }
+
+        const competenceId = result.insertId;
+
+        // Étape 2 : Ajouter l'ordre d'affichage dans Tcompetence_order
+        const orderQuery = 'INSERT INTO Tcompetence_order (competence_id, display_order) VALUES (?, ?)';
+        connection.query(orderQuery, [competenceId, displayOrder], (err) => {
+            if (err) {
+                console.error('Erreur lors de l\'ajout de l\'ordre de la compétence :', err.message);
+                return res.status(500).send('Erreur lors de l\'ajout de l\'ordre de la compétence');
+            }
+
+            // Étape 3 : Créer la liaison dans Tcompetence_Tsite
+            const linkQuery = 'INSERT INTO Tcompetence_Tsite (competence_id, site_id) VALUES (?, ?)';
+            connection.query(linkQuery, [competenceId, site_id], (err) => {
+                if (err) {
+                    console.error('Erreur lors de la création de la liaison compétence-site :', err.message);
+                    return res.status(500).send('Erreur lors de la création de la liaison compétence-site');
+                }
+
+                res.send('Compétence ajoutée avec succès et liée au site');
+            });
+        });
     });
 });
 

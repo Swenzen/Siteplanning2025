@@ -1,4 +1,4 @@
-// Fonction pour afficher les compétences dans le tableau
+// Fonction pour afficher les compétences dans le tableau *
 async function fetchCompetences() {
     try {
         console.time('fetchCompetences');
@@ -70,21 +70,35 @@ async function addCompetence() {
     if (competence) {
         try {
             console.time('addCompetence');
+
+            // Récupérer le site_id depuis le localStorage
+            const siteId = localStorage.getItem('site_id');
+            if (!siteId) {
+                console.error('Erreur : le site_id est introuvable.');
+                alert('Erreur : le site n\'est pas chargé.');
+                return;
+            }
+
             // Récupérer le plus grand display_order existant
             const responseOrder = await fetch('/api/max-display-order');
             const maxOrderData = await responseOrder.json();
             const maxDisplayOrder = maxOrderData.maxDisplayOrder || 0;
 
+            // Envoyer la requête pour ajouter la compétence avec la liaison au site
             const response = await fetch('/api/add-competence2', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ competence, displayOrder: maxDisplayOrder + 1 })
+                body: JSON.stringify({
+                    competence,
+                    displayOrder: maxDisplayOrder + 1,
+                    site_id: siteId // Inclure le site_id dans la requête
+                })
             });
 
             if (response.ok) {
-                fetchCompetences();
+                fetchCompetences(); // Rafraîchir la liste des compétences
             } else {
                 console.error('Erreur lors de l\'ajout de la compétence');
             }
