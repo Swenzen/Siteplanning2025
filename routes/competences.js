@@ -30,7 +30,7 @@ router.get('/competences', authenticateToken, (req, res) => {
 });
 
 
-// Route pour ajouter une compétence avec liaison à Tsite
+// Route pour ajouter une compétence avec liaison à Tsite *
 router.post('/add-competence2', (req, res) => {
     const { competence, displayOrder, site_id } = req.body;
 
@@ -70,17 +70,33 @@ router.post('/add-competence2', (req, res) => {
     });
 });
 
-// Route pour supprimer une compétence
+// Route pour supprimer une compétence liée à un site
 router.post('/delete-competence', (req, res) => {
-    const { competence_id } = req.body;
-    const query = 'DELETE FROM Tcompetence WHERE competence_id = ?';
-    connection.query(query, [competence_id], (err, result) => {
+    const { competence_id, site_id } = req.body;
+
+    if (!competence_id || !site_id) {
+        return res.status(400).send('Les champs "competence_id" et "site_id" sont requis');
+    }
+
+    // Supprimer la compétence uniquement si elle est liée au site spécifié
+    const deleteQuery = `
+        DELETE c
+        FROM Tcompetence c
+        JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
+        WHERE c.competence_id = ? AND ct.site_id = ?
+    `;
+
+    connection.query(deleteQuery, [competence_id, site_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression de la compétence :', err.message);
-            res.status(500).send('Erreur lors de la suppression de la compétence');
-        } else {
-            res.send('Compétence supprimée avec succès');
+            return res.status(500).send('Erreur lors de la suppression de la compétence');
         }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Aucune compétence trouvée pour ce site');
+        }
+
+        res.send('Compétence supprimée avec succès');
     });
 });
 

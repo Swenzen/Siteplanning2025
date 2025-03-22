@@ -64,7 +64,7 @@ async function fetchCompetences() {
     }
 }
 
-// Fonction pour ajouter une compétence
+// Fonction pour ajouter une compétence *
 async function addCompetence() {
     const competence = prompt("Entrez la compétence");
     if (competence) {
@@ -114,19 +114,30 @@ async function deleteCompetence(competence_id) {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette compétence ?")) {
         try {
             console.time('deleteCompetence');
+
+            // Récupérer le site_id depuis le localStorage
+            const siteId = localStorage.getItem('site_id');
+            if (!siteId) {
+                console.error('Erreur : le site_id est introuvable.');
+                alert('Erreur : le site n\'est pas chargé.');
+                return;
+            }
+
+            // Envoyer la requête pour supprimer la compétence liée au site
             const response = await fetch('/api/delete-competence', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ competence_id })
+                body: JSON.stringify({ competence_id, site_id: siteId })
             });
 
             if (response.ok) {
-                fetchCompetences();
+                fetchCompetences(); // Rafraîchir la liste des compétences
             } else {
                 console.error('Erreur lors de la suppression de la compétence');
             }
+
             console.timeEnd('deleteCompetence');
         } catch (error) {
             console.error('Erreur lors de la requête:', error);
