@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="main-column">
+        <!-- Affichage du site -->
+        <div id="site-info">
+            <p id="site-display">Site : </p>
+        </div>
+
+        <!-- Menu -->
+        <div id="menu">
+            <h2>Menu</h2>
+            <a href="index.html">Index</a>
+            <a href="base-de-donnee.html">Base de donnée</a>
+            <a href="planning.html">Planning</a>
+        </div>
+
+        <!-- Informations utilisateur -->
+        <div id="user-info" style="display: none;">
+            <p>Connecté en tant que : <span id="username-display"></span></p>
+            <button id="logoutButton">Se déconnecter</button>
+        </div>
+    </div>
+
     <div id="content">
         <h1>Planning</h1>
         
@@ -46,13 +67,6 @@
         <div id="competenceTableContainer"></div>
     </div>
     
-    <div id="menu">
-        <h2>Menu</h2>
-        <a href="index.html">Index</a>
-        <a href="base-de-donnee.html">Base de donnée</a>
-        <a href="planning.html">Planning</a>
-    </div>
-    
     <div id="tooltip"></div>
     
     <!-- Inclure les fichiers JavaScript -->
@@ -70,6 +84,61 @@
 
         // Appeler la fonction pour récupérer les données lorsque la page est chargée
         document.addEventListener('DOMContentLoaded', fetchPlanningData);
+
+        // Fonction pour afficher le nom de l'utilisateur connecté
+        function displayUser() {
+            const username = localStorage.getItem('username'); // Récupérer le nom de l'utilisateur depuis le localStorage
+            if (username) {
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('username-display').textContent = username;
+            } else {
+                // Si aucun utilisateur n'est connecté, rediriger vers la page de connexion
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Fonction pour gérer la déconnexion
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('token'); // Supprimer le jeton
+            localStorage.removeItem('username'); // Supprimer le nom de l'utilisateur
+            window.location.href = 'index.html'; // Rediriger vers la page de connexion
+        });
+
+        // Appeler la fonction pour afficher l'utilisateur connecté au chargement de la page
+        document.addEventListener('DOMContentLoaded', displayUser);
+
+        async function fetchSite() {
+            const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+
+            try {
+                const response = await fetch('/api/site', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const { site } = await response.json();
+                    console.log('Site récupéré :', site);
+
+                    // Stocker le site_id dans le localStorage
+                    localStorage.setItem('site_id', site.site_id);
+
+                    // Afficher le site dans l'interface utilisateur
+                    const siteElement = document.getElementById('site-display');
+                    siteElement.textContent = `Site : ${site.site_name}`;
+                } else {
+                    console.error('Erreur lors de la récupération du site');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la requête :', error);
+            }
+        }
+
+        // Appeler la fonction pour récupérer le site au chargement de la page
+        document.addEventListener('DOMContentLoaded', fetchSite);
     </script>
 </body>
 </html>
