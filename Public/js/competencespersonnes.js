@@ -1,9 +1,21 @@
 // Fonction pour afficher les compétences des personnes dans le tableau
 async function fetchCompetencesPersonnes() {
     try {
+        const siteId = localStorage.getItem('site_id');
+        const token = localStorage.getItem('token');
+
+        if (!siteId || !token) {
+            console.error('Erreur : site_id ou token manquant.');
+            return;
+        }
+
         const [competencesResponse, personnesResponse] = await Promise.all([
-            fetch('/api/competences'),
-            fetch('/api/competences-personnes')
+            fetch(`/api/competences`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`/api/competences-personnes?site_id=${siteId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
         ]);
 
         const competences = await competencesResponse.json();
@@ -59,14 +71,22 @@ async function fetchCompetencesPersonnes() {
 // Fonction pour ajouter ou supprimer une compétence pour une personne
 async function toggleCompetence(nom_id, competence_id, cell) {
     try {
+        const siteId = localStorage.getItem('site_id');
+        const token = localStorage.getItem('token');
+
+        if (!siteId || !token) {
+            console.error('Erreur : site_id ou token manquant.');
+            return;
+        }
+
         if (cell.textContent === '✔') {
-            // Supprimer la compétence
-            const response = await fetch('/api/delete-competence2', {
+            const response = await fetch('/api/delete-competence', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nom_id, competence_id })
+                body: JSON.stringify({ nom_id, competence_id, site_id: siteId })
             });
 
             if (response.ok) {
@@ -75,13 +95,13 @@ async function toggleCompetence(nom_id, competence_id, cell) {
                 console.error('Erreur lors de la suppression de la compétence');
             }
         } else {
-            // Ajouter la compétence
             const response = await fetch('/api/add-competence', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nom_id, competence_id })
+                body: JSON.stringify({ nom_id, competence_id, site_id: siteId })
             });
 
             if (response.ok) {
@@ -91,7 +111,7 @@ async function toggleCompetence(nom_id, competence_id, cell) {
             }
         }
     } catch (error) {
-        console.error('Erreur lors de la requête:', error);
+        console.error('Erreur lors de la requête :', error);
     }
 }
 
