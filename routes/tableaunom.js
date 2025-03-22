@@ -106,8 +106,17 @@ async function fetchNoms() {
     }
 }
 
-
-
+router.get('/data', authenticateToken, (req, res) => {
+    const query = 'SELECT nom_id, nom FROM Tnom';
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des noms :', err.message);
+            res.status(500).send('Erreur lors de la récupération des noms');
+        } else {
+            res.json(results); // Renvoie les données au client
+        }
+    });
+});
 
 router.get('/api/data', authenticateToken, (req, res) => {
     const query = 'SELECT nom_id, nom FROM Tnom';
