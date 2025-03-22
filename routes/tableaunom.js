@@ -20,56 +20,20 @@ router.post('/update-name', authenticateToken, (req, res) => {
 
 // Route pour ajouter un nom (protégée)
 router.post('/add-nom', authenticateToken, (req, res) => {
-    const { nom, site_id } = req.body; // Récupérer le nom et le site_id depuis le corps de la requête
-    const userId = req.user.userId; // Récupérer l'ID de l'utilisateur connecté depuis le middleware
+    const { nom } = req.body;
 
-    if (!nom || !site_id) {
-        return res.status(400).send('Les champs "nom" et "site_id" sont requis');
+    if (!nom) {
+        return res.status(400).send('Le champ "nom" est requis');
     }
 
-    // Vérifier si l'utilisateur a accès au site via Tsite_Tuser
-    const checkSiteAccessQuery = `
-        SELECT * 
-        FROM Tsite_Tuser st
-        JOIN Tsite s ON st.site_id = s.site_id
-        WHERE st.user_id = ? AND s.site_id = ?
-    `;
-    connection.query(checkSiteAccessQuery, [userId, site_id], (err, results) => {
+    const query = 'INSERT INTO Tnom (nom) VALUES (?)';
+    connection.query(query, [nom], (err, result) => {
         if (err) {
-            console.error('Erreur lors de la vérification de l\'accès au site :', err.message);
-            return res.status(500).send('Erreur lors de la vérification de l\'accès au site');
+            console.error('Erreur lors de l\'ajout du nom :', err.message);
+            res.status(500).send('Erreur lors de l\'ajout du nom');
+        } else {
+            res.status(201).send('Nom ajouté avec succès');
         }
-
-        if (results.length === 0) {
-            return res.status(403).send('Vous n\'avez pas la permission d\'ajouter un nom à ce site');
-        }
-
-        // Ajouter le nom dans la table Tnom et l'associer au site via Tnom_Tsite
-        const insertNomQuery = `
-            INSERT INTO Tnom (nom) VALUES (?)
-        `;
-        connection.query(insertNomQuery, [nom], (err, result) => {
-            if (err) {
-                console.error('Erreur lors de l\'ajout du nom :', err.message);
-                return res.status(500).send('Erreur lors de l\'ajout du nom');
-            }
-
-            const nomId = result.insertId; // Récupérer l'ID du nom inséré
-
-            // Associer le nom au site dans Tnom_Tsite
-            const insertNomSiteQuery = `
-                INSERT INTO Tnom_Tsite (nom_id, site_id)
-                VALUES (?, ?)
-            `;
-            connection.query(insertNomSiteQuery, [nomId, site_id], (err, result) => {
-                if (err) {
-                    console.error('Erreur lors de l\'association du nom au site :', err.message);
-                    return res.status(500).send('Erreur lors de l\'association du nom au site');
-                }
-
-                res.status(201).send('Nom ajouté et associé au site avec succès');
-            });
-        });
     });
 });
 
