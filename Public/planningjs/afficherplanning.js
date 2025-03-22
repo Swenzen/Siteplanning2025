@@ -23,8 +23,20 @@ async function fetchPlanningData() {
     const annee = document.getElementById("yearNumber").value;
 
     try {
+        const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+        if (!token) {
+            console.error('Erreur : le token est manquant.');
+            return;
+        }
+
         const [planningResponse, commentsResponse, fermeturesResponse] = await Promise.all([
-            fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`),
+            fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                    'Content-Type': 'application/json'
+                }
+            }),
             fetch(`/api/comments?semaine=${semaine}&annee=${annee}`),
             fetch(`/api/fermetures?semaine=${semaine}&annee=${annee}`)
         ]);

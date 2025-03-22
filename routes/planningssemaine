@@ -1,10 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const connection = require('../db'); // Assurez-vous que la connexion à la base de données est correctement configurée
+const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
+
 
 // Route pour récupérer les données du planning
-router.get('/planning-data', (req, res) => {
+router.get('/planning-data', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
+    const siteId = req.user.site_id; // Récupérer le site_id depuis le token
+
+    if (!semaine || !annee) {
+        return res.status(400).send('Les champs "semaine" et "annee" sont requis');
+    }
 
     const query = `
         SELECT 
@@ -17,10 +24,12 @@ router.get('/planning-data', (req, res) => {
         LEFT JOIN Tplanning p ON h.horaire_id = p.horaire_id AND c.competence_id = p.competence_id AND p.semaine = ? AND p.annee = ?
         LEFT JOIN Tnom j ON p.nom_id = j.nom_id
         LEFT JOIN Tcompetence_order o ON c.competence_id = o.competence_id
+        JOIN Tplanning_Tsite pts ON p.planning_id = pts.planning_id
+        WHERE pts.site_id = ?
         ORDER BY o.display_order ASC, c.competence ASC, h.horaire_debut ASC, h.horaire_fin ASC, p.jour_id ASC
     `;
 
-    connection.query(query, [semaine, annee], (err, results) => {
+    connection.query(query, [semaine, annee, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données du planning :', err.message);
             res.status(500).send('Erreur lors de la récupération des données du planning');

@@ -232,3 +232,11 @@ CREATE TABLE Tcompetence_nom_Tsite (
     FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
+
+CREATE TABLE Tplanning_Tsite (
+    planning_id INT NOT NULL,
+    site_id INT NOT NULL,
+    PRIMARY KEY (planning_id, site_id),
+    FOREIGN KEY (planning_id) REFERENCES Tplanning(planning_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);
