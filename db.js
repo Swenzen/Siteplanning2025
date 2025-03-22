@@ -22,4 +22,5 @@ pool.getConnection((err, connection) => {
     connection.release(); // Libérer la connexion après le test
 });
 
+
 module.exports = pool;
