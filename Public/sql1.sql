@@ -167,12 +167,14 @@ INSERT INTO Tfermeture (fermeture, jour_id, semaine, annee, competence_id, horai
 (false, 2, 1, 2025, 2, '10:00:00', '18:00:00');
 
 -- Table des utilisateurs
+
 CREATE TABLE Tuser (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE
 );
+
 
 CREATE TABLE Tsite (
     site_id INT AUTO_INCREMENT PRIMARY KEY,
