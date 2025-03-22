@@ -3,7 +3,7 @@ const router = express.Router();
 const connection = require('../db'); // Assurez-vous que le chemin est correct
 
 // Route pour récupérer les compétences
-router.get('/api/competences', authenticateToken, (req, res) => {
+router.get('/competences', authenticateToken, (req, res) => {
     const siteId = req.query.site_id;
 
     if (!siteId) {

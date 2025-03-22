@@ -12,7 +12,7 @@ async function fetchCompetences() {
         }
 
         // Effectuer une requête pour récupérer les compétences liées au site
-        const response = await fetch(`/api/competences?site_id=${siteId}`);
+        const response = await fetch(`/competences?site_id=${siteId}`);
         const data = await response.json();
 
         const tableBody = document.querySelector("#competencesTable tbody");
