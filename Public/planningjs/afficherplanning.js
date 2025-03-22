@@ -466,4 +466,5 @@ async function createCompetenceTable(semaine, annee) {
     table.appendChild(tbody);
     competenceTableContainer.appendChild(table);
     console.log('Tableau des compétences créé avec succès');
+    console.log('Paramètres reçus :', { semaine, annee, siteId });
 }
