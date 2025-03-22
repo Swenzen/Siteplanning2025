@@ -167,7 +167,7 @@
             }
 
             try {
-                const response = await fetch('/site', {
+                const response = await fetch('/api/site', { // Ajoutez le préfixe /api si nécessaire
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
