@@ -29,6 +29,32 @@
         <a href="planning.html">Planning</a>
     </div>
     <div id="tooltip"></div>
+    <div id="auth-section">
+        <h2>Connexion</h2>
+        <form id="loginForm">
+            <label for="loginUsername">Nom d'utilisateur :</label>
+            <input type="text" id="loginUsername" name="username" required>
+            <br>
+            <label for="loginPassword">Mot de passe :</label>
+            <input type="password" id="loginPassword" name="password" required>
+            <br>
+            <button type="submit">Se connecter</button>
+        </form>
+
+        <h2>Inscription</h2>
+        <form id="registerForm">
+            <label for="registerUsername">Nom d'utilisateur :</label>
+            <input type="text" id="registerUsername" name="username" required>
+            <br>
+            <label for="registerEmail">Email :</label>
+            <input type="email" id="registerEmail" name="email" required>
+            <br>
+            <label for="registerPassword">Mot de passe :</label>
+            <input type="password" id="registerPassword" name="password" required>
+            <br>
+            <button type="submit">S'inscrire</button>
+        </form>
+    </div>
     <script>
         // Sélectionner le tableau et le conteneur du tooltip
         const tableBody = document.querySelector("#dynamicTable tbody");
@@ -97,6 +123,46 @@
 
         // Appeler la fonction pour récupérer les données lorsque la page est chargée
         document.addEventListener('DOMContentLoaded', fetchData);
+
+        // Gestion de l'inscription
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
+
+            const result = await response.text();
+            alert(result);
+        });
+
+        // Gestion de la connexion
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert('Connexion réussie !');
+                console.log('Token JWT :', result.token);
+                // Stocker le token dans le localStorage pour les requêtes futures
+                localStorage.setItem('token', result.token);
+            } else {
+                alert(result);
+            }
+        });
     </script>
 </body>
 </html>
