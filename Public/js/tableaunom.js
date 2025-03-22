@@ -85,7 +85,15 @@ async function saveName() {
 //Fonction pour ajouter un nom
 async function addNom() {
     const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
-    const nom = document.getElementById('nomInput').value; // Récupérer le nom saisi par l'utilisateur
+    const nomInput = document.getElementById('nomInput'); // Récupérer l'élément input
+
+    if (!nomInput) {
+        console.error('L\'élément avec l\'ID "nomInput" est introuvable.');
+        alert('Erreur : le champ de saisie pour le nom est introuvable.');
+        return;
+    }
+
+    const nom = nomInput.value; // Récupérer la valeur saisie
     const siteId = localStorage.getItem('site_id'); // Récupérer le site_id stocké
 
     console.log('Nom saisi :', nom); // Log pour vérifier le nom
