@@ -165,3 +165,20 @@ CREATE TABLE Tfermeture (
 INSERT INTO Tfermeture (fermeture, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) VALUES
 (true, 1, 1, 2025, 1, '08:00:00', '16:00:00'),
 (false, 2, 1, 2025, 2, '10:00:00', '18:00:00');
+
+-- Table des utilisateurs
+CREATE TABLE Tuser (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
+);
+
+-- Table pour associer les utilisateurs aux plannings
+CREATE TABLE Tuser_planning (
+    user_planning_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    planning_id INT,
+    FOREIGN KEY (user_id) REFERENCES Tuser(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (planning_id) REFERENCES Tplanning(planning_id) ON DELETE CASCADE
+);
