@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const connection = require('../db'); // Importer la connexion à la base de données
+const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
-// Route pour mettre à jour le nom
-router.post('/update-name', (req, res) => {
+// Route pour mettre à jour le nom (protégée)
+router.post('/update-name', authenticateToken, (req, res) => {
     const { nom_id, nom } = req.body;
     const query = 'UPDATE Tnom SET nom = ? WHERE nom_id = ?';
 
@@ -17,8 +18,8 @@ router.post('/update-name', (req, res) => {
     });
 });
 
-// Route pour ajouter un nom
-router.post('/add-nom', (req, res) => {
+// Route pour ajouter un nom (protégée)
+router.post('/add-nom', authenticateToken, (req, res) => {
     const { nom } = req.body;
     const query = `
         INSERT INTO Tnom (nom)
@@ -35,8 +36,8 @@ router.post('/add-nom', (req, res) => {
     });
 });
 
-// Route pour supprimer un nom
-router.post('/delete-nom', (req, res) => {
+// Route pour supprimer un nom (protégée)
+router.post('/delete-nom', authenticateToken, (req, res) => {
     const { nom_id } = req.body;
 
     // Supprimer les enregistrements associés dans Tcompetence_nom
