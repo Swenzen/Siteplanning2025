@@ -19,6 +19,8 @@ router.post('/update-name', authenticateToken, (req, res) => {
 });
 
 router.post('/add-nom', authenticateToken, (req, res) => {
+    console.log('Requête reçue :', req.body); // Log pour vérifier les données reçues
+
     const { nom, site_id } = req.body;
 
     if (!nom || !site_id) {

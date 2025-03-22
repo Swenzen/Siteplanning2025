@@ -166,16 +166,11 @@
         async function fetchSite() {
             const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
 
-            if (!token) {
-                console.error('Utilisateur non connecté. Aucun jeton disponible.');
-                return; // Ne pas appeler la route si l'utilisateur n'est pas connecté
-            }
-
             try {
-                const response = await fetch('/api/site', { // Ajoutez le préfixe /api si nécessaire
+                const response = await fetch('/api/site', {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -184,12 +179,12 @@
                     const { site } = await response.json();
                     console.log('Site récupéré :', site);
 
+                    // Stocker le site_id dans le localStorage
+                    localStorage.setItem('site_id', site.site_id);
+
                     // Afficher le site dans l'interface utilisateur
                     const siteElement = document.getElementById('site-display');
                     siteElement.textContent = `Site : ${site.site_name}`;
-                } else if (response.status === 401) {
-                    console.error('Utilisateur non authentifié. Veuillez vous connecter.');
-                    window.location.href = 'index.html'; // Rediriger vers la page de connexion
                 } else {
                     console.error('Erreur lors de la récupération du site');
                 }

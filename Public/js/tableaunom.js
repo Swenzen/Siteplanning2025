@@ -120,6 +120,9 @@ async function addNom() {
     const nom = document.getElementById('nomInput').value; // Récupérer le nom saisi par l'utilisateur
     const siteId = localStorage.getItem('site_id'); // Récupérer le site_id stocké (par exemple, après avoir affiché le site)
 
+    console.log('Nom saisi :', nom); // Log pour vérifier le nom
+    console.log('Site ID récupéré :', siteId); // Log pour vérifier le site_id
+
     if (!nom || !siteId) {
         alert('Veuillez saisir un nom et vérifier que le site est chargé.');
         return;
