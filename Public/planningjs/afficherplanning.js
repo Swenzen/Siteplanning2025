@@ -24,8 +24,15 @@ async function fetchPlanningData() {
 
     try {
         const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+        const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+
         if (!token) {
             console.error('Erreur : le token est manquant.');
+            return;
+        }
+
+        if (!siteId) {
+            console.error('Erreur : le site_id est manquant.');
             return;
         }
 
@@ -255,7 +262,7 @@ async function fetchPlanningData() {
 
         // Appeler la fonction pour créer le tableau supplémentaire
         createAdditionalTable();
-        createCompetenceTable(semaine, annee);
+        createCompetenceTable(semaine, annee, siteId);
 
     } catch (error) {
         console.error('Erreur lors de la récupération des données du planning :', error);
