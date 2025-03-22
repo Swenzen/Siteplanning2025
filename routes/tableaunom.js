@@ -111,17 +111,18 @@ router.get('/data', authenticateToken, (req, res) => {
     const userId = req.user.userId; // Récupérer l'ID de l'utilisateur depuis le middleware
 
     const query = `
-        SELECT t.nom_id, t.nom
+        SELECT t.nom_id, t.nom, s.site_name
         FROM Tnom t
-        JOIN Tuser_Tnom ut ON t.nom_id = ut.nom_id
-        WHERE ut.user_id = ?
+        JOIN Tsite s ON t.site_id = s.site_id
+        JOIN Tsite_Tuser st ON s.site_id = st.site_id
+        WHERE st.user_id = ?
     `;
     connection.query(query, [userId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des noms :', err.message);
             res.status(500).send('Erreur lors de la récupération des noms');
         } else {
-            res.json(results); // Renvoie les données au client
+            res.json(results); // Renvoie les noms et les sites associés à l'utilisateur
         }
     });
 });

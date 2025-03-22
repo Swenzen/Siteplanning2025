@@ -191,3 +191,17 @@ CREATE TABLE Tuser_Tnom (
     FOREIGN KEY (user_id) REFERENCES Tuser(user_id),
     FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id)
 );
+
+
+CREATE TABLE Tsite (
+    site_id INT AUTO_INCREMENT PRIMARY KEY,
+    site_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Tsite_Tuser (
+    tsite_tuser_id INT AUTO_INCREMENT PRIMARY KEY,
+    site_id INT NOT NULL,
+    user_id INT NOT NULL,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id),
+    FOREIGN KEY (user_id) REFERENCES Tuser(user_id)
+);
