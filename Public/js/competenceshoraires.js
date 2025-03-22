@@ -1,9 +1,21 @@
 // Fonction pour afficher les horaires par compétence dans le tableau
 async function fetchHorairesCompetences() {
     try {
+        const siteId = localStorage.getItem('site_id');
+        const token = localStorage.getItem('token');
+
+        if (!siteId || !token) {
+            console.error('Erreur : site_id ou token manquant.');
+            return;
+        }
+
         const [competencesResponse, horairesResponse] = await Promise.all([
-            fetch('/api/competences'),
-            fetch('/api/horaires-competences')
+            fetch(`/api/competences`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`/api/horaires-competences?site_id=${siteId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
         ]);
 
         const competences = await competencesResponse.json();
@@ -63,14 +75,22 @@ async function fetchHorairesCompetences() {
 // Fonction pour ajouter ou supprimer une compétence pour un horaire
 async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
     try {
+        const siteId = localStorage.getItem('site_id');
+        const token = localStorage.getItem('token');
+
+        if (!siteId || !token) {
+            console.error('Erreur : site_id ou token manquant.');
+            return;
+        }
+
         if (cell.textContent === '✔') {
-            // Supprimer la compétence de l'horaire
             const response = await fetch('/api/delete-horaire-competence', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ horaire_id, competence_id })
+                body: JSON.stringify({ horaire_id, competence_id, site_id: siteId })
             });
 
             if (response.ok) {
@@ -79,13 +99,13 @@ async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
                 console.error('Erreur lors de la suppression de la compétence de l\'horaire');
             }
         } else {
-            // Ajouter la compétence à l'horaire
             const response = await fetch('/api/add-horaire-competence', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ horaire_id, competence_id })
+                body: JSON.stringify({ horaire_id, competence_id, site_id: siteId })
             });
 
             if (response.ok) {
@@ -95,7 +115,7 @@ async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
             }
         }
     } catch (error) {
-        console.error('Erreur lors de la requête:', error);
+        console.error('Erreur lors de la requête :', error);
     }
 }
 

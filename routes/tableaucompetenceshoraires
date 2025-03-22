@@ -1,17 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const connection = require('../db'); // Importer la connexion à la base de données
+const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
-// Route pour récupérer les horaires par compétence
-router.get('/horaires-competences', (req, res) => {
+
+// Route pour récupérer les horaires par compétence et site
+router.get('/horaires-competences', authenticateToken, (req, res) => {
+    const siteId = req.query.site_id;
+
+    if (!siteId) {
+        return res.status(400).send('Le champ "site_id" est requis');
+    }
+
     const query = `
         SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, c.competence_id, c.competence
         FROM Thoraire h
-        LEFT JOIN Thoraire_competence hc ON h.horaire_id = hc.horaire_id
-        LEFT JOIN Tcompetence c ON hc.competence_id = c.competence_id
+        JOIN Thoraire_competence_Tsite hct ON h.horaire_id = hct.horaire_id
+        JOIN Tcompetence c ON hct.competence_id = c.competence_id
+        WHERE hct.site_id = ?
     `;
 
-    connection.query(query, (err, results) => {
+    connection.query(query, [siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des horaires par compétence :', err.message);
             res.status(500).send('Erreur lors de la récupération des horaires par compétence');
@@ -21,38 +30,48 @@ router.get('/horaires-competences', (req, res) => {
     });
 });
 
-// Route pour ajouter une compétence à un horaire
-router.post('/add-horaire-competence', (req, res) => {
-    const { horaire_id, competence_id } = req.body;
+// Route pour ajouter une compétence à un horaire pour un site
+router.post('/add-horaire-competence', authenticateToken, (req, res) => {
+    const { horaire_id, competence_id, site_id } = req.body;
+
+    if (!horaire_id || !competence_id || !site_id) {
+        return res.status(400).send('Les champs "horaire_id", "competence_id" et "site_id" sont requis');
+    }
+
     const query = `
-        INSERT INTO Thoraire_competence (horaire_id, competence_id)
-        VALUES (?, ?)
+        INSERT INTO Thoraire_competence_Tsite (horaire_id, competence_id, site_id)
+        VALUES (?, ?, ?)
     `;
 
-    connection.query(query, [horaire_id, competence_id], (err, result) => {
+    connection.query(query, [horaire_id, competence_id, site_id], (err) => {
         if (err) {
-            console.error('Erreur lors de l\'ajout de la compétence à l\'horaire :', err.message);
-            res.status(500).send('Erreur lors de l\'ajout de la compétence à l\'horaire');
+            console.error('Erreur lors de l\'ajout de la compétence à l\'horaire pour le site :', err.message);
+            res.status(500).send('Erreur lors de l\'ajout de la compétence à l\'horaire pour le site');
         } else {
-            res.send('Compétence ajoutée à l\'horaire avec succès');
+            res.send('Compétence ajoutée à l\'horaire pour le site avec succès');
         }
     });
 });
 
-// Route pour supprimer une compétence d'un horaire
-router.post('/delete-horaire-competence', (req, res) => {
-    const { horaire_id, competence_id } = req.body;
+// Route pour supprimer une compétence d'un horaire pour un site
+router.post('/delete-horaire-competence', authenticateToken, (req, res) => {
+    const { horaire_id, competence_id, site_id } = req.body;
+
+    if (!horaire_id || !competence_id || !site_id) {
+        return res.status(400).send('Les champs "horaire_id", "competence_id" et "site_id" sont requis');
+    }
+
     const query = `
-        DELETE FROM Thoraire_competence
-        WHERE horaire_id = ? AND competence_id = ?
+        DELETE FROM Thoraire_competence_Tsite
+        WHERE horaire_id = ? AND competence_id = ? AND site_id = ?
     `;
 
-    connection.query(query, [horaire_id, competence_id], (err, result) => {
+    connection.query(query, [horaire_id, competence_id, site_id], (err) => {
         if (err) {
-            console.error('Erreur lors de la suppression de la compétence de l\'horaire :', err.message);
-            res.status(500).send('Erreur lors de la suppression de la compétence de l\'horaire');
+            console.error('Erreur lors de la suppression de la compétence de l\'horaire pour le site :', err.message);
+            res.status(500).send('Erreur lors de la suppression de la compétence de l\'horaire pour le site');
         } else {
-            res.send('Compétence supprimée de l\'horaire avec succès');
+            res.send('Compétence supprimée de l\'horaire pour le site avec succès');
         }
     });
 });
