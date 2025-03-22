@@ -153,3 +153,19 @@ tr:nth-child(even) {
     padding: 5px;
     text-align: left;
 }
+
+#site-info {
+    background-color: #f8f9fa; /* Couleur de fond légère */
+    border: 1px solid #ddd; /* Bordure fine */
+    border-radius: 5px; /* Coins arrondis */
+    padding: 10px; /* Espacement interne */
+    margin-bottom: 20px; /* Espacement avec le menu */
+    text-align: center; /* Centrer le texte */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Légère ombre */
+}
+
+#site-display {
+    font-size: 18px; /* Taille de police plus grande */
+    font-weight: bold; /* Texte en gras */
+    color: #333; /* Couleur du texte */
+}
