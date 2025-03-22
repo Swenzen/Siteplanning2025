@@ -41,7 +41,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'Public')));
 
 // Importer les routes
-const competencesRoutes = require('./routes/competences');
+const competencesRoutes = require('./routes/bdd/competences');
 const nomsRoutes = require('./routes/tableaunom');
 const planningssemaineRoutes = require('./routes/planningssemaine');
 const tableaucompetencenomRoutes = require('./routes/tableaucompetencenom');

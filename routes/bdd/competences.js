@@ -70,7 +70,7 @@ router.post('/add-competence2', (req, res) => {
     });
 });
 
-// Route pour supprimer une compétence liée à un site
+// Route pour supprimer une compétence liée à un site *
 router.post('/delete-competence', (req, res) => {
     const { competence_id, site_id } = req.body;
 

@@ -109,7 +109,7 @@ async function addCompetence() {
     }
 }
 
-// Fonction pour supprimer une compétence
+// Fonction pour supprimer une compétence *
 async function deleteCompetence(competence_id) {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette compétence ?")) {
         try {
