@@ -86,24 +86,30 @@ async function saveName() {
 async function addName() {
     const nom = prompt("Entrez le nom");
     if (nom) {
+        const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+
         try {
             console.time('addName');
             const response = await fetch('/api/add-nom', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nom })
+                body: JSON.stringify({ nom }) // Envoyer le nom dans le corps de la requête
             });
 
             if (response.ok) {
-                fetchData();
+                console.log('Nom ajouté avec succès');
+                fetchData(); // Rafraîchir la liste des noms
             } else {
                 console.error('Erreur lors de l\'ajout du nom');
+                const error = await response.text();
+                console.error('Détails de l\'erreur :', error);
             }
             console.timeEnd('addName');
         } catch (error) {
-            console.error('Erreur lors de la requête:', error);
+            console.error('Erreur lors de la requête :', error);
         }
     }
 }

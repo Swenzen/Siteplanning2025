@@ -21,17 +21,18 @@ router.post('/update-name', authenticateToken, (req, res) => {
 // Route pour ajouter un nom (protégée)
 router.post('/add-nom', authenticateToken, (req, res) => {
     const { nom } = req.body;
-    const query = `
-        INSERT INTO Tnom (nom)
-        VALUES (?)
-    `;
 
+    if (!nom) {
+        return res.status(400).send('Le champ "nom" est requis');
+    }
+
+    const query = 'INSERT INTO Tnom (nom) VALUES (?)';
     connection.query(query, [nom], (err, result) => {
         if (err) {
             console.error('Erreur lors de l\'ajout du nom :', err.message);
             res.status(500).send('Erreur lors de l\'ajout du nom');
         } else {
-            res.send('Nom ajouté avec succès');
+            res.status(201).send('Nom ajouté avec succès');
         }
     });
 });
