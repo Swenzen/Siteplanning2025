@@ -204,3 +204,11 @@ CREATE TABLE Tcompetence_Tsite (
     FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
+
+CREATE TABLE Thoraire_Tsite (
+    horaire_id INT NOT NULL,
+    site_id INT NOT NULL,
+    PRIMARY KEY (horaire_id, site_id),
+    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);

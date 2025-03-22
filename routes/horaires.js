@@ -1,15 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const connection = require('../db'); // Importer la connexion à la base de données
+const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
 
 
+// Route pour récupérer les horaires liés à un site (protégée)
+router.get('/horaires', authenticateToken, (req, res) => {
+    const siteId = req.query.site_id;
 
-// Route pour récupérer les horaires
-router.get('/horaires', (req, res) => {
-    const query = 'SELECT horaire_id, horaire_debut, horaire_fin FROM Thoraire'; // Requête SQL correcte
+    if (!siteId) {
+        return res.status(400).send('Le champ "site_id" est requis');
+    }
 
-    connection.query(query, (err, results) => {
+    const query = `
+        SELECT h.horaire_id, h.horaire_debut, h.horaire_fin
+        FROM Thoraire h
+        JOIN Thoraire_Tsite ht ON h.horaire_id = ht.horaire_id
+        WHERE ht.site_id = ?
+    `;
+
+    connection.query(query, [siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des horaires :', err.message);
             res.status(500).send('Erreur lors de la récupération des horaires');
@@ -19,9 +30,14 @@ router.get('/horaires', (req, res) => {
     });
 });
 
-// Route pour ajouter un horaire
-router.post('/add-horaires', (req, res) => {
-    const { horaire_debut, horaire_fin } = req.body;
+// Route pour ajouter un horaire (protégée)
+router.post('/add-horaires', authenticateToken, (req, res) => {
+    const { horaire_debut, horaire_fin, site_id } = req.body;
+
+    if (!horaire_debut || !horaire_fin || !site_id) {
+        return res.status(400).send('Les champs "horaire_debut", "horaire_fin" et "site_id" sont requis');
+    }
+
     const query = `
         INSERT INTO Thoraire (horaire_debut, horaire_fin)
         VALUES (?, ?)
@@ -32,7 +48,22 @@ router.post('/add-horaires', (req, res) => {
             console.error('Erreur lors de l\'ajout de l\'horaire :', err.message);
             res.status(500).send('Erreur lors de l\'ajout de l\'horaire');
         } else {
-            res.send('Horaire ajouté avec succès');
+            const horaireId = result.insertId;
+
+            // Ajouter la liaison dans Thoraire_Tsite
+            const linkQuery = `
+                INSERT INTO Thoraire_Tsite (horaire_id, site_id)
+                VALUES (?, ?)
+            `;
+
+            connection.query(linkQuery, [horaireId, site_id], (err) => {
+                if (err) {
+                    console.error('Erreur lors de la liaison horaire-site :', err.message);
+                    res.status(500).send('Erreur lors de la liaison horaire-site');
+                } else {
+                    res.send('Horaire ajouté avec succès et lié au site');
+                }
+            });
         }
     });
 });
