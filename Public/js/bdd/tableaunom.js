@@ -125,9 +125,15 @@ async function addNom() {
     }
 }
 
-// Fonction pour supprimer un nom
 async function deleteName(nom_id) {
     const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id stocké
+
+    if (!siteId) {
+        console.error('Erreur : le site_id est introuvable.');
+        alert('Erreur : le site n\'est pas chargé.');
+        return;
+    }
 
     try {
         const response = await fetch('/api/delete-nom', {
@@ -136,12 +142,13 @@ async function deleteName(nom_id) {
                 'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ nom_id })
+            body: JSON.stringify({ nom_id, site_id: siteId }) // Envoyer le nom_id et le site_id
         });
 
         if (response.ok) {
             alert('Nom supprimé avec succès');
             // Rafraîchir la liste des noms ou mettre à jour l'interface
+            fetchData(); // Appeler fetchData pour recharger les données
         } else {
             console.error('Erreur lors de la suppression du nom');
             const error = await response.text();

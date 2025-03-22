@@ -18,6 +18,7 @@ router.post('/update-name', authenticateToken, (req, res) => {
     });
 });
 
+// Route pour ajouter un nom (protégée) *
 router.post('/add-nom', authenticateToken, (req, res) => {
     console.log('Requête reçue :', req.body); // Log pour vérifier les données reçues
 
@@ -51,74 +52,30 @@ router.post('/add-nom', authenticateToken, (req, res) => {
 });
 
 // Route pour supprimer un nom (protégée)
+
 router.post('/delete-nom', authenticateToken, (req, res) => {
     const { nom_id } = req.body;
 
-    // Supprimer les enregistrements associés dans Tcompetence_nom
-    const deleteCompetenceNomQuery = `
-        DELETE FROM Tcompetence_nom
+    if (!nom_id) {
+        return res.status(400).send('Le champ "nom_id" est requis');
+    }
+
+    const deleteNomQuery = `
+        DELETE FROM Tnom
         WHERE nom_id = ?
     `;
 
-    connection.query(deleteCompetenceNomQuery, [nom_id], (err, result) => {
+    connection.query(deleteNomQuery, [nom_id], (err, result) => {
         if (err) {
-            console.error('Erreur lors de la suppression des compétences associées :', err.message);
-            res.status(500).send('Erreur lors de la suppression des compétences associées');
-        } else {
-            console.log(`Compétences associées supprimées pour nom_id: ${nom_id}`);
-            // Mettre à jour les enregistrements associés dans Tplanning
-            const updatePlanningQuery = `
-                UPDATE Tplanning
-                SET nom_id = NULL
-                WHERE nom_id = ?
-            `;
-
-            connection.query(updatePlanningQuery, [nom_id], (err, result) => {
-                if (err) {
-                    console.error('Erreur lors de la mise à jour des plannings associés :', err.message);
-                    res.status(500).send('Erreur lors de la mise à jour des plannings associés');
-                } else {
-                    console.log(`Plannings associés mis à jour pour nom_id: ${nom_id}`);
-                    // Supprimer le nom dans Tnom
-                    const deleteNomQuery = `
-                        DELETE FROM Tnom
-                        WHERE nom_id = ?
-                    `;
-
-                    connection.query(deleteNomQuery, [nom_id], (err, result) => {
-                        if (err) {
-                            console.error('Erreur lors de la suppression du nom :', err.message);
-                            res.status(500).send('Erreur lors de la suppression du nom');
-                        } else {
-                            console.log(`Nom supprimé avec succès pour nom_id: ${nom_id}`);
-                            res.send('Nom supprimé avec succès');
-                        }
-                    });
-                }
-            });
+            console.error('Erreur lors de la suppression du nom :', err.message);
+            return res.status(500).send('Erreur lors de la suppression du nom');
         }
+
+        console.log(`Nom supprimé avec succès pour nom_id: ${nom_id}`);
+        res.send('Nom supprimé avec succès');
     });
 });
 
-async function fetchNoms() {
-    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
-
-    const response = await fetch('/api/noms', {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
-            'Content-Type': 'application/json'
-        }
-    });
-
-    if (response.ok) {
-        const noms = await response.json();
-        console.log('Noms récupérés :', noms);
-        // Afficher les noms dans le tableau
-    } else {
-        console.error('Erreur lors de la récupération des noms');
-    }
-}
 
 router.get('/data', authenticateToken, (req, res) => {
     const userId = req.user.userId; // Récupérer l'ID de l'utilisateur depuis le middleware
