@@ -1,3 +1,7 @@
+-- Utiliser la base de données railway
+USE railway;
+
+
 -- Créer la table Tnom
 CREATE TABLE Tnom (
     nom_id INT AUTO_INCREMENT PRIMARY KEY,
