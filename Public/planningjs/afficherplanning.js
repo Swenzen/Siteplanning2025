@@ -370,7 +370,7 @@ async function removeFermeture(jour_id, semaine, annee, competence_id, horaire_d
 }
 
 // Fonction pour créer le tableau des compétences
-async function createCompetenceTable(semaine, annee) {
+async function createCompetenceTable(semaine, annee, siteId) {
     const competenceTableContainer = document.getElementById("competenceTableContainer");
     if (!competenceTableContainer) {
         console.error('Conteneur competenceTableContainer non trouvé');
@@ -406,7 +406,7 @@ async function createCompetenceTable(semaine, annee) {
     for (const day of days) {
         const cell = document.createElement("td");
         try {
-            const response = await fetch(`/api/count-horaire-competence?jour_id=${day}&semaine=${semaine}&annee=${annee}`);
+            const response = await fetch(`/api/count-horaire-competence?jour_id=${day}&semaine=${semaine}&annee=${annee}&site_id=${siteId}`);
             if (!response.ok) {
                 throw new Error('Erreur lors de la récupération du comptage des horaire_competence');
             }
@@ -433,7 +433,7 @@ async function createCompetenceTable(semaine, annee) {
     for (const day of days) {
         const cell = document.createElement("td");
         try {
-            const response = await fetch(`/api/available-names?jour_id=${day}&semaine=${semaine}&annee=${annee}`);
+            const response = await fetch(`/api/available-names?jour_id=${day}&semaine=${semaine}&annee=${annee}&site_id=${siteId}`);
             if (!response.ok) {
                 throw new Error('Erreur lors de la récupération des noms disponibles');
             }
@@ -457,7 +457,7 @@ async function createCompetenceTable(semaine, annee) {
 
     for (let i = 0; i < days.length; i++) {
         const cell = document.createElement("td");
-        const difference =  availableNamesCount[i] - countHoraireCompetence[i];
+        const difference = availableNamesCount[i] - countHoraireCompetence[i];
         cell.textContent = difference;
         thirdRow.appendChild(cell);
     }
