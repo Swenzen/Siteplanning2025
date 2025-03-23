@@ -51,10 +51,11 @@ router.post('/add-nom', authenticateToken, (req, res) => {
 // Route pour supprimer un nom (protégée)
 
 router.post('/delete-nom', authenticateToken, (req, res) => {
-    console.log('Requête reçue :', req.body);
+    console.log('Requête reçue pour /delete-nom :', req.body);
     const { nom_id } = req.body;
 
     if (!nom_id) {
+        console.error('Erreur : Le champ "nom_id" est requis');
         return res.status(400).send('Le champ "nom_id" est requis');
     }
 
@@ -63,10 +64,20 @@ router.post('/delete-nom', authenticateToken, (req, res) => {
         WHERE nom_id = ?
     `;
 
+    console.log('Requête SQL exécutée :', deleteNomQuery);
+    console.log('Paramètres SQL :', [nom_id]);
+
     connection.query(deleteNomQuery, [nom_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression du nom :', err.message);
             return res.status(500).send('Erreur lors de la suppression du nom');
+        }
+
+        console.log('Résultat de la suppression :', result);
+
+        if (result.affectedRows === 0) {
+            console.error('Aucun nom trouvé pour nom_id :', nom_id);
+            return res.status(404).send('Aucun nom trouvé pour ce nom_id');
         }
 
         console.log(`Nom supprimé avec succès pour nom_id: ${nom_id}`);

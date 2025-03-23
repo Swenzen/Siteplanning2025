@@ -123,9 +123,10 @@ async function addNom() {
     }
 }
 
+// Fonction pour supprimer un nom *
 async function deleteName(nom_id) {
-    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id stocké
+    const token = localStorage.getItem('token');
+    const siteId = localStorage.getItem('site_id');
 
     if (!siteId) {
         console.error('Erreur : le site_id est introuvable.');
@@ -133,24 +134,24 @@ async function deleteName(nom_id) {
         return;
     }
 
+    console.log('Données envoyées pour suppression :', { nom_id, site_id: siteId });
+
     try {
         const response = await fetch('/api/delete-nom', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ nom_id, site_id: siteId }) // Envoyer le nom_id et le site_id
+            body: JSON.stringify({ nom_id, site_id: siteId })
         });
 
         if (response.ok) {
             alert('Nom supprimé avec succès');
-            // Rafraîchir la liste des noms ou mettre à jour l'interface
-            fetchData(); // Appeler fetchData pour recharger les données
+            fetchData(); // Rafraîchir la liste des noms
         } else {
-            console.error('Erreur lors de la suppression du nom');
             const error = await response.text();
-            console.error('Détails de l\'erreur :', error);
+            console.error('Erreur lors de la suppression du nom :', error);
         }
     } catch (error) {
         console.error('Erreur lors de la requête :', error);
