@@ -67,6 +67,8 @@ app.use('/api', tooltipRoutes);
 app.use('/api', creationjreposRoutes);
 app.use('/api', retoursiteRoutes);
 
+console.log('Routes chargées : /api/site');
+
 // Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {
     const filePath = path.join(__dirname, 'public', 'index2.html');

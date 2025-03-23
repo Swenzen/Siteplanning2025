@@ -24,6 +24,7 @@
     </div>
     <div id="menu">
         <h2>Menu</h2>
+        <p id="site-display">Site : </p> <!-- Le nom du site sera affiché ici -->
         <a href="index.html">Index</a>
         <a href="base-de-donnee.html">Base de donnée</a>
         <a href="planning.html">Planning</a>
@@ -179,6 +180,35 @@
 
         // Appeler la fonction pour afficher l'utilisateur connecté au chargement de la page
         document.addEventListener('DOMContentLoaded', displayUser);
+
+        // Fonction pour récupérer le site
+        async function fetchSite() {
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch('/api/site', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const { site } = await response.json();
+                    console.log('Site récupéré :', site);
+
+                    const siteElement = document.getElementById('site-display');
+                    siteElement.textContent = `Site : ${site.site_name}`;
+                } else {
+                    console.error('Erreur lors de la récupération du site');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la requête :', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchSite);
     </script>
 </body>
 
