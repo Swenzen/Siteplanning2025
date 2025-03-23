@@ -33,6 +33,7 @@ router.get('/planning-data', authenticateToken, (req, res) => {
     console.log('Requête SQL exécutée :', query);
     console.log('Paramètres SQL :', [semaine, annee, siteId]);
 
+    
     connection.query(query, [semaine, annee, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données du planning :', err.message);
