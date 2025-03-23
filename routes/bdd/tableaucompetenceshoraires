@@ -1,15 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const connection = require('../../db'); // Importer la connexion à la base de données
-const authenticateToken = require('../../middleware/auth'); // Importer le middleware d'authentification
+const connection = require('../../db');
+const authenticateToken = require('../../middleware/auth');
 
-
-// Route pour récupérer les horaires par compétence et site
+// Route pour récupérer les horaires par compétence et site (protégée)
 router.get('/horaires-competences', authenticateToken, (req, res) => {
-    const siteId = req.query.site_id;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
     if (!siteId) {
-        return res.status(400).send('Le champ "site_id" est requis');
+        return res.status(400).send('Le site_id est introuvable dans le token');
     }
 
     const query = `
@@ -30,11 +29,12 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour ajouter une compétence à un horaire pour un site
+// Route pour ajouter une compétence à un horaire pour un site (protégée)
 router.post('/add-horaire-competence', authenticateToken, (req, res) => {
-    const { horaire_id, competence_id, site_id } = req.body;
+    const { horaire_id, competence_id } = req.body;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
-    if (!horaire_id || !competence_id || !site_id) {
+    if (!horaire_id || !competence_id || !siteId) {
         return res.status(400).send('Les champs "horaire_id", "competence_id" et "site_id" sont requis');
     }
 
@@ -43,7 +43,7 @@ router.post('/add-horaire-competence', authenticateToken, (req, res) => {
         VALUES (?, ?, ?)
     `;
 
-    connection.query(query, [horaire_id, competence_id, site_id], (err) => {
+    connection.query(query, [horaire_id, competence_id, siteId], (err) => {
         if (err) {
             console.error('Erreur lors de l\'ajout de la compétence à l\'horaire pour le site :', err.message);
             res.status(500).send('Erreur lors de l\'ajout de la compétence à l\'horaire pour le site');
@@ -53,11 +53,12 @@ router.post('/add-horaire-competence', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour supprimer une compétence d'un horaire pour un site
+// Route pour supprimer une compétence d'un horaire pour un site (protégée)
 router.post('/delete-horaire-competence', authenticateToken, (req, res) => {
-    const { horaire_id, competence_id, site_id } = req.body;
+    const { horaire_id, competence_id } = req.body;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
-    if (!horaire_id || !competence_id || !site_id) {
+    if (!horaire_id || !competence_id || !siteId) {
         return res.status(400).send('Les champs "horaire_id", "competence_id" et "site_id" sont requis');
     }
 
@@ -66,7 +67,7 @@ router.post('/delete-horaire-competence', authenticateToken, (req, res) => {
         WHERE horaire_id = ? AND competence_id = ? AND site_id = ?
     `;
 
-    connection.query(query, [horaire_id, competence_id, site_id], (err) => {
+    connection.query(query, [horaire_id, competence_id, siteId], (err) => {
         if (err) {
             console.error('Erreur lors de la suppression de la compétence de l\'horaire pour le site :', err.message);
             res.status(500).send('Erreur lors de la suppression de la compétence de l\'horaire pour le site');
