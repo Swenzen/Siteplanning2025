@@ -36,6 +36,8 @@ async function fetchPlanningData() {
             return;
         }
 
+        console.log('Site ID récupéré dans fetchPlanningData :', siteId);
+
         const [planningResponse, commentsResponse, fermeturesResponse] = await Promise.all([
             fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`, {
                 method: 'GET',
