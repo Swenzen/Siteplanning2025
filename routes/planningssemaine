@@ -8,8 +8,7 @@ router.get('/planning-data', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
     const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du tableau
 
-    console.log('Données utilisateur (req.user) :', req.user);
-    console.log('Paramètres reçus dans /api/planning-data :', { semaine, annee, siteId });
+    console.log('Paramètres reçus :', { semaine, annee, siteId });
 
     if (!semaine || !annee || !siteId) {
         console.error('Erreur : paramètres manquants.');
@@ -21,14 +20,13 @@ router.get('/planning-data', authenticateToken, (req, res) => {
             h.horaire_debut, h.horaire_fin, 
             c.competence, c.competence_id, 
             p.jour_id, j.nom, j.nom_id, o.display_order
-        FROM Thoraire_competence hc
-        JOIN Thoraire h ON hc.horaire_id = h.horaire_id
-        JOIN Tcompetence c ON hc.competence_id = c.competence_id
-        LEFT JOIN Tplanning p ON h.horaire_id = p.horaire_id AND c.competence_id = p.competence_id AND p.semaine = ? AND p.annee = ?
+        FROM Tplanning p
+        JOIN Tplanning_Tsite pts ON p.planning_id = pts.planning_id
+        JOIN Thoraire h ON p.horaire_id = h.horaire_id
+        JOIN Tcompetence c ON p.competence_id = c.competence_id
         LEFT JOIN Tnom j ON p.nom_id = j.nom_id
         LEFT JOIN Tcompetence_order o ON c.competence_id = o.competence_id
-        JOIN Tplanning_Tsite pts ON p.planning_id = pts.planning_id
-        WHERE pts.site_id = ?
+        WHERE p.semaine = ? AND p.annee = ? AND pts.site_id = ?
         ORDER BY o.display_order ASC, c.competence ASC, h.horaire_debut ASC, h.horaire_fin ASC, p.jour_id ASC
     `;
 
