@@ -181,12 +181,12 @@ CREATE TABLE Tsite (
     site_name VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE Tsite_Tuser (
-    tsite_tuser_id INT AUTO_INCREMENT PRIMARY KEY,
-    site_id INT NOT NULL,
+CREATE TABLE Tuser_Tsite (
     user_id INT NOT NULL,
-    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES Tuser(user_id) ON DELETE CASCADE
+    site_id INT NOT NULL,
+    PRIMARY KEY (user_id, site_id),
+    FOREIGN KEY (user_id) REFERENCES Tuser(user_id),
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id)
 );
 
 CREATE TABLE Tnom_Tsite (
