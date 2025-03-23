@@ -19,8 +19,16 @@ async function fetchCompetencesPersonnes() {
             })
         ]);
 
+        if (!competencesResponse.ok || !personnesResponse.ok) {
+            const competencesError = await competencesResponse.text();
+            const personnesError = await personnesResponse.text();
+            console.error('Erreur lors de la récupération des données :', competencesError, personnesError);
+            alert('Erreur lors de la récupération des données.');
+            return;
+        }
+
         const competences = await competencesResponse.json();
-        const data = await personnesResponse.json();
+        const personnes = await personnesResponse.json();
 
         const tableHead = document.querySelector("#competencesPersonnesTable thead tr");
         const tableBody = document.querySelector("#competencesPersonnesTable tbody");
@@ -33,28 +41,16 @@ async function fetchCompetencesPersonnes() {
             tableHead.appendChild(th);
         });
 
-        const noms = [...new Set(data.map(item => item.nom))];
-
-        const groupedData = data.reduce((acc, item) => {
-            if (!acc[item.nom]) {
-                acc[item.nom] = { nom_id: item.nom_id };
-            }
-            if (item.competence) {
-                acc[item.nom][item.competence] = true;
-            }
-            return acc;
-        }, {});
-
-        noms.forEach(nom => {
+        personnes.forEach(personne => {
             const row = document.createElement("tr");
             const nameCell = document.createElement("td");
-            nameCell.textContent = nom;
+            nameCell.textContent = personne.nom;
             row.appendChild(nameCell);
 
             competences.forEach(competence => {
                 const cell = document.createElement("td");
-                cell.textContent = groupedData[nom] && groupedData[nom][competence.competence] ? '✔' : '';
-                cell.addEventListener('click', () => toggleCompetence(groupedData[nom].nom_id, competence.competence_id, cell));
+                cell.textContent = personne.competences.includes(competence.competence_id) ? '✔' : '';
+                cell.addEventListener('click', () => toggleCompetence(personne.nom_id, competence.competence_id, cell));
                 row.appendChild(cell);
             });
 

@@ -14,17 +14,37 @@ router.get('/competences-personnes', authenticateToken, (req, res) => {
     const query = `
         SELECT n.nom_id, n.nom, c.competence_id, c.competence
         FROM Tnom n
-        JOIN Tcompetence_nom_Tsite cnt ON n.nom_id = cnt.nom_id
-        JOIN Tcompetence c ON cnt.competence_id = c.competence_id
-        WHERE cnt.site_id = ?
+        JOIN Tnom_Tsite nts ON n.nom_id = nts.nom_id
+        LEFT JOIN Tcompetence_nom_Tsite cnt ON n.nom_id = cnt.nom_id AND cnt.site_id = ?
+        LEFT JOIN Tcompetence c ON cnt.competence_id = c.competence_id
+        WHERE nts.site_id = ?
     `;
 
-    connection.query(query, [siteId], (err, results) => {
+    connection.query(query, [siteId, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des compétences des personnes :', err.message);
             res.status(500).send('Erreur lors de la récupération des compétences des personnes');
         } else {
-            res.json(results);
+            if (!results || results.length === 0) {
+                console.error('Aucun nom trouvé pour ce site.');
+                return res.status(404).send('Aucun nom trouvé pour ce site.');
+            }
+
+            const groupedData = results.reduce((acc, row) => {
+                if (!acc[row.nom_id]) {
+                    acc[row.nom_id] = {
+                        nom_id: row.nom_id,
+                        nom: row.nom,
+                        competences: []
+                    };
+                }
+                if (row.competence_id) {
+                    acc[row.nom_id].competences.push(row.competence_id);
+                }
+                return acc;
+            }, {});
+
+            res.json(Object.values(groupedData));
         }
     });
 });
