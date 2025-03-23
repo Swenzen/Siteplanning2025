@@ -1,42 +1,40 @@
 // Fonction pour afficher les compétences des personnes dans le tableau
 async function fetchCompetencesPersonnes() {
+    const siteId = localStorage.getItem('site_id');
+    const token = localStorage.getItem('token');
+
+    if (!siteId || !token) {
+        console.error('Erreur : site_id ou token manquant.');
+        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
+        return;
+    }
+
     try {
-        const siteId = localStorage.getItem('site_id');
-        const token = localStorage.getItem('token');
-
-        if (!siteId || !token) {
-            console.error('Erreur : site_id ou token manquant.');
-            return;
-        }
-
         const [competencesResponse, personnesResponse] = await Promise.all([
-            fetch(`/api/competences?site_id=${siteId}`, {
+            fetch(`/api/competences`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
-            fetch(`/api/competences-personnes?site_id=${siteId}`, {
+            fetch(`/api/competences-personnes`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
         ]);
 
         const competences = await competencesResponse.json();
         const data = await personnesResponse.json();
-        
+
         const tableHead = document.querySelector("#competencesPersonnesTable thead tr");
         const tableBody = document.querySelector("#competencesPersonnesTable tbody");
-        tableHead.innerHTML = '<th>Nom</th>'; // Vider le contenu des en-têtes de colonne
-        tableBody.innerHTML = ''; // Vider le contenu du tableau
+        tableHead.innerHTML = '<th>Nom</th>';
+        tableBody.innerHTML = '';
 
-        // Ajouter les compétences en tant qu'en-têtes de colonne
         competences.forEach(competence => {
             const th = document.createElement("th");
             th.textContent = competence.competence;
             tableHead.appendChild(th);
         });
 
-        // Récupérer tous les noms uniques
         const noms = [...new Set(data.map(item => item.nom))];
 
-        // Grouper les données par nom
         const groupedData = data.reduce((acc, item) => {
             if (!acc[item.nom]) {
                 acc[item.nom] = { nom_id: item.nom_id };
@@ -47,7 +45,6 @@ async function fetchCompetencesPersonnes() {
             return acc;
         }, {});
 
-        // Ajouter les données récupérées au tableau
         noms.forEach(nom => {
             const row = document.createElement("tr");
             const nameCell = document.createElement("td");
@@ -70,15 +67,16 @@ async function fetchCompetencesPersonnes() {
 
 // Fonction pour ajouter ou supprimer une compétence pour une personne
 async function toggleCompetence(nom_id, competence_id, cell) {
+    const siteId = localStorage.getItem('site_id');
+    const token = localStorage.getItem('token');
+
+    if (!siteId || !token) {
+        console.error('Erreur : site_id ou token manquant.');
+        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
+        return;
+    }
+
     try {
-        const siteId = localStorage.getItem('site_id');
-        const token = localStorage.getItem('token');
-
-        if (!siteId || !token) {
-            console.error('Erreur : site_id ou token manquant.');
-            return;
-        }
-
         if (cell.textContent === '✔') {
             const response = await fetch('/api/delete-competence', {
                 method: 'POST',
@@ -86,7 +84,7 @@ async function toggleCompetence(nom_id, competence_id, cell) {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nom_id, competence_id, site_id: siteId })
+                body: JSON.stringify({ nom_id, competence_id })
             });
 
             if (response.ok) {
@@ -101,7 +99,7 @@ async function toggleCompetence(nom_id, competence_id, cell) {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nom_id, competence_id, site_id: siteId })
+                body: JSON.stringify({ nom_id, competence_id })
             });
 
             if (response.ok) {

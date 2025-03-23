@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const connection = require('../../db'); // Importer la connexion à la base de données
-const authenticateToken = require('../../middleware/auth'); // Importer le middleware d'authentification
+const connection = require('../../db');
+const authenticateToken = require('../../middleware/auth');
 
-// Route pour récupérer les compétences des personnes par site
+// Route pour récupérer les compétences des personnes par site (protégée)
 router.get('/competences-personnes', authenticateToken, (req, res) => {
-    const siteId = req.query.site_id;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
     if (!siteId) {
-        return res.status(400).send('Le champ "site_id" est requis');
+        return res.status(400).send('Le site_id est introuvable dans le token');
     }
 
     const query = `
@@ -29,8 +29,8 @@ router.get('/competences-personnes', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour récupérer toutes les compétences
-router.get('/competences', (req, res) => {
+// Route pour récupérer toutes les compétences (protégée)
+router.get('/competences', authenticateToken, (req, res) => {
     const query = `
         SELECT competence_id, competence
         FROM Tcompetence
@@ -46,11 +46,12 @@ router.get('/competences', (req, res) => {
     });
 });
 
-// Route pour ajouter une compétence à une personne pour un site
+// Route pour ajouter une compétence à une personne pour un site (protégée)
 router.post('/add-competence', authenticateToken, (req, res) => {
-    const { nom_id, competence_id, site_id } = req.body;
+    const { nom_id, competence_id } = req.body;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
-    if (!nom_id || !competence_id || !site_id) {
+    if (!nom_id || !competence_id || !siteId) {
         return res.status(400).send('Les champs "nom_id", "competence_id" et "site_id" sont requis');
     }
 
@@ -59,7 +60,7 @@ router.post('/add-competence', authenticateToken, (req, res) => {
         VALUES (?, ?, ?)
     `;
 
-    connection.query(query, [nom_id, competence_id, site_id], (err) => {
+    connection.query(query, [nom_id, competence_id, siteId], (err) => {
         if (err) {
             console.error('Erreur lors de l\'ajout de la compétence :', err.message);
             res.status(500).send('Erreur lors de l\'ajout de la compétence');
@@ -69,11 +70,12 @@ router.post('/add-competence', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour supprimer une compétence d'une personne pour un site
+// Route pour supprimer une compétence d'une personne pour un site (protégée)
 router.post('/delete-competence', authenticateToken, (req, res) => {
-    const { nom_id, competence_id, site_id } = req.body;
+    const { nom_id, competence_id } = req.body;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
-    if (!nom_id || !competence_id || !site_id) {
+    if (!nom_id || !competence_id || !siteId) {
         return res.status(400).send('Les champs "nom_id", "competence_id" et "site_id" sont requis');
     }
 
@@ -82,7 +84,7 @@ router.post('/delete-competence', authenticateToken, (req, res) => {
         WHERE nom_id = ? AND competence_id = ? AND site_id = ?
     `;
 
-    connection.query(query, [nom_id, competence_id, site_id], (err) => {
+    connection.query(query, [nom_id, competence_id, siteId], (err) => {
         if (err) {
             console.error('Erreur lors de la suppression de la compétence :', err.message);
             res.status(500).send('Erreur lors de la suppression de la compétence');
