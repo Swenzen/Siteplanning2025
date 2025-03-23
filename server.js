@@ -17,6 +17,7 @@ console.log('MYSQLUSER:', process.env.MYSQLUSER);
 console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD);
 console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE);
 console.log('MYSQLPORT:', process.env.MYSQLPORT);
+console.log('Clé secrète JWT_SECRET :', process.env.JWT_SECRET);
 
 // Configuration de la connexion MySQL
 const connection = mysql.createConnection({
@@ -126,7 +127,7 @@ app.post('/login', (req, res) => {
         }
 
         // Générer un jeton JWT
-        const token = jwt.sign({ userId: user.user_id }, 'votre_secret', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.user_id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         // Renvoyer le jeton et le nom de l'utilisateur
         res.json({ token, username: user.username });
