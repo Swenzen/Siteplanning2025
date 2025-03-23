@@ -98,44 +98,23 @@ async function saveName() {
 
 //Fonction pour ajouter un nom *
 async function addNom() {
-    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
-    const nomInput = document.getElementById('nomInput'); // Récupérer l'élément input
+    const token = localStorage.getItem('token');
+    const nom = document.getElementById('nomInput').value;
+    const siteId = localStorage.getItem('site_id');
 
-    if (!nomInput) {
-        console.error('L\'élément avec l\'ID "nomInput" est introuvable.');
-        alert('Erreur : le champ de saisie pour le nom est introuvable.');
-        return;
-    }
+    const response = await fetch('/api/add-nom', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nom, site_id: siteId })
+    });
 
-    const nom = nomInput.value; // Récupérer la valeur saisie
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id stocké
-
-    console.log('Nom saisi :', nom); // Log pour vérifier le nom
-    console.log('Site ID récupéré depuis localStorage :', siteId); // Log pour vérifier le site_id
-
-    if (!nom || !siteId) {
-        alert('Veuillez saisir un nom et vérifier que le site est chargé.');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/add-nom', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ nom, site_id: siteId }) // Envoyer le nom et le site_id
-        });
-
-        if (response.ok) {
-            alert('Nom ajouté avec succès !');
-        } else {
-            const error = await response.text();
-            alert(`Erreur : ${error}`);
-        }
-    } catch (error) {
-        console.error('Erreur lors de l\'ajout du nom :', error);
+    if (response.ok) {
+        alert('Nom ajouté avec succès');
+    } else {
+        alert('Erreur lors de l\'ajout du nom');
     }
 }
 
