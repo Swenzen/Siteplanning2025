@@ -35,6 +35,8 @@ router.post('/add-competence2', authenticateToken, (req, res) => {
     const { competence, displayOrder } = req.body;
     const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du token
 
+    console.log('Données utilisateur (req.user) :', req.user);
+
     if (!competence || !siteId) {
         return res.status(400).send('Les champs "competence" et "site_id" sont requis');
     }
@@ -75,6 +77,8 @@ router.post('/add-competence2', authenticateToken, (req, res) => {
 router.post('/delete-competence', authenticateToken, (req, res) => {
     const { competence_id } = req.body;
     const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du token
+
+    console.log('Données utilisateur (req.user) :', req.user);
 
     if (!competence_id || !siteId) {
         return res.status(400).send('Les champs "competence_id" et "site_id" sont requis');
