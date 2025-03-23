@@ -28,6 +28,7 @@ router.get('/competences', authenticateToken, (req, res) => {
             return res.status(500).send('Erreur lors de la récupération des compétences');
         }
 
+        console.log('Compétences récupérées :', results); // Ajoute ce log
         res.json(results);
     });
 });
@@ -70,6 +71,7 @@ router.post('/add-competence2', authenticateToken, (req, res) => {
                     return res.status(500).send('Erreur lors de la création de la liaison compétence-site');
                 }
 
+                console.log(`Liaison créée : competence_id=${competenceId}, site_id=${siteId}`); // Ajoute ce log
                 res.send('Compétence ajoutée avec succès et liée au site');
             });
         });
@@ -102,6 +104,8 @@ router.post('/delete-competence', authenticateToken, (req, res) => {
             console.error('Erreur lors de la suppression de la compétence :', err.message);
             return res.status(500).send('Erreur lors de la suppression de la compétence');
         }
+
+        console.log('Résultat de la suppression :', result); // Ajoute ce log
 
         if (result.affectedRows === 0) {
             return res.status(404).send('Aucune compétence trouvée pour ce site');
