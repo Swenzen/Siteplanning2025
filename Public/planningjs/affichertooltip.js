@@ -4,6 +4,8 @@ async function fetchNomIds(competenceId, event) {
     const annee = document.getElementById("yearNumber").value;
     const jour_id = currentDay; // Utiliser l'ID du jour
 
+    console.log('Données envoyées pour fetchNomIds :', { competenceId, semaine, annee, jour_id });
+
     try {
         const response = await fetch(`/api/nom-ids?competence_id=${competenceId}&semaine=${semaine}&annee=${annee}&jour_id=${jour_id}`);
         if (!response.ok) {
@@ -39,6 +41,18 @@ function showTooltip(event, noms) {
             tooltip.style.display = 'none'; // Fermer le tooltip
         });
     });
+}
+
+// Fonction pour afficher le tooltip vide et charger les noms disponibles
+function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId, horaireDebut, horaireFin) {
+    const tooltip = document.getElementById("tooltip");
+    tooltip.innerHTML = `<p>Chargement des noms disponibles...</p>`;
+    tooltip.style.display = 'block';
+    tooltip.style.left = `${event.pageX + 10}px`; // Décalage pour une meilleure visibilité
+    tooltip.style.top = `${event.pageY + 10}px`;
+
+    // Appeler fetchNomIds pour récupérer les noms disponibles
+    fetchNomIds(competenceId, event);
 }
 
 // Fonction pour mettre à jour le planning dans la base de données

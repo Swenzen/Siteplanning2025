@@ -204,6 +204,7 @@ async function fetchPlanningData() {
                             container.appendChild(div);
 
                             div.addEventListener('contextmenu', (event) => {
+                                console.log('Clic droit détecté sur la cellule');
                                 event.preventDefault(); // Empêcher le menu contextuel par défaut
                                 currentCell = cell; // Stocker la cellule actuelle
                                 currentDay = day;
