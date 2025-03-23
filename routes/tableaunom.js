@@ -18,17 +18,15 @@ router.post('/update-name', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour ajouter un nom (protégée) *
 router.post('/add-nom', authenticateToken, (req, res) => {
-    console.log('Requête reçue :', req.body); // Log pour vérifier les données reçues
-
     const { nom, site_id } = req.body;
 
-    if (!nom || !site_id) {
-        return res.status(400).send('Les champs "nom" et "site_id" sont requis');
+    // Vérifier si l'utilisateur a accès au site_id
+    if (!req.user.siteIds.includes(String(site_id))) {
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
-    // Étape 1 : Ajouter le nom dans la table Tnom
+    // Logique pour ajouter un nom
     const insertNomQuery = 'INSERT INTO Tnom (nom) VALUES (?)';
     connection.query(insertNomQuery, [nom], (err, nomResult) => {
         if (err) {
@@ -36,9 +34,8 @@ router.post('/add-nom', authenticateToken, (req, res) => {
             return res.status(500).send('Erreur lors de l\'ajout du nom');
         }
 
-        const nomId = nomResult.insertId; // Récupérer l'ID du nom inséré
+        const nomId = nomResult.insertId;
 
-        // Étape 2 : Associer le nom au site dans Tnom_Tsite
         const insertNomSiteQuery = 'INSERT INTO Tnom_Tsite (nom_id, site_id) VALUES (?, ?)';
         connection.query(insertNomSiteQuery, [nomId, site_id], (err) => {
             if (err) {
