@@ -8,8 +8,11 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
     const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
     if (!siteId) {
+        console.error('Erreur : site_id introuvable dans le token');
         return res.status(400).send('Le site_id est introuvable dans le token');
     }
+
+    console.log('Site ID utilisé :', siteId);
 
     const query = `
         SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, c.competence_id
@@ -22,25 +25,33 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
     connection.query(query, [siteId, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des horaires par compétence :', err.message);
-            res.status(500).send('Erreur lors de la récupération des horaires par compétence');
-        } else {
-            const groupedData = results.reduce((acc, row) => {
-                if (!acc[row.horaire_id]) {
-                    acc[row.horaire_id] = {
-                        horaire_id: row.horaire_id,
-                        horaire_debut: row.horaire_debut,
-                        horaire_fin: row.horaire_fin,
-                        competences: []
-                    };
-                }
-                if (row.competence_id) {
-                    acc[row.horaire_id].competences.push(row.competence_id);
-                }
-                return acc;
-            }, {});
-
-            res.json(Object.values(groupedData));
+            return res.status(500).send('Erreur lors de la récupération des horaires par compétence');
         }
+
+        console.log('Résultats de la requête :', results);
+
+        if (!results || results.length === 0) {
+            console.error('Aucun horaire trouvé pour ce site.');
+            alert('Aucun horaire trouvé pour ce site.');
+            return;
+        }
+
+        const groupedData = results.reduce((acc, row) => {
+            if (!acc[row.horaire_id]) {
+                acc[row.horaire_id] = {
+                    horaire_id: row.horaire_id,
+                    horaire_debut: row.horaire_debut,
+                    horaire_fin: row.horaire_fin,
+                    competences: []
+                };
+            }
+            if (row.competence_id) {
+                acc[row.horaire_id].competences.push(row.competence_id);
+            }
+            return acc;
+        }, {});
+
+        res.json(Object.values(groupedData));
     });
 });
 

@@ -19,8 +19,22 @@ async function fetchHorairesCompetences() {
             })
         ]);
 
+        if (!competencesResponse.ok || !horairesResponse.ok) {
+            const competencesError = await competencesResponse.text();
+            const horairesError = await horairesResponse.text();
+            console.error('Erreur lors de la récupération des données :', competencesError, horairesError);
+            alert('Erreur lors de la récupération des données.');
+            return;
+        }
+
         const competences = await competencesResponse.json();
         const horaires = await horairesResponse.json();
+
+        if (!horaires || horaires.length === 0) {
+            console.error('Aucun horaire trouvé pour ce site.');
+            alert('Aucun horaire trouvé pour ce site.');
+            return;
+        }
 
         const tableHead = document.querySelector("#horairescompetenceTable thead tr");
         const tableBody = document.querySelector("#horairescompetenceTable tbody");
