@@ -14,9 +14,7 @@ function authenticateToken(req, res, next) {
             return res.status(403).send('Token invalide');
         }
 
-        console.log('Utilisateur authentifié :', user); // Ajouter un log pour vérifier les données du token
-        console.log('Données décodées du token :', user);
-        req.user = user; // Ajouter les informations de l'utilisateur à la requête
+        req.user = user; // Inclut userId et siteIds
         console.log('Données décodées du token :', req.user);
         next();
     });

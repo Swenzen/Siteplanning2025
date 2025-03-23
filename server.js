@@ -107,7 +107,14 @@ app.post('/register', async (req, res) => {
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
-    const query = 'SELECT * FROM Tuser WHERE username = ?';
+    const query = `
+        SELECT u.user_id, u.username, GROUP_CONCAT(st.site_id) AS site_ids
+        FROM Tuser u
+        JOIN Tuser_Tsite st ON u.user_id = st.user_id
+        WHERE u.username = ?
+        GROUP BY u.user_id
+    `;
+
     pool.query(query, [username], async (err, results) => {
         if (err) {
             console.error('Erreur lors de la connexion :', err.message);
@@ -126,10 +133,10 @@ app.post('/login', (req, res) => {
             return res.status(401).send('Nom d\'utilisateur ou mot de passe incorrect');
         }
 
-        // Générer un jeton JWT
-        const token = jwt.sign({ userId: user.user_id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // Générer un jeton JWT avec les site_ids
+        const token = jwt.sign({ userId: user.user_id, siteIds: user.site_ids.split(',') }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        // Renvoyer le jeton et le nom de l'utilisateur
+        console.log('Token généré :', token);
         res.json({ token, username: user.username });
     });
 });
