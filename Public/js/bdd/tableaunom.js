@@ -4,9 +4,10 @@ let currentId = null;
 // Fonction pour afficher les données dans le tableau des noms *
 async function fetchData() {
     const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
 
     try {
-        const response = await fetch('/api/data', {
+        const response = await fetch(`/api/data?site_id=${siteId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
@@ -72,12 +73,16 @@ async function saveName() {
     if (currentCell && currentId) {
         try {
             console.time('saveName');
+            const token = localStorage.getItem('token');
+            const siteId = localStorage.getItem('site_id');
+
             const response = await fetch('/api/update-name', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nom_id: currentId, nom: newName })
+                body: JSON.stringify({ nom_id: currentId, nom: newName, site_id: siteId })
             });
 
             if (response.ok) {
