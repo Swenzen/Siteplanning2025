@@ -79,8 +79,28 @@ async function addCompetence() {
                 return;
             }
 
+            // Récupérer le token depuis le localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Erreur : le token d\'authentification est introuvable.');
+                alert('Erreur : vous n\'êtes pas authentifié.');
+                return;
+            }
+
             // Récupérer le plus grand display_order existant
-            const responseOrder = await fetch('/api/max-display-order');
+            const responseOrder = await fetch('/api/max-display-order', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!responseOrder.ok) {
+                console.error('Erreur lors de la récupération du display_order');
+                return;
+            }
+
             const maxOrderData = await responseOrder.json();
             const maxDisplayOrder = maxOrderData.maxDisplayOrder || 0;
 
@@ -88,6 +108,7 @@ async function addCompetence() {
             const response = await fetch('/api/add-competence2', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -98,17 +119,20 @@ async function addCompetence() {
             });
 
             if (response.ok) {
+                console.log('Compétence ajoutée avec succès');
                 fetchCompetences(); // Rafraîchir la liste des compétences
             } else {
-                console.error('Erreur lors de l\'ajout de la compétence');
+                const error = await response.text();
+                console.error('Erreur lors de l\'ajout de la compétence :', error);
             }
             console.timeEnd('addCompetence');
         } catch (error) {
-            console.error('Erreur lors de la requête:', error);
+            console.error('Erreur lors de la requête :', error);
         }
     }
 }
 
+// Fonction pour supprimer une compétence *
 async function deleteCompetence(competenceId) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
 
