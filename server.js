@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const mysql = require('mysql2');
 const path = require('path');
@@ -61,8 +63,6 @@ app.use('/api', tableaucompetenceshorairesRoutes);
 app.use('/api', ordreRoutes);
 app.use('/api', tooltipRoutes);
 app.use('/api', creationjreposRoutes);
-
-
 
 // Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {
