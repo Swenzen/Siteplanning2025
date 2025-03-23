@@ -14,51 +14,37 @@ async function fetchHorairesCompetences() {
             fetch(`/api/competences?site_id=${siteId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
-            fetch(`/api/horaires-competences`, {
+            fetch(`/api/horaires-competences?site_id=${siteId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
         ]);
 
         const competences = await competencesResponse.json();
-        const data = await horairesResponse.json();
+        const horaires = await horairesResponse.json();
 
         const tableHead = document.querySelector("#horairescompetenceTable thead tr");
         const tableBody = document.querySelector("#horairescompetenceTable tbody");
         tableHead.innerHTML = '<th>Horaires</th>';
         tableBody.innerHTML = '';
 
+        // Ajouter les colonnes pour les compétences
         competences.forEach(competence => {
             const th = document.createElement("th");
             th.textContent = competence.competence;
             tableHead.appendChild(th);
         });
 
-        const groupedData = data.reduce((acc, item) => {
-            if (!acc[item.horaire_id]) {
-                acc[item.horaire_id] = { horaire_debut: item.horaire_debut, horaire_fin: item.horaire_fin };
-            }
-            if (item.competence) {
-                acc[item.horaire_id][item.competence] = true;
-            }
-            return acc;
-        }, {});
-
-        const horaires = Object.keys(groupedData).sort((a, b) => {
-            const horaireA = groupedData[a].horaire_debut;
-            const horaireB = groupedData[b].horaire_debut;
-            return new Date(`1970-01-01T${horaireA}`) - new Date(`1970-01-01T${horaireB}`);
-        });
-
-        horaires.forEach(horaire_id => {
+        // Ajouter les lignes pour les horaires
+        horaires.forEach(horaire => {
             const row = document.createElement("tr");
             const horaireCell = document.createElement("td");
-            horaireCell.textContent = `${groupedData[horaire_id].horaire_debut} - ${groupedData[horaire_id].horaire_fin}`;
+            horaireCell.textContent = `${horaire.horaire_debut} - ${horaire.horaire_fin}`;
             row.appendChild(horaireCell);
 
             competences.forEach(competence => {
                 const cell = document.createElement("td");
-                cell.textContent = groupedData[horaire_id] && groupedData[horaire_id][competence.competence] ? '✔' : '';
-                cell.addEventListener('click', () => toggleHoraireCompetence(horaire_id, competence.competence_id, cell));
+                cell.textContent = horaire.competences && horaire.competences.includes(competence.competence_id) ? '✔' : '';
+                cell.addEventListener('click', () => toggleHoraireCompetence(horaire.horaire_id, competence.competence_id, cell));
                 row.appendChild(cell);
             });
 

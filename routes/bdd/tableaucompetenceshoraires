@@ -12,19 +12,34 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
     }
 
     const query = `
-        SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, c.competence_id, c.competence
+        SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, c.competence_id
         FROM Thoraire h
-        JOIN Thoraire_competence_Tsite hct ON h.horaire_id = hct.horaire_id
-        JOIN Tcompetence c ON hct.competence_id = c.competence_id
-        WHERE hct.site_id = ?
+        LEFT JOIN Thoraire_competence_Tsite hct ON h.horaire_id = hct.horaire_id AND hct.site_id = ?
+        LEFT JOIN Tcompetence c ON hct.competence_id = c.competence_id
+        WHERE h.site_id = ?
     `;
 
-    connection.query(query, [siteId], (err, results) => {
+    connection.query(query, [siteId, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des horaires par compétence :', err.message);
             res.status(500).send('Erreur lors de la récupération des horaires par compétence');
         } else {
-            res.json(results);
+            const groupedData = results.reduce((acc, row) => {
+                if (!acc[row.horaire_id]) {
+                    acc[row.horaire_id] = {
+                        horaire_id: row.horaire_id,
+                        horaire_debut: row.horaire_debut,
+                        horaire_fin: row.horaire_fin,
+                        competences: []
+                    };
+                }
+                if (row.competence_id) {
+                    acc[row.horaire_id].competences.push(row.competence_id);
+                }
+                return acc;
+            }, {});
+
+            res.json(Object.values(groupedData));
         }
     });
 });
