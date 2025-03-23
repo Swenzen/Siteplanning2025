@@ -37,18 +37,32 @@ async function fetchPlanningData() {
     }
 
     try {
+        // Effectuer les requêtes en parallèle
         const [planningResponse, commentsResponse, fermeturesResponse] = await Promise.all([
-            fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`, {
+            fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}&siteId=${siteId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
                     'Content-Type': 'application/json'
                 }
             }),
-            fetch(`/api/comments?semaine=${semaine}&annee=${annee}`),
-            fetch(`/api/fermetures?semaine=${semaine}&annee=${annee}`)
+            fetch(`/api/comments?semaine=${semaine}&annee=${annee}&siteId=${siteId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }),
+            fetch(`/api/fermetures?semaine=${semaine}&annee=${annee}&siteId=${siteId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
         ]);
 
+        // Vérifier si les réponses sont valides
         if (!planningResponse.ok) {
             throw new Error('Erreur lors de la récupération des données du planning');
         }
@@ -59,6 +73,7 @@ async function fetchPlanningData() {
             throw new Error('Erreur lors de la récupération des fermetures');
         }
 
+        // Extraire les données des réponses
         const planningData = await planningResponse.json();
         const commentsData = await commentsResponse.json();
         const fermeturesData = await fermeturesResponse.json();
@@ -148,9 +163,6 @@ async function fetchPlanningData() {
                         }
                     });
 
-                    // Ajouter des logs pour vérifier les paires créées
-                    console.log(`Paires créées pour le jour ${day}:`, pairs);
-
                     // Ajouter chaque paire dans un conteneur
                     Object.entries(pairs).forEach(([nom_id, { nom, commentaire }]) => {
                         const container = document.createElement('div');
@@ -159,7 +171,6 @@ async function fetchPlanningData() {
                             const commentDiv = document.createElement('div');
                             commentDiv.textContent = commentaire;
                             commentDiv.style.fontWeight = 'bold'; // Changer le style pour gras
-                            console.log(`Commentaire créé: ${commentaire}`);
                             container.appendChild(commentDiv);
                         }
 
@@ -172,78 +183,21 @@ async function fetchPlanningData() {
                             div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
                             div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
 
-                            console.log(`Nom créé: ${nom}, Nom ID: ${nom_id}, Jour ID: ${day}, Compétence ID: ${rowData.competence_id}, Horaire Début: ${rowData.horaire_debut}, Horaire Fin: ${rowData.horaire_fin}`);
-
                             container.appendChild(div);
 
                             div.addEventListener('contextmenu', (event) => {
                                 event.preventDefault(); // Empêcher le menu contextuel par défaut
-                                console.log(`Clic droit sur le nom : ${nom}`);
                                 currentCell = cell; // Stocker la cellule actuelle
                                 currentDay = day;
                                 currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
                                 currentCompetenceId = rowData.competence_id;
-                                const nom_id = div.dataset.nomId; // Récupérer l'ID du nom
-                                const jour_id = div.dataset.jourId; // Récupérer l'ID du jour
-                                const competence_id = div.dataset.competenceId; // Récupérer l'ID de la compétence
-                                const horaire_debut = div.dataset.horaireDebut; // Récupérer l'horaire de début
-                                const horaire_fin = div.dataset.horaireFin; // Récupérer l'horaire de fin
-                                console.log(`Nom ID récupéré: ${nom_id}`);
-                                showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin);
+                                showEmptyTooltip(event, nom, nom_id, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
                             });
                         }
 
-                        // Ajouter le conteneur à la cellule
                         cell.appendChild(container);
                     });
-
-                    // Ajouter un log pour afficher le contenu de la cellule
-                    console.log(`Contenu de la cellule pour le jour ${day}:`, cell.innerHTML);
-                } else {
-                    // Vérifier si la cellule doit être marquée comme "FERMEE"
-                    const isFermeture = fermeturesData.some(fermeture => 
-                        fermeture.jour_id == day &&
-                        fermeture.semaine == semaine &&
-                        fermeture.annee == annee &&
-                        fermeture.competence_id == rowData.competence_id &&
-                        fermeture.horaire_debut == rowData.horaire_debut &&
-                        fermeture.horaire_fin == rowData.horaire_fin
-                    );
-
-                    if (isFermeture) {
-                        cell.textContent = 'FERMEE';
-
-                        // Ajouter un gestionnaire de clic droit pour supprimer la fermeture
-                        cell.addEventListener('contextmenu', (event) => {
-                            event.preventDefault(); // Empêcher le menu contextuel par défaut
-                            console.log(`Clic droit sur FERMEE : ${day}`);
-                            removeFermeture(day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
-                        });
-                    }
                 }
-
-                // Gestionnaire de clic gauche pour afficher le tooltip
-                cell.addEventListener('click', (event) => {
-                    console.log(`Cellule cliquée : ${day}, ${rowData.competence_id}`);
-                    currentCell = cell; // Stocker la cellule actuelle
-                    currentDay = day;
-                    currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
-                    currentCompetenceId = rowData.competence_id;
-                    fetchNomIds(rowData.competence_id, event);
-                });
-
-                // Gestionnaire de clic droit pour afficher le tooltip sur les cellules vides
-                cell.addEventListener('contextmenu', (event) => {
-                    event.preventDefault(); // Empêcher le menu contextuel par défaut
-                    if (cell.innerHTML.trim() === '') {
-                        console.log(`Clic droit sur une cellule vide : ${day}`);
-                        currentCell = cell; // Stocker la cellule actuelle
-                        currentDay = day;
-                        currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
-                        currentCompetenceId = rowData.competence_id;
-                        showTooltipForEmptyCell(event, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
-                    }
-                });
 
                 row.appendChild(cell);
             });
@@ -251,17 +205,7 @@ async function fetchPlanningData() {
             tableBody.appendChild(row);
         });
 
-        // Calculer le nombre de cellules vides dans la colonne "lundi"
-        const lundiCells = document.querySelectorAll("#planningTable tbody tr td:nth-child(3)"); // 3ème colonne pour "lundi"
-        let emptyCellsCount = 0;
-        lundiCells.forEach(cell => {
-            if (cell.innerHTML.trim() === '') {
-                emptyCellsCount++;
-            }
-        });
-        console.log(`Pour le tableau fetchplanning : Le nombre de cellules vides dans la colonne lundi est de : ${emptyCellsCount}`);
-
-        // Appeler la fonction pour créer le tableau supplémentaire
+        // Appeler les fonctions supplémentaires pour créer les tableaux
         createAdditionalTable();
         createCompetenceTable(semaine, annee, siteId);
 
