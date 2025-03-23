@@ -19,6 +19,9 @@ router.get('/competences', authenticateToken, (req, res) => {
         WHERE ct.site_id = ?
     `;
 
+    console.log('Requête SQL exécutée :', query);
+    console.log('Paramètres SQL :', [siteId]);
+
     connection.query(query, [siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des compétences :', err.message);
@@ -90,6 +93,9 @@ router.post('/delete-competence', authenticateToken, (req, res) => {
         JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
         WHERE c.competence_id = ? AND ct.site_id = ?
     `;
+
+    console.log('Requête SQL exécutée :', deleteQuery);
+    console.log('Paramètres SQL :', [competence_id, siteId]);
 
     connection.query(deleteQuery, [competence_id, siteId], (err, result) => {
         if (err) {
