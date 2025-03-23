@@ -109,39 +109,27 @@ async function addCompetence() {
     }
 }
 
-// Fonction pour supprimer une compétence *
-async function deleteCompetence(competence_id) {
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette compétence ?")) {
-        try {
-            console.time('deleteCompetence');
+async function deleteCompetence(competenceId) {
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
 
-            // Récupérer le site_id depuis le localStorage
-            const siteId = localStorage.getItem('site_id');
-            if (!siteId) {
-                console.error('Erreur : le site_id est introuvable.');
-                alert('Erreur : le site n\'est pas chargé.');
-                return;
-            }
+    try {
+        const response = await fetch('/api/delete-competence', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ competence_id: competenceId })
+        });
 
-            // Envoyer la requête pour supprimer la compétence liée au site
-            const response = await fetch('/api/delete-competence', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ competence_id, site_id: siteId })
-            });
-
-            if (response.ok) {
-                fetchCompetences(); // Rafraîchir la liste des compétences
-            } else {
-                console.error('Erreur lors de la suppression de la compétence');
-            }
-
-            console.timeEnd('deleteCompetence');
-        } catch (error) {
-            console.error('Erreur lors de la requête:', error);
+        if (response.ok) {
+            console.log('Compétence supprimée avec succès');
+        } else {
+            const error = await response.text();
+            console.error('Erreur lors de la suppression de la compétence :', error);
         }
+    } catch (error) {
+        console.error('Erreur lors de la requête :', error);
     }
 }
 
