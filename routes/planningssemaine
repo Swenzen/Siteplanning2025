@@ -6,12 +6,13 @@ const authenticateToken = require('../middleware/auth'); // Importer le middlewa
 
 router.get('/planning-data', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
-    const siteId = req.user.site_id; // Récupérer le site_id depuis le token
+    const siteId = req.user.site_id; // Récupérer le site_id depuis req.user
 
+    console.log('Données utilisateur (req.user) :', req.user);
     console.log('Paramètres reçus dans /api/planning-data :', { semaine, annee, siteId });
 
-    if (!semaine || !annee) {
-        return res.status(400).send('Les champs "semaine" et "annee" sont requis');
+    if (!semaine || !annee || !siteId) {
+        return res.status(400).send('Les champs "semaine", "annee" et "site_id" sont requis');
     }
 
     const query = `
