@@ -4,9 +4,9 @@ const authenticateToken = require('../middleware/auth'); // Middleware pour vér
 const connection = require('../db'); // Connexion à la base de données
 
 // Route pour récupérer les informations du site associé à l'utilisateur
-router.get('/api/site', authenticateToken, (req, res) => {
+router.get('/site', authenticateToken, (req, res) => {
     console.log('Requête reçue pour /api/site');
-    const siteIds = req.user.siteIds; // Récupérer les siteIds depuis le token JWT
+    const siteIds = req.user.siteIds;
 
     if (!siteIds || siteIds.length === 0) {
         console.error('Aucun site associé à cet utilisateur');
@@ -26,7 +26,6 @@ router.get('/api/site', authenticateToken, (req, res) => {
         }
 
         console.log('Sites récupérés :', results);
-        // Retourner le premier site (ou tous si nécessaire)
         res.json({ site: results[0] });
     });
 });

@@ -183,30 +183,30 @@
 
         // Fonction pour récupérer le site
         async function fetchSite() {
-            const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Récupérer le token JWT depuis le localStorage
 
-            try {
-                const response = await fetch('/api/site', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const { site } = await response.json();
-                    console.log('Site récupéré :', site);
-
-                    const siteElement = document.getElementById('site-display');
-                    siteElement.textContent = `Site : ${site.site_name}`;
-                } else {
-                    console.error('Erreur lors de la récupération du site');
-                }
-            } catch (error) {
-                console.error('Erreur lors de la requête :', error);
+    try {
+        const response = await fetch('/api/site', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        if (response.ok) {
+            const { site } = await response.json();
+            console.log('Site récupéré :', site);
+
+            const siteElement = document.getElementById('site-display');
+            siteElement.textContent = `Site : ${site.site_name}`;
+        } else {
+            console.error('Erreur lors de la récupération du site');
         }
+    } catch (error) {
+        console.error('Erreur lors de la requête :', error);
+    }
+}
 
         document.addEventListener('DOMContentLoaded', fetchSite);
     </script>
