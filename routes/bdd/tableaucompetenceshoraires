@@ -17,9 +17,10 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
     const query = `
         SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, c.competence_id
         FROM Thoraire h
+        JOIN Thoraire_Tsite ht ON h.horaire_id = ht.horaire_id
         LEFT JOIN Thoraire_competence_Tsite hct ON h.horaire_id = hct.horaire_id AND hct.site_id = ?
         LEFT JOIN Tcompetence c ON hct.competence_id = c.competence_id
-        WHERE h.site_id = ?
+        WHERE ht.site_id = ?
     `;
 
     connection.query(query, [siteId, siteId], (err, results) => {
@@ -32,8 +33,7 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
 
         if (!results || results.length === 0) {
             console.error('Aucun horaire trouvé pour ce site.');
-            alert('Aucun horaire trouvé pour ce site.');
-            return;
+            return res.status(404).send('Aucun horaire trouvé pour ce site.');
         }
 
         const groupedData = results.reduce((acc, row) => {
