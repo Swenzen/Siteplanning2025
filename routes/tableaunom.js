@@ -1,141 +1,110 @@
-// Fonction pour afficher les horaires dans le tableau
-async function fetchHoraires() {
-    const token = localStorage.getItem('token');
-    const siteId = localStorage.getItem('site_id');
+const express = require('express');
+const router = express.Router();
+const connection = require('../db'); // Importer la connexion à la base de données
+const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
-        return;
-    }
+// Route pour mettre à jour le nom (protégée)
+router.post('/update-name', authenticateToken, (req, res) => {
+    console.log('Requête reçue :', req.body);
+    const { nom_id, nom } = req.body;
+    const query = 'UPDATE Tnom SET nom = ? WHERE nom_id = ?';
 
-    try {
-        const response = await fetch(`/api/horaires?site_id=${siteId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP ! statut : ${response.status}`);
+    connection.query(query, [nom, nom_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la mise à jour du nom :', err.message);
+            res.status(500).send('Erreur lors de la mise à jour');
+            return;
         }
-
-        const data = await response.json();
-        console.log('Données récupérées :', data);
-
-        const tableBody = document.querySelector("#horairesTable tbody");
-        tableBody.innerHTML = '';
-
-        data.forEach(rowData => {
-            const row = document.createElement("tr");
-            const horaireDebutCell = document.createElement("td");
-            horaireDebutCell.textContent = rowData.horaire_debut;
-            row.appendChild(horaireDebutCell);
-
-            const horaireFinCell = document.createElement("td");
-            horaireFinCell.textContent = rowData.horaire_fin;
-            row.appendChild(horaireFinCell);
-
-            const actionCell = document.createElement("td");
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Supprimer";
-            deleteButton.dataset.horaireId = rowData.horaire_id;
-            actionCell.appendChild(deleteButton);
-            row.appendChild(actionCell);
-
-            tableBody.appendChild(row);
-        });
-
-        console.timeEnd('fetchHoraires');
-    } catch (error) {
-        console.error('Erreur lors de la récupération des horaires :', error);
-    }
-}
-
-// Fonction pour ajouter un horaire
-async function addHoraire() {
-    const horaireDebut = prompt("Entrez l'horaire de début (HH:MM)");
-    const horaireFin = prompt("Entrez l'horaire de fin (HH:MM)");
-    const token = localStorage.getItem('token');
-    const siteId = localStorage.getItem('site_id');
-
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
-        return;
-    }
-
-    if (horaireDebut && horaireFin) {
-        try {
-            const response = await fetch('/api/add-horaires', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    horaire_debut: horaireDebut,
-                    horaire_fin: horaireFin,
-                    site_id: siteId
-                })
-            });
-
-            if (response.ok) {
-                alert('Horaire ajouté avec succès');
-                fetchHoraires();
-            } else {
-                console.error('Erreur lors de l\'ajout de l\'horaire');
-            }
-        } catch (error) {
-            console.error('Erreur lors de la requête :', error);
-        }
-    }
-}
-
-// Fonction pour supprimer un horaire
-async function deleteHoraire(horaire_id) {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-        console.error('Erreur : le token d\'authentification est introuvable.');
-        alert('Erreur : vous devez être authentifié.');
-        return;
-    }
-
-    if (confirm("Êtes-vous sûr de vouloir supprimer cet horaire ?")) {
-        try {
-            const response = await fetch('/api/delete-horaires', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ horaire_id })
-            });
-
-            if (response.ok) {
-                fetchHoraires();
-            } else {
-                console.error('Erreur lors de la suppression de l\'horaire');
-            }
-        } catch (error) {
-            console.error('Erreur lors de la requête:', error);
-        }
-    }
-}
-
-// Appeler la fonction pour récupérer les horaires lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', fetchHoraires);
-
-// Utiliser la délégation d'événements pour gérer les clics sur les boutons de suppression
-document.querySelector("#horairesTable tbody").addEventListener("click", (event) => {
-    if (event.target.tagName === "BUTTON" && event.target.textContent === "Supprimer") {
-        const horaireId = event.target.dataset.horaireId;
-        deleteHoraire(horaireId);
-    }
+        res.send('Nom mis à jour avec succès');
+    });
 });
 
-// Gestionnaire d'événements pour ajouter un horaire
-document.getElementById("addHoraireButton").addEventListener("click", addHoraire);
+
+
+
+router.post('/add-nom', authenticateToken, (req, res) => {
+    const { nom, site_id } = req.body;
+
+    if (!req.user.siteIds.includes(String(site_id))) {
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
+    }
+
+    const insertNomQuery = 'INSERT INTO Tnom (nom) VALUES (?)';
+    connection.query(insertNomQuery, [nom], (err, nomResult) => {
+        if (err) {
+            return res.status(500).send('Erreur lors de l\'ajout du nom');
+        }
+
+        const nomId = nomResult.insertId;
+
+        const insertNomSiteQuery = 'INSERT INTO Tnom_Tsite (nom_id, site_id) VALUES (?, ?)';
+        connection.query(insertNomSiteQuery, [nomId, site_id], (err) => {
+            if (err) {
+                return res.status(500).send('Erreur lors de l\'association du nom au site');
+            }
+
+            res.status(201).send('Nom ajouté avec succès');
+        });
+    });
+});
+
+// Route pour supprimer un nom (protégée)
+
+router.post('/delete-nom', authenticateToken, (req, res) => {
+    console.log('Requête reçue pour /delete-nom :', req.body);
+    const { nom_id } = req.body;
+
+    if (!nom_id) {
+        console.error('Erreur : Le champ "nom_id" est requis');
+        return res.status(400).send('Le champ "nom_id" est requis');
+    }
+
+    const deleteNomQuery = `
+        DELETE FROM Tnom
+        WHERE nom_id = ?
+    `;
+
+    console.log('Requête SQL exécutée :', deleteNomQuery);
+    console.log('Paramètres SQL :', [nom_id]);
+
+    connection.query(deleteNomQuery, [nom_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la suppression du nom :', err.message);
+            return res.status(500).send('Erreur lors de la suppression du nom');
+        }
+
+        console.log('Résultat de la suppression :', result);
+
+        if (result.affectedRows === 0) {
+            console.error('Aucun nom trouvé pour nom_id :', nom_id);
+            return res.status(404).send('Aucun nom trouvé pour ce nom_id');
+        }
+
+        console.log(`Nom supprimé avec succès pour nom_id: ${nom_id}`);
+        res.send('Nom supprimé avec succès');
+    });
+});
+
+
+router.get('/data', authenticateToken, (req, res) => {
+    const siteIds = req.user.siteIds;
+
+    const query = `
+    SELECT t.nom_id, t.nom, s.site_name
+    FROM Tnom t
+    JOIN Tnom_Tsite nts ON t.nom_id = nts.nom_id
+    JOIN Tsite s ON nts.site_id = s.site_id
+    WHERE nts.site_id = ?
+`;
+
+    connection.query(query, [siteIds], (err, results) => {
+        if (err) {
+            return res.status(500).send('Erreur lors de la récupération des données');
+        }
+
+        res.json(results);
+    });
+});
+
+
+module.exports = router;
