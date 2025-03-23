@@ -6,7 +6,7 @@ const authenticateToken = require('../middleware/auth'); // Importer le middlewa
 
 router.get('/planning-data', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
-    const siteId = req.user.site_id; // Récupérer le site_id depuis req.user
+    const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du tableau
 
     console.log('Données utilisateur (req.user) :', req.user);
     console.log('Paramètres reçus dans /api/planning-data :', { semaine, annee, siteId });
