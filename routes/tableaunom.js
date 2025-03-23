@@ -96,28 +96,4 @@ router.get('/data', authenticateToken, (req, res) => {
 });
 
 
-// Route pour récupérer les informations des sites associés à l'utilisateur
-router.get('/site', authenticateToken, (req, res) => {
-    const siteIds = req.user.siteIds; // Récupérer les siteIds depuis le token JWT
-
-    if (!siteIds || siteIds.length === 0) {
-        return res.status(400).send('Aucun site associé à cet utilisateur');
-    }
-
-    const query = `
-        SELECT site_id, site_name
-        FROM Tsite
-        WHERE site_id IN (?)
-    `;
-
-    connection.query(query, [siteIds], (err, results) => {
-        if (err) {
-            console.error('Erreur lors de la récupération des sites :', err.message);
-            return res.status(500).send('Erreur lors de la récupération des sites');
-        }
-
-        res.json({ sites: results });
-    });
-});
-
 module.exports = router;

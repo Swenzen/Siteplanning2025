@@ -53,6 +53,7 @@ const tableaucompetenceshorairesRoutes = require('./routes/bdd/tableaucompetence
 const ordreRoutes = require('./routes/planning/ordre');
 const tooltipRoutes = require('./routes/planning/tooltip');
 const creationjreposRoutes = require('./routes/bdd/creationjrepos');
+const retoursiteRoutes = require('./routes/retoursite');
 
 // Utiliser les routes
 app.use('/api', competencesRoutes);
@@ -64,6 +65,7 @@ app.use('/api', tableaucompetenceshorairesRoutes);
 app.use('/api', ordreRoutes);
 app.use('/api', tooltipRoutes);
 app.use('/api', creationjreposRoutes);
+app.use('/api', retoursiteRoutes);
 
 // Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {
