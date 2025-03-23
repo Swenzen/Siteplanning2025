@@ -6,10 +6,10 @@ const authenticateToken = require('../../middleware/auth'); // Importer le middl
 
 //route pour compétences tableau *
 router.get('/competences', authenticateToken, (req, res) => {
-    const siteId = req.query.site_id;
+    const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du token
 
     if (!siteId) {
-        return res.status(400).send('Le champ "site_id" est requis');
+        return res.status(400).send('Le site_id est introuvable dans le token');
     }
 
     const query = `
@@ -31,10 +31,11 @@ router.get('/competences', authenticateToken, (req, res) => {
 
 
 // Route pour ajouter une compétence avec liaison à Tsite *
-router.post('/add-competence2', (req, res) => {
-    const { competence, displayOrder, site_id } = req.body;
+router.post('/add-competence2', authenticateToken, (req, res) => {
+    const { competence, displayOrder } = req.body;
+    const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du token
 
-    if (!competence || !site_id) {
+    if (!competence || !siteId) {
         return res.status(400).send('Les champs "competence" et "site_id" sont requis');
     }
 
@@ -58,7 +59,7 @@ router.post('/add-competence2', (req, res) => {
 
             // Étape 3 : Créer la liaison dans Tcompetence_Tsite
             const linkQuery = 'INSERT INTO Tcompetence_Tsite (competence_id, site_id) VALUES (?, ?)';
-            connection.query(linkQuery, [competenceId, site_id], (err) => {
+            connection.query(linkQuery, [competenceId, siteId], (err) => {
                 if (err) {
                     console.error('Erreur lors de la création de la liaison compétence-site :', err.message);
                     return res.status(500).send('Erreur lors de la création de la liaison compétence-site');
@@ -71,14 +72,14 @@ router.post('/add-competence2', (req, res) => {
 });
 
 // Route pour supprimer une compétence liée à un site *
-router.post('/delete-competence', (req, res) => {
-    const { competence_id, site_id } = req.body;
+router.post('/delete-competence', authenticateToken, (req, res) => {
+    const { competence_id } = req.body;
+    const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du token
 
-    if (!competence_id || !site_id) {
+    if (!competence_id || !siteId) {
         return res.status(400).send('Les champs "competence_id" et "site_id" sont requis');
     }
 
-    // Supprimer la compétence uniquement si elle est liée au site spécifié
     const deleteQuery = `
         DELETE c
         FROM Tcompetence c
@@ -86,7 +87,7 @@ router.post('/delete-competence', (req, res) => {
         WHERE c.competence_id = ? AND ct.site_id = ?
     `;
 
-    connection.query(deleteQuery, [competence_id, site_id], (err, result) => {
+    connection.query(deleteQuery, [competence_id, siteId], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression de la compétence :', err.message);
             return res.status(500).send('Erreur lors de la suppression de la compétence');
