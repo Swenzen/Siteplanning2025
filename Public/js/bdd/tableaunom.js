@@ -41,6 +41,7 @@ async function fetchData() {
                 deleteButton.textContent = "Supprimer";
                 deleteButton.dataset.nomId = rowData.nom_id; // Stocker l'ID du nom dans le bouton
                 deleteButton.classList.add("delete-button"); // Ajouter une classe pour le style
+                console.log('Bouton de suppression créé avec nom_id :', rowData.nom_id);
                 actionCell.appendChild(deleteButton);
                 row.appendChild(actionCell);
 
@@ -162,6 +163,12 @@ async function deleteName(nom_id) {
 document.querySelector("#databaseTable tbody").addEventListener("click", (event) => {
     if (event.target.tagName === "BUTTON" && event.target.textContent === "Supprimer") {
         const nomId = event.target.dataset.nomId; // Récupérer l'ID du nom à partir du bouton
+        console.log('ID du nom récupéré :', nomId);
+        if (!nomId) {
+            console.error('Erreur : nom_id est introuvable.');
+            alert('Erreur : Impossible de trouver l\'ID du nom.');
+            return;
+        }
         deleteName(nomId); // Appeler la fonction pour supprimer le nom
     }
 });
