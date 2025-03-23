@@ -28,11 +28,13 @@ async function fetchPlanningData() {
 
     if (!token) {
         console.error('Erreur : le token est manquant.');
+        alert('Erreur : vous devez être authentifié.');
         return;
     }
 
     if (!siteId) {
         console.error('Erreur : le site_id est manquant.');
+        alert('Erreur : un site doit être sélectionné.');
         return;
     }
 
@@ -64,13 +66,22 @@ async function fetchPlanningData() {
 
         // Vérifier si les réponses sont valides
         if (!planningResponse.ok) {
-            throw new Error('Erreur lors de la récupération des données du planning');
+            const errorText = await planningResponse.text();
+            console.error('Erreur lors de la récupération des données du planning :', errorText);
+            alert('Erreur lors de la récupération des données du planning.');
+            return;
         }
         if (!commentsResponse.ok) {
-            throw new Error('Erreur lors de la récupération des commentaires');
+            const errorText = await commentsResponse.text();
+            console.error('Erreur lors de la récupération des commentaires :', errorText);
+            alert('Erreur lors de la récupération des commentaires.');
+            return;
         }
         if (!fermeturesResponse.ok) {
-            throw new Error('Erreur lors de la récupération des fermetures');
+            const errorText = await fermeturesResponse.text();
+            console.error('Erreur lors de la récupération des fermetures :', errorText);
+            alert('Erreur lors de la récupération des fermetures.');
+            return;
         }
 
         // Extraire les données des réponses
@@ -81,6 +92,13 @@ async function fetchPlanningData() {
         console.log('Données du planning récupérées :', planningData);
         console.log('Commentaires récupérés :', commentsData);
         console.log('Fermetures récupérées :', fermeturesData);
+
+        // Vérifie si les données du planning sont vides
+        if (!planningData || planningData.length === 0) {
+            console.warn('Aucune donnée de planning trouvée.');
+            alert('Aucune donnée de planning trouvée.');
+            return;
+        }
 
         const tableBody = document.querySelector("#planningTable tbody");
         tableBody.innerHTML = ''; // Vider le contenu du tableau
@@ -211,6 +229,7 @@ async function fetchPlanningData() {
 
     } catch (error) {
         console.error('Erreur lors de la récupération des données du planning :', error);
+        alert('Une erreur est survenue lors de la récupération des données du planning.');
     }
 }
 

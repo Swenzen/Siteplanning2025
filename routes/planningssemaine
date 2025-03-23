@@ -12,6 +12,7 @@ router.get('/planning-data', authenticateToken, (req, res) => {
     console.log('Paramètres reçus dans /api/planning-data :', { semaine, annee, siteId });
 
     if (!semaine || !annee || !siteId) {
+        console.error('Erreur : paramètres manquants.');
         return res.status(400).send('Les champs "semaine", "annee" et "site_id" sont requis');
     }
 
@@ -37,11 +38,17 @@ router.get('/planning-data', authenticateToken, (req, res) => {
     connection.query(query, [semaine, annee, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données du planning :', err.message);
-            res.status(500).send('Erreur lors de la récupération des données du planning');
-        } else {
-            console.log('Résultats SQL :', results);
-            res.json(results);
+            return res.status(500).send('Erreur lors de la récupération des données du planning');
         }
+
+        console.log('Résultats SQL :', results);
+
+        if (!results || results.length === 0) {
+            console.warn('Aucune donnée trouvée pour le planning.');
+            return res.status(404).send('Aucune donnée trouvée pour le planning.');
+        }
+
+        res.json(results);
     });
 });
 
