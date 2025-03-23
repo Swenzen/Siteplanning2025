@@ -5,6 +5,7 @@ const authenticateToken = require('../middleware/auth'); // Importer le middlewa
 
 // Route pour mettre à jour le nom (protégée)
 router.post('/update-name', authenticateToken, (req, res) => {
+    console.log('Requête reçue :', req.body);
     const { nom_id, nom } = req.body;
     const query = 'UPDATE Tnom SET nom = ? WHERE nom_id = ?';
 
@@ -19,20 +20,25 @@ router.post('/update-name', authenticateToken, (req, res) => {
 });
 
 router.post('/add-nom', authenticateToken, (req, res) => {
+    console.log('Requête reçue :', req.body); // Log pour vérifier les données reçues
     const { nom, site_id } = req.body;
 
-    // Vérifier si l'utilisateur a accès au site_id
+    console.log('SiteIds de l\'utilisateur :', req.user.siteIds); // Log pour vérifier les permissions
+    console.log('Site ID reçu :', site_id);
+
     if (!req.user.siteIds.includes(String(site_id))) {
+        console.error('Accès refusé : L\'utilisateur n\'a pas accès à ce site');
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
-    // Logique pour ajouter un nom
     const insertNomQuery = 'INSERT INTO Tnom (nom) VALUES (?)';
     connection.query(insertNomQuery, [nom], (err, nomResult) => {
         if (err) {
             console.error('Erreur lors de l\'ajout du nom :', err.message);
             return res.status(500).send('Erreur lors de l\'ajout du nom');
         }
+
+        console.log('Nom inséré avec succès, ID :', nomResult.insertId); // Log pour vérifier l'insertion
 
         const nomId = nomResult.insertId;
 
@@ -43,6 +49,7 @@ router.post('/add-nom', authenticateToken, (req, res) => {
                 return res.status(500).send('Erreur lors de l\'association du nom au site');
             }
 
+            console.log('Nom associé au site avec succès'); // Log pour vérifier l'association
             res.status(201).send('Nom ajouté et associé au site avec succès');
         });
     });
@@ -51,6 +58,7 @@ router.post('/add-nom', authenticateToken, (req, res) => {
 // Route pour supprimer un nom (protégée)
 
 router.post('/delete-nom', authenticateToken, (req, res) => {
+    console.log('Requête reçue :', req.body);
     const { nom_id } = req.body;
 
     if (!nom_id) {
