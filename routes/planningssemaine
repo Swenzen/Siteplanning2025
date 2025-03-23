@@ -4,7 +4,6 @@ const connection = require('../db'); // Assurez-vous que la connexion à la base
 const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
 
-// Route pour récupérer les données du planning
 router.get('/planning-data', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
     const siteId = req.user.site_id; // Récupérer le site_id depuis le token
@@ -31,11 +30,15 @@ router.get('/planning-data', authenticateToken, (req, res) => {
         ORDER BY o.display_order ASC, c.competence ASC, h.horaire_debut ASC, h.horaire_fin ASC, p.jour_id ASC
     `;
 
+    console.log('Requête SQL exécutée :', query);
+    console.log('Paramètres SQL :', [semaine, annee, siteId]);
+
     connection.query(query, [semaine, annee, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données du planning :', err.message);
             res.status(500).send('Erreur lors de la récupération des données du planning');
         } else {
+            console.log('Résultats SQL :', results);
             res.json(results);
         }
     });
