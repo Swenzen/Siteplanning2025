@@ -108,7 +108,7 @@ app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
     const query = `
-        SELECT u.user_id, u.username, GROUP_CONCAT(st.site_id) AS site_ids
+        SELECT u.user_id, u.username, u.password, GROUP_CONCAT(st.site_id) AS site_ids
         FROM Tuser u
         JOIN Tuser_Tsite st ON u.user_id = st.user_id
         WHERE u.username = ?

@@ -59,6 +59,7 @@
         <p>Bienvenue, <span id="username-display"></span>!</p>
         <button id="logoutButton">Se déconnecter</button>
     </div>
+    <script src="js/auth.js"></script>
     <script>
         // Sélectionner le tableau et le conteneur du tooltip
         const tableBody = document.querySelector("#dynamicTable tbody");
@@ -151,24 +152,10 @@
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
 
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                alert('Connexion réussie !');
-                console.log('Token JWT :', result.token);
-                // Stocker le token et le nom de l'utilisateur dans le localStorage
-                localStorage.setItem('token', result.token);
-                localStorage.setItem('username', result.username);
-
-                // Afficher le nom de l'utilisateur connecté
+            const success = await login(username, password);
+            if (success) {
+                // Rediriger l'utilisateur ou afficher des informations supplémentaires
                 displayUser();
-            } else {
-                alert(result);
             }
         });
 
@@ -178,7 +165,7 @@
             if (username) {
                 document.getElementById('user-info').style.display = 'block';
                 document.getElementById('username-display').textContent = username;
-                document.getElementById('auth-section').style.display = 'none'; // Masquer les formulaires de connexion/inscription
+                document.getElementById('auth-section').style.display = 'none'; // Masquer les formulaires
             }
         }
 
