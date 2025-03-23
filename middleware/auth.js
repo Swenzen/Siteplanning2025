@@ -6,15 +6,18 @@ function authenticateToken(req, res, next) {
     const token = authHeader && authHeader.split(' ')[1]; // Récupérer le token après "Bearer"
 
     if (!token) {
-        return res.status(401).send('Accès refusé : aucun token fourni');
+        return res.status(401).send('Accès refusé : Aucun token fourni');
     }
 
-    jwt.verify(token, 'votre_secret', (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
             return res.status(403).send('Token invalide');
         }
-        req.user = user; // Ajouter les informations de l'utilisateur au `req`
-        next(); // Passer à la route suivante
+
+        console.log('Utilisateur authentifié :', user); // Ajouter un log pour vérifier les données du token
+        console.log('Données décodées du token :', user);
+        req.user = user; // Ajouter les informations de l'utilisateur à la requête
+        next();
     });
 }
 
