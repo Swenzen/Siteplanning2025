@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const connection = require('../../db'); // Importer la connexion à la base de données
-const authenticateToken = require('../../middleware/auth'); // Importer le middleware d'authentification
-
-
+const connection = require('../../db');
+const authenticateToken = require('../../middleware/auth');
 
 // Route pour récupérer les horaires liés à un site (protégée)
 router.get('/horaires', authenticateToken, (req, res) => {
-    const siteId = req.query.site_id;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
     if (!siteId) {
-        return res.status(400).send('Le champ "site_id" est requis');
+        return res.status(400).send('Le site_id est introuvable dans le token');
     }
 
     const query = `
@@ -32,9 +30,10 @@ router.get('/horaires', authenticateToken, (req, res) => {
 
 // Route pour ajouter un horaire (protégée)
 router.post('/add-horaires', authenticateToken, (req, res) => {
-    const { horaire_debut, horaire_fin, site_id } = req.body;
+    const { horaire_debut, horaire_fin } = req.body;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
-    if (!horaire_debut || !horaire_fin || !site_id) {
+    if (!horaire_debut || !horaire_fin || !siteId) {
         return res.status(400).send('Les champs "horaire_debut", "horaire_fin" et "site_id" sont requis');
     }
 
@@ -50,13 +49,12 @@ router.post('/add-horaires', authenticateToken, (req, res) => {
         } else {
             const horaireId = result.insertId;
 
-            // Ajouter la liaison dans Thoraire_Tsite
             const linkQuery = `
                 INSERT INTO Thoraire_Tsite (horaire_id, site_id)
                 VALUES (?, ?)
             `;
 
-            connection.query(linkQuery, [horaireId, site_id], (err) => {
+            connection.query(linkQuery, [horaireId, siteId], (err) => {
                 if (err) {
                     console.error('Erreur lors de la liaison horaire-site :', err.message);
                     res.status(500).send('Erreur lors de la liaison horaire-site');
@@ -68,48 +66,41 @@ router.post('/add-horaires', authenticateToken, (req, res) => {
     });
 });
 
-
-
-
-
-
-// Route pour supprimer un horaire
-router.post('/delete-horaires', (req, res) => {
+// Route pour supprimer un horaire (protégée)
+router.post('/delete-horaires', authenticateToken, (req, res) => {
     const { horaire_id } = req.body;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
-    // Supprimer les enregistrements associés dans Tplanning
+    if (!horaire_id || !siteId) {
+        return res.status(400).send('Les champs "horaire_id" et "site_id" sont requis');
+    }
+
     const deletePlanningQuery = `
         DELETE FROM Tplanning
         WHERE horaire_id = ?
     `;
 
-    connection.query(deletePlanningQuery, [horaire_id], (err, result) => {
+    connection.query(deletePlanningQuery, [horaire_id], (err) => {
         if (err) {
             console.error('Erreur lors de la suppression des plannings associés :', err.message);
             res.status(500).send('Erreur lors de la suppression des plannings associés');
         } else {
-            console.log(`Plannings associés supprimés pour horaire_id: ${horaire_id}`);
-
-            // Supprimer les enregistrements associés dans Thoraire_competence
             const deleteHoraireCompetenceQuery = `
                 DELETE FROM Thoraire_competence
                 WHERE horaire_id = ?
             `;
 
-            connection.query(deleteHoraireCompetenceQuery, [horaire_id], (err, result) => {
+            connection.query(deleteHoraireCompetenceQuery, [horaire_id], (err) => {
                 if (err) {
                     console.error('Erreur lors de la suppression des horaires associés :', err.message);
                     res.status(500).send('Erreur lors de la suppression des horaires associés');
                 } else {
-                    console.log(`Horaires associés supprimés pour horaire_id: ${horaire_id}`);
-
-                    // Supprimer l'horaire dans Thoraire
                     const deleteHoraireQuery = `
                         DELETE FROM Thoraire
                         WHERE horaire_id = ?
                     `;
 
-                    connection.query(deleteHoraireQuery, [horaire_id], (err, result) => {
+                    connection.query(deleteHoraireQuery, [horaire_id], (err) => {
                         if (err) {
                             console.error('Erreur lors de la suppression de l\'horaire :', err.message);
                             res.status(500).send('Erreur lors de la suppression de l\'horaire');

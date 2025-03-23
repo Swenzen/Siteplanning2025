@@ -1,30 +1,19 @@
 // Fonction pour afficher les horaires dans le tableau
-// Fonction pour afficher les horaires dans le tableau
 async function fetchHoraires() {
+    const token = localStorage.getItem('token');
+    const siteId = localStorage.getItem('site_id');
+
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
+        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
+        return;
+    }
+
     try {
-        console.time('fetchHoraires');
-
-        // Récupérer le site_id depuis le localStorage
-        const siteId = localStorage.getItem('site_id');
-        if (!siteId) {
-            console.error('Erreur : le site_id est introuvable.');
-            alert('Erreur : le site n\'est pas chargé.');
-            return;
-        }
-
-        // Récupérer le token depuis le localStorage
-        const token = localStorage.getItem('token');
-        if (!token) {
-            console.error('Erreur : le token d\'authentification est introuvable.');
-            alert('Erreur : vous n\'êtes pas authentifié.');
-            return;
-        }
-
-        // Effectuer une requête pour récupérer les horaires liés au site
         const response = await fetch(`/api/horaires?site_id=${siteId}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -37,9 +26,8 @@ async function fetchHoraires() {
         console.log('Données récupérées :', data);
 
         const tableBody = document.querySelector("#horairesTable tbody");
-        tableBody.innerHTML = ''; // Vider le contenu du tableau
+        tableBody.innerHTML = '';
 
-        // Ajouter les données récupérées au tableau
         data.forEach(rowData => {
             const row = document.createElement("tr");
             const horaireDebutCell = document.createElement("td");
@@ -59,8 +47,6 @@ async function fetchHoraires() {
 
             tableBody.appendChild(row);
         });
-
-        console.timeEnd('fetchHoraires');
     } catch (error) {
         console.error('Erreur lors de la récupération des horaires :', error);
     }
@@ -70,32 +56,21 @@ async function fetchHoraires() {
 async function addHoraire() {
     const horaireDebut = prompt("Entrez l'horaire de début (HH:MM)");
     const horaireFin = prompt("Entrez l'horaire de fin (HH:MM)");
+    const token = localStorage.getItem('token');
+    const siteId = localStorage.getItem('site_id');
+
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
+        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
+        return;
+    }
 
     if (horaireDebut && horaireFin) {
         try {
-            console.time('addHoraire');
-
-            // Récupérer le site_id depuis le localStorage
-            const siteId = localStorage.getItem('site_id');
-            if (!siteId) {
-                console.error('Erreur : le site_id est introuvable.');
-                alert('Erreur : le site n\'est pas chargé.');
-                return;
-            }
-
-            // Récupérer le token depuis le localStorage
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.error('Erreur : le token d\'authentification est introuvable.');
-                alert('Erreur : vous n\'êtes pas authentifié.');
-                return;
-            }
-
-            // Envoyer la requête pour ajouter l'horaire
             const response = await fetch('/api/add-horaires', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -107,12 +82,10 @@ async function addHoraire() {
 
             if (response.ok) {
                 alert('Horaire ajouté avec succès');
-                fetchHoraires(); // Rafraîchir la liste des horaires
+                fetchHoraires();
             } else {
                 console.error('Erreur lors de l\'ajout de l\'horaire');
             }
-
-            console.timeEnd('addHoraire');
         } catch (error) {
             console.error('Erreur lors de la requête :', error);
         }
@@ -121,12 +94,20 @@ async function addHoraire() {
 
 // Fonction pour supprimer un horaire
 async function deleteHoraire(horaire_id) {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        console.error('Erreur : le token d\'authentification est introuvable.');
+        alert('Erreur : vous devez être authentifié.');
+        return;
+    }
+
     if (confirm("Êtes-vous sûr de vouloir supprimer cet horaire ?")) {
         try {
-            console.time('deleteHoraire');
             const response = await fetch('/api/delete-horaires', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ horaire_id })
@@ -137,7 +118,6 @@ async function deleteHoraire(horaire_id) {
             } else {
                 console.error('Erreur lors de la suppression de l\'horaire');
             }
-            console.timeEnd('deleteHoraire');
         } catch (error) {
             console.error('Erreur lors de la requête:', error);
         }
