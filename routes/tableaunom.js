@@ -110,28 +110,27 @@ router.get('/api/data', authenticateToken, (req, res) => {
     });
 });
 
+// Route pour récupérer les informations des sites associés à l'utilisateur
 router.get('/site', authenticateToken, (req, res) => {
-    const userId = req.user.userId; // Récupérer l'ID de l'utilisateur depuis le middleware
+    const siteIds = req.user.siteIds; // Récupérer les siteIds depuis le token JWT
+
+    if (!siteIds || siteIds.length === 0) {
+        return res.status(400).send('Aucun site associé à cet utilisateur');
+    }
 
     const query = `
-        SELECT s.site_id, s.site_name
-        FROM Tsite s
-        JOIN Tsite_Tuser st ON s.site_id = st.site_id
-        WHERE st.user_id = ?
+        SELECT site_id, site_name
+        FROM Tsite
+        WHERE site_id IN (?)
     `;
 
-    connection.query(query, [userId], (err, results) => {
+    connection.query(query, [siteIds], (err, results) => {
         if (err) {
-            console.error('Erreur lors de la récupération du site :', err.message);
-            res.status(500).send('Erreur lors de la récupération du site');
-        } else {
-            if (results.length > 0) {
-                const site = results[0]; // Récupérer le premier site associé à l'utilisateur
-                res.json({ site }); // Envoyer les informations du site au client
-            } else {
-                res.status(404).send('Aucun site associé à cet utilisateur');
-            }
+            console.error('Erreur lors de la récupération des sites :', err.message);
+            return res.status(500).send('Erreur lors de la récupération des sites');
         }
+
+        res.json({ sites: results });
     });
 });
 

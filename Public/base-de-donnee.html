@@ -167,34 +167,37 @@
         document.addEventListener('DOMContentLoaded', displayUser);
 
         async function fetchSite() {
-            const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
 
-            try {
-                const response = await fetch('/api/site', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const { site } = await response.json();
-                    console.log('Site récupéré :', site);
-
-                    // Stocker le site_id dans le localStorage
-                    localStorage.setItem('site_id', site.site_id);
-
-                    // Afficher le site dans l'interface utilisateur
-                    const siteElement = document.getElementById('site-display');
-                    siteElement.textContent = `Site : ${site.site_name}`;
-                } else {
-                    console.error('Erreur lors de la récupération du site');
-                }
-            } catch (error) {
-                console.error('Erreur lors de la requête :', error);
+    try {
+        const response = await fetch('/api/site', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        if (response.ok) {
+            const { sites } = await response.json();
+            console.log('Sites récupérés :', sites);
+
+            // Afficher les sites dans l'interface utilisateur
+            const siteElement = document.getElementById('site-display');
+            if (sites.length === 1) {
+                // Si un seul site est associé
+                siteElement.textContent = `Site : ${sites[0].site_name}`;
+            } else {
+                // Si plusieurs sites sont associés
+                siteElement.textContent = `Sites : ${sites.map(site => site.site_name).join(', ')}`;
+            }
+        } else {
+            console.error('Erreur lors de la récupération des sites');
         }
+    } catch (error) {
+        console.error('Erreur lors de la requête :', error);
+    }
+}
 
         // Appeler la fonction pour récupérer le site au chargement de la page
         document.addEventListener('DOMContentLoaded', fetchSite);
