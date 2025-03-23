@@ -39,8 +39,9 @@ async function fetchData() {
                 const actionCell = document.createElement("td");
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "Supprimer";
+                console.log('Données de la ligne :', rowData);
                 deleteButton.dataset.nomId = rowData.nom_id; // Stocker l'ID du nom dans le bouton
-                deleteButton.classList.add("delete-button"); // Ajouter une classe pour le style
+deleteButton.classList.add("delete-button"); // Ajouter une classe pour le style
                 console.log('Bouton de suppression créé avec nom_id :', rowData.nom_id);
                 actionCell.appendChild(deleteButton);
                 row.appendChild(actionCell);
