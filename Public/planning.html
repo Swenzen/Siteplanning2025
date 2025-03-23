@@ -16,6 +16,7 @@
         <!-- Menu -->
         <div id="menu">
             <h2>Menu</h2>
+            <p id="site-display">Site : </p> <!-- Le nom du site sera affiché ici -->
             <a href="index.html">Index</a>
             <a href="base-de-donnee.html">Base de donnée</a>
             <a href="planning.html">Planning</a>
@@ -108,34 +109,34 @@
         document.addEventListener('DOMContentLoaded', displayUser);
 
         async function fetchSite() {
-            const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
+    const token = localStorage.getItem('token'); // Récupérer le jeton JWT depuis le localStorage
 
-            try {
-                const response = await fetch('/api/site', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const { site } = await response.json();
-                    console.log('Site récupéré :', site);
-
-                    // Stocker le site_id dans le localStorage
-                    localStorage.setItem('site_id', site.site_id);
-
-                    // Afficher le site dans l'interface utilisateur
-                    const siteElement = document.getElementById('site-display');
-                    siteElement.textContent = `Site : ${site.site_name}`;
-                } else {
-                    console.error('Erreur lors de la récupération du site');
-                }
-            } catch (error) {
-                console.error('Erreur lors de la requête :', error);
+    try {
+        const response = await fetch('/api/site', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        if (response.ok) {
+            const { site } = await response.json();
+            console.log('Site récupéré :', site);
+
+            // Stocker le site_id dans le localStorage
+            localStorage.setItem('site_id', site.site_id);
+
+            // Afficher le site dans l'interface utilisateur
+            const siteElement = document.getElementById('site-display');
+            siteElement.textContent = `Site : ${site.site_name}`;
+        } else {
+            console.error('Erreur lors de la récupération du site');
         }
+    } catch (error) {
+        console.error('Erreur lors de la requête :', error);
+    }
+}
 
         // Appeler la fonction pour récupérer le site au chargement de la page
         document.addEventListener('DOMContentLoaded', fetchSite);
