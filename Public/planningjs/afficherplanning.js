@@ -21,23 +21,22 @@ const dayMapping = {
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+
+    console.log('Paramètres envoyés à fetchPlanningData :', { semaine, annee, siteId, token });
+
+    if (!token) {
+        console.error('Erreur : le token est manquant.');
+        return;
+    }
+
+    if (!siteId) {
+        console.error('Erreur : le site_id est manquant.');
+        return;
+    }
 
     try {
-        const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-        const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
-
-        if (!token) {
-            console.error('Erreur : le token est manquant.');
-            return;
-        }
-
-        if (!siteId) {
-            console.error('Erreur : le site_id est manquant.');
-            return;
-        }
-
-        console.log('Site ID récupéré dans fetchPlanningData :', siteId);
-
         const [planningResponse, commentsResponse, fermeturesResponse] = await Promise.all([
             fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}`, {
                 method: 'GET',
@@ -476,4 +475,5 @@ async function createCompetenceTable(semaine, annee, siteId) {
     competenceTableContainer.appendChild(table);
     console.log('Tableau des compétences créé avec succès');
     console.log('Paramètres reçus :', { semaine, annee, siteId });
-}
+    
+   }
