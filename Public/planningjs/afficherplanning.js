@@ -212,6 +212,17 @@ async function fetchPlanningData() {
                                 currentCompetenceId = rowData.competence_id;
                                 showEmptyTooltip(event, nom, nom_id, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
                             });
+
+                            div.addEventListener('click', (event) => {
+                                console.log(`Clic gauche détecté sur la cellule : ${day}, ${rowData.competence_id}`);
+                                currentCell = cell; // Stocker la cellule actuelle
+                                currentDay = day;
+                                currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+                                currentCompetenceId = rowData.competence_id;
+
+                                // Appeler fetchNomIds pour afficher le tooltip ou effectuer une autre action
+                                fetchNomIds(rowData.competence_id, event);
+                            });
                         }
 
                         cell.appendChild(container);
