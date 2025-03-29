@@ -77,14 +77,17 @@ function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId,
 
 // Fonction pour mettre à jour le planning dans la base de données
 async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom) {
-    console.log('Données envoyées pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom });
+    const siteId = localStorage.getItem('site_id'); // Récupérer le siteId depuis le localStorage
+
+    console.log('Données envoyées pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom, siteId });
+
     try {
         const response = await fetch('/api/update-planning', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: competenceId, nom })
+            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: competenceId, nom, site_id: siteId })
         });
 
         if (!response.ok) {

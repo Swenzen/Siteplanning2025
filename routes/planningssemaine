@@ -52,20 +52,47 @@ router.get('/planning-data', authenticateToken, (req, res) => {
 });
 
 // Route pour insérer ou mettre à jour le planning
-router.post('/update-planning', (req, res) => {
+router.post('/update-planning', authenticateToken, (req, res) => {
     const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 
-    // Insérer une nouvelle ligne
+    if (!siteId) {
+        return res.status(400).send('Erreur : site_id est requis.');
+    }
+
+    console.log('Données reçues pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, siteId });
+
+    // Insérer ou mettre à jour le planning
     const insertQuery = `
         INSERT INTO Tplanning (semaine, annee, jour_id, horaire_id, competence_id, nom_id)
-        VALUES (?, ?, ?, (SELECT horaire_id FROM Thoraire WHERE horaire_debut = ? AND horaire_fin = ? LIMIT 1), ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1))
+        VALUES (?, ?, ?, 
+            (SELECT horaire_id FROM Thoraire WHERE horaire_debut = ? AND horaire_fin = ? LIMIT 1), 
+            ?, 
+            (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
+        )
+        ON DUPLICATE KEY UPDATE
+            horaire_id = VALUES(horaire_id),
+            competence_id = VALUES(competence_id),
+            nom_id = VALUES(nom_id);
+
+        INSERT INTO Tplanning_Tsite (planning_id, site_id)
+        SELECT p.planning_id, ?
+        FROM Tplanning p
+        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND p.horaire_id = (SELECT horaire_id FROM Thoraire WHERE horaire_debut = ? AND horaire_fin = ? LIMIT 1)
+        ON DUPLICATE KEY UPDATE site_id = VALUES(site_id);
     `;
-    connection.query(insertQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom], (err, result) => {
+
+    const params = [
+        semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, // Pour Tplanning
+        siteId, semaine, annee, jour_id, horaire_debut, horaire_fin            // Pour Tplanning_Tsite
+    ];
+
+    connection.query(insertQuery, params, (err, result) => {
         if (err) {
-            console.error('Erreur lors de l\'insertion dans le planning :', err.message);
-            res.status(500).send('Erreur lors de l\'insertion dans le planning');
+            console.error('Erreur lors de l\'insertion ou de la mise à jour du planning :', err.message);
+            res.status(500).send('Erreur lors de l\'insertion ou de la mise à jour du planning');
         } else {
-            res.send('Planning inséré avec succès');
+            res.send('Planning inséré ou mis à jour avec succès');
         }
     });
 });
