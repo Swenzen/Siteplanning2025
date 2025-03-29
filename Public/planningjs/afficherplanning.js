@@ -164,6 +164,10 @@ async function fetchPlanningData() {
             const days = ['1', '2', '3', '4', '5', '6', '7']; // Utiliser les IDs des jours
             days.forEach(day => {
                 const cell = document.createElement("td");
+                cell.dataset.jourId = day; // Ajouter l'ID du jour
+                cell.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence
+                cell.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début
+                cell.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin
 
                 // Vérifie si la cellule contient des données
                 if (rowData.jours[day]) {
@@ -196,11 +200,12 @@ async function fetchPlanningData() {
                         if (nom) {
                             const div = document.createElement('div');
                             div.textContent = nom;
-                            div.dataset.nomId = nom_id; // Ajouter l'ID du nom comme attribut de données
+                            div.dataset.nomId = nom_id || null; // Ajouter l'ID du nom comme attribut de données
                             div.dataset.jourId = day; // Ajouter l'ID du jour comme attribut de données
                             div.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence comme attribut de données
                             div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
                             div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
+                            div.dataset.nom = nom || null; // Ajouter le nom (si disponible)
 
                             container.appendChild(div);
 
@@ -242,6 +247,9 @@ async function fetchPlanningData() {
         // Appeler les fonctions supplémentaires pour créer les tableaux
         createAdditionalTable();
         createCompetenceTable(semaine, annee, siteId);
+
+        // Activer le clic droit sur les cellules du tableau
+        enableRightClickOnTable();
 
     } catch (error) {
         console.error('Erreur lors de la récupération des données du planning :', error);
@@ -463,5 +471,49 @@ async function createCompetenceTable(semaine, annee, siteId) {
     competenceTableContainer.appendChild(table);
     console.log('Tableau des compétences créé avec succès');
     console.log('Paramètres reçus :', { semaine, annee, siteId });
-    
-   }
+}
+
+// Ajouter un détecteur de clic droit sur les cellules du tableau
+function enableRightClickOnTable() {
+    const table = document.getElementById("planningTable"); // Sélectionner le tableau par son ID
+    if (!table) {
+        console.error("Tableau 'planningTable' introuvable.");
+        return;
+    }
+
+    // Ajouter un gestionnaire d'événements pour chaque cellule du tableau
+    table.querySelectorAll("td").forEach(cell => {
+        cell.addEventListener("contextmenu", (event) => {
+            event.preventDefault(); // Empêcher le menu contextuel par défaut
+
+            // Récupérer les informations nécessaires depuis les attributs de la cellule
+            const jour_id = cell.dataset.jourId || null;
+            const competence_id = cell.dataset.competenceId || null;
+            const horaire_debut = cell.dataset.horaireDebut || null;
+            const horaire_fin = cell.dataset.horaireFin || null;
+            const nom = cell.dataset.nom || null;
+            const nom_id = cell.dataset.nomId || null;
+            const semaine = document.getElementById("weekNumber").value;
+            const annee = document.getElementById("yearNumber").value;
+
+            console.log("Clic droit détecté sur une cellule :", {
+                jour_id,
+                competence_id,
+                horaire_debut,
+                horaire_fin,
+                nom,
+                nom_id,
+                semaine,
+                annee
+            });
+
+            // Appeler la fonction showEmptyTooltipdt
+            showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin);
+        });
+    });
+}
+
+// Appeler la fonction après avoir généré le tableau
+document.addEventListener("DOMContentLoaded", () => {
+    enableRightClickOnTable();
+});
