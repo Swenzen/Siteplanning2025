@@ -53,16 +53,15 @@ router.get('/planning-data', authenticateToken, (req, res) => {
 
 // Route pour insérer ou mettre à jour le planning
 router.post('/update-planning', authenticateToken, (req, res) => {
-    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
-    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
+    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id } = req.body;
 
-    if (!siteId) {
+    console.log('Données reçues pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id });
+
+    if (!site_id) {
+        console.error('Erreur : site_id est requis.');
         return res.status(400).send('Erreur : site_id est requis.');
     }
 
-    console.log('Données reçues pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, siteId });
-
-    // Insérer ou mettre à jour le planning
     const insertQuery = `
         INSERT INTO Tplanning (semaine, annee, jour_id, horaire_id, competence_id, nom_id)
         VALUES (?, ?, ?, 
@@ -84,16 +83,20 @@ router.post('/update-planning', authenticateToken, (req, res) => {
 
     const params = [
         semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, // Pour Tplanning
-        siteId, semaine, annee, jour_id, horaire_debut, horaire_fin            // Pour Tplanning_Tsite
+        site_id, semaine, annee, jour_id, horaire_debut, horaire_fin            // Pour Tplanning_Tsite
     ];
+
+    console.log('Requête SQL générée :', insertQuery);
+    console.log('Paramètres SQL :', params);
 
     connection.query(insertQuery, params, (err, result) => {
         if (err) {
             console.error('Erreur lors de l\'insertion ou de la mise à jour du planning :', err.message);
-            res.status(500).send('Erreur lors de l\'insertion ou de la mise à jour du planning');
-        } else {
-            res.send('Planning inséré ou mis à jour avec succès');
+            return res.status(500).send('Erreur lors de l\'insertion ou de la mise à jour du planning');
         }
+
+        console.log('Résultat de la mise à jour du planning :', result);
+        res.send('Planning inséré ou mis à jour avec succès');
     });
 });
 
