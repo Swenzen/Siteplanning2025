@@ -1,23 +1,31 @@
 // Fonction pour récupérer les noms disponibles pour une compétence donnée dans le tooltip
 async function fetchNomIds(competenceId, siteId, event) {
-    if (!siteId) {
-        console.error('Erreur : siteId est manquant.');
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
         return;
     }
 
-    console.log('fetchNomIds appelée avec competenceId :', competenceId, 'et siteId :', siteId);
-
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
-    const jour_id = currentDay; // Utiliser l'ID du jour
+    const jour_id = currentDay;
 
     console.log('Données envoyées pour fetchNomIds :', { competenceId, siteId, semaine, annee, jour_id });
 
     try {
-        const response = await fetch(`/api/nom-ids?competence_id=${competenceId}&site_id=${siteId}&semaine=${semaine}&annee=${annee}&jour_id=${jour_id}`);
+        const response = await fetch(`/api/nom-ids?competence_id=${competenceId}&site_id=${siteId}&semaine=${semaine}&annee=${annee}&jour_id=${jour_id}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                'Content-Type': 'application/json'
+            }
+        });
+
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des noms');
+            throw new Error(`Erreur lors de la récupération des noms : ${response.status}`);
         }
+
         const data = await response.json();
         console.log('Noms récupérés :', data);
 
