@@ -1,15 +1,15 @@
 // Fonction pour récupérer les noms disponibles pour une compétence donnée dans le tooltip
-async function fetchNomIds(competenceId, event) {
-    console.log('fetchNomIds appelée avec competenceId :', competenceId);
+async function fetchNomIds(competenceId, siteId, event) {
+    console.log('fetchNomIds appelée avec competenceId :', competenceId, 'et siteId :', siteId);
 
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const jour_id = currentDay; // Utiliser l'ID du jour
 
-    console.log('Données envoyées pour fetchNomIds :', { competenceId, semaine, annee, jour_id });
+    console.log('Données envoyées pour fetchNomIds :', { competenceId, siteId, semaine, annee, jour_id });
 
     try {
-        const response = await fetch(`/api/nom-ids?competence_id=${competenceId}&semaine=${semaine}&annee=${annee}&jour_id=${jour_id}`);
+        const response = await fetch(`/api/nom-ids?competence_id=${competenceId}&site_id=${siteId}&semaine=${semaine}&annee=${annee}&jour_id=${jour_id}`);
         if (!response.ok) {
             throw new Error('Erreur lors de la récupération des noms');
         }
@@ -48,7 +48,7 @@ function showTooltip(event, noms) {
 }
 
 // Fonction pour afficher le tooltip vide et charger les noms disponibles
-function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId, horaireDebut, horaireFin) {
+function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId, horaireDebut, horaireFin, siteId) {
     const tooltip = document.getElementById("tooltip");
     tooltip.innerHTML = `<p>Chargement des noms disponibles...</p>`;
     tooltip.style.display = 'block';
@@ -56,7 +56,7 @@ function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId,
     tooltip.style.top = `${event.pageY + 10}px`;
 
     // Appeler fetchNomIds pour récupérer les noms disponibles
-    fetchNomIds(competenceId, event);
+    fetchNomIds(competenceId, siteId, event);
 }
 
 // Fonction pour mettre à jour le planning dans la base de données
