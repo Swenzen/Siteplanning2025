@@ -109,37 +109,62 @@
         document.addEventListener('DOMContentLoaded', displayUser);
 
         async function fetchSite() {
-    const token = localStorage.getItem('token'); // Récupérer le jeton JWT depuis le localStorage
+            const token = localStorage.getItem('token'); // Récupérer le jeton JWT depuis le localStorage
 
-    try {
-        const response = await fetch('/api/site', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+            try {
+                const response = await fetch('/api/site', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const { site } = await response.json();
+                    console.log('Site récupéré :', site);
+
+                    // Stocker le site_id dans le localStorage
+                    localStorage.setItem('site_id', site.site_id);
+
+                    // Afficher le site dans l'interface utilisateur
+                    const siteElement = document.getElementById('site-display');
+                    siteElement.textContent = `Site : ${site.site_name}`;
+                } else {
+                    console.error('Erreur lors de la récupération du site');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la requête :', error);
             }
-        });
-
-        if (response.ok) {
-            const { site } = await response.json();
-            console.log('Site récupéré :', site);
-
-            // Stocker le site_id dans le localStorage
-            localStorage.setItem('site_id', site.site_id);
-
-            // Afficher le site dans l'interface utilisateur
-            const siteElement = document.getElementById('site-display');
-            siteElement.textContent = `Site : ${site.site_name}`;
-        } else {
-            console.error('Erreur lors de la récupération du site');
         }
-    } catch (error) {
-        console.error('Erreur lors de la requête :', error);
-    }
-}
 
         // Appeler la fonction pour récupérer le site au chargement de la page
         document.addEventListener('DOMContentLoaded', fetchSite);
+
+        // Sauvegarder les valeurs dans localStorage
+        document.getElementById("weekNumber").addEventListener("change", () => {
+            const weekNumber = document.getElementById("weekNumber").value;
+            localStorage.setItem("weekNumber", weekNumber);
+        });
+
+        document.getElementById("yearNumber").addEventListener("change", () => {
+            const yearNumber = document.getElementById("yearNumber").value;
+            localStorage.setItem("yearNumber", yearNumber);
+        });
+
+        // Charger les valeurs depuis localStorage au chargement de la page
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedWeekNumber = localStorage.getItem("weekNumber");
+            const savedYearNumber = localStorage.getItem("yearNumber");
+
+            if (savedWeekNumber) {
+                document.getElementById("weekNumber").value = savedWeekNumber;
+            }
+
+            if (savedYearNumber) {
+                document.getElementById("yearNumber").value = savedYearNumber;
+            }
+        });
     </script>
 </body>
 </html>
