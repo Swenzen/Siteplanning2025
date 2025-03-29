@@ -92,3 +92,5 @@ document.addEventListener('click', (event) => {
         tooltip.style.display = 'none';
     }
 });
+
+console.log('Contenu du token décodé :', req.user);
