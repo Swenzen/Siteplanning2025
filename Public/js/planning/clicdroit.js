@@ -58,7 +58,8 @@ function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, compete
 
             // Ajouter un gestionnaire de clic au bouton de suppression du nom
             document.getElementById('deleteNameButton').addEventListener('click', () => {
-                removeValueFromPlanning(nom);
+                const site_id = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+                removeValueFromPlanning(nom, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin, site_id); // Appeler la fonction depuis afficherplanning.js
                 emptyTooltip.remove();
             });
 
@@ -100,13 +101,6 @@ function deleteComment(commentId, callback) {
         console.error('Erreur lors de la suppression du commentaire :', error);
     });
 }
-
-// Fonction pour supprimer un nom du planning
-function removeValueFromPlanning(nom) {
-    // Ajoutez ici la logique pour supprimer le nom du planning
-    console.log(`Nom ${nom} supprimé du planning`);
-}
-
 // Nouvelle fonction pour afficher un tooltip spécifique pour les cellules vides
 function showTooltipForEmptyCell(event, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
     console.log(`Appel de showTooltipForEmptyCell avec les paramètres : jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);

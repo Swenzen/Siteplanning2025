@@ -270,23 +270,18 @@ async function fetchPlanningData() {
     }
 }
 
-// Fonction pour supprimer la valeur dans le tableau Tplanning
-async function removeValueFromPlanning(nom) {
+// Fonction pour supprimer un nom du planning
+async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin, site_id) {
     console.log('Appel de la fonction removeValueFromPlanning');
-    const semaine = document.getElementById("weekNumber").value;
-    const annee = document.getElementById("yearNumber").value;
-    const jour_id = currentDay; // Utiliser l'ID du jour
-    const [horaire_debut, horaire_fin] = currentHorairesNom.split(' - '); // Séparer les horaires de début et de fin
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
 
-    if (!token || !siteId) {
+    if (!token || !site_id) {
         console.error('Erreur : le token ou le site_id est introuvable.');
         alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
-    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, currentCompetenceId, nom, siteId });
+    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id });
 
     try {
         const response = await fetch('/api/remove-planning', {
@@ -295,7 +290,7 @@ async function removeValueFromPlanning(nom) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` // Ajouter le token dans l'en-tête
             },
-            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: currentCompetenceId, nom, site_id: siteId })
+            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id })
         });
 
         if (!response.ok) {
@@ -306,15 +301,7 @@ async function removeValueFromPlanning(nom) {
         console.log('Résultat de la suppression du planning :', result);
 
         // Mettre à jour l'interface utilisateur
-        const divs = currentCell.querySelectorAll('div');
-        divs.forEach(div => {
-            if (div.textContent === nom && div.parentNode === currentCell) {
-                currentCell.removeChild(div);
-            }
-        });
-
-        // Actualiser le tableau après la suppression
-        fetchPlanningData();
+        fetchPlanningData(); // Actualiser le tableau après la suppression
     } catch (error) {
         console.error('Erreur lors de la suppression du planning :', error);
     }
