@@ -146,7 +146,9 @@ router.get('/nom-ids-vacances', authenticateToken, (req, res) => {
     const query = `
         SELECT n.nom
         FROM Tnom n
-        WHERE n.nom_id NOT IN (
+        JOIN Tnom_Tsite nts ON n.nom_id = nts.nom_id
+        WHERE nts.site_id = ? -- Vérifier que le nom est associé au site
+        AND n.nom_id NOT IN (
             SELECT v.nom_id
             FROM Tvacances v
             JOIN Tvacances_Tsite vt ON v.vacances_id = vt.vacances_id
@@ -154,7 +156,7 @@ router.get('/nom-ids-vacances', authenticateToken, (req, res) => {
         )
     `;
 
-    connection.query(query, [semaine, annee, siteId], (err, results) => {
+    connection.query(query, [siteId, semaine, annee, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des noms :', err.message);
             res.status(500).send('Erreur lors de la récupération des noms');
@@ -163,7 +165,6 @@ router.get('/nom-ids-vacances', authenticateToken, (req, res) => {
         }
     });
 });
-
 // Route pour ajouter une entrée dans Tvacances
 router.post('/add-vacances', authenticateToken, (req, res) => {
     const { semaine, annee, nom, site_id } = req.body;
