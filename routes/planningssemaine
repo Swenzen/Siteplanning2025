@@ -177,16 +177,20 @@ router.post('/add-vacances', (req, res) => {
     });
 });
 
-// Route pour récupérer les données de vacances
-router.get('/vacances-data', (req, res) => {
+// Route pour récupérer les données de vacances pour un site spécifique
+router.get('/vacances-data', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token utilisateur
+
     const query = `
         SELECT v.vacances_id, v.semaine, v.annee, n.nom
         FROM Tvacances v
-        LEFT JOIN Tnom n ON v.nom_id = n.nom_id
-        WHERE v.semaine = ? AND v.annee = ?
+        JOIN Tvacances_Tsite vt ON v.vacances_id = vt.vacances_id
+        JOIN Tnom n ON v.nom_id = n.nom_id
+        WHERE v.semaine = ? AND v.annee = ? AND vt.site_id = ?
     `;
-    connection.query(query, [semaine, annee], (err, results) => {
+
+    connection.query(query, [semaine, annee, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données de vacances :', err.message);
             res.status(500).send('Erreur lors de la récupération des données de vacances');

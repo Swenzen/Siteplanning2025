@@ -93,12 +93,28 @@ async function removeVacances(semaine, annee, nom) {
 async function fetchVacancesData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
+        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
+        return;
+    }
 
     try {
-        const response = await fetch(`/api/vacances-data?semaine=${semaine}&annee=${annee}`);
+        const response = await fetch(`/api/vacances-data?semaine=${semaine}&annee=${annee}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                'Content-Type': 'application/json'
+            }
+        });
+
         if (!response.ok) {
             throw new Error('Erreur lors de la récupération des données de vacances');
         }
+
         const data = await response.json();
         console.log('Données de vacances récupérées :', data);
 
