@@ -4,6 +4,7 @@ const connection = require('../db'); // Assurez-vous que la connexion à la base
 const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
 
+
 router.get('/planning-data', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
     const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du tableau
