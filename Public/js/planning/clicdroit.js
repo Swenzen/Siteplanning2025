@@ -1,5 +1,5 @@
 // Fonction pour afficher un tooltip avec des options de suppression et d'ajout de commentaire lors d'un clic droit
-function showEmptyTooltip(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
+function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
     console.log(`Appel de showEmptyTooltip avec les paramètres : nom=${nom}, nom_id=${nom_id}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
     
     // Récupérer les commentaires correspondants à partir de la base de données
