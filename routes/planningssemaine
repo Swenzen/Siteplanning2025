@@ -93,6 +93,7 @@ router.post('/update-planning', authenticateToken, (req, res) => {
         site_id, semaine, annee, jour_id, horaire_debut, horaire_fin
     ];
 
+    
     // Exécuter les deux requêtes séquentiellement
     connection.query(insertPlanningQuery, planningParams, (err, result) => {
         if (err) {
