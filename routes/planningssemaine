@@ -118,17 +118,30 @@ router.post('/update-planning', authenticateToken, (req, res) => {
 });
 
 // Route pour supprimer une valeur dans le planning
-router.post('/remove-planning', (req, res) => {
-    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
+router.post('/remove-planning', authenticateToken, (req, res) => {
+    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id } = req.body;
+
+    if (!site_id) {
+        console.error('Erreur : site_id est requis.');
+        return res.status(400).send('Erreur : site_id est requis.');
+    }
 
     const deleteQuery = `
         DELETE p
         FROM Tplanning p
         JOIN Thoraire h ON p.horaire_id = h.horaire_id
-        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND h.horaire_debut = ? AND h.horaire_fin = ? AND p.competence_id = ? AND p.nom_id = (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
+        JOIN Tnom_Tsite nts ON p.nom_id = nts.nom_id -- Vérifier que le nom est associé au site
+        WHERE p.semaine = ? 
+        AND p.annee = ? 
+        AND p.jour_id = ? 
+        AND h.horaire_debut = ? 
+        AND h.horaire_fin = ? 
+        AND p.competence_id = ? 
+        AND p.nom_id = (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
+        AND nts.site_id = ? -- Vérifier que le site_id correspond
     `;
 
-    connection.query(deleteQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom], (err, result) => {
+    connection.query(deleteQuery, [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression du planning :', err.message);
             res.status(500).send('Erreur lors de la suppression du planning');

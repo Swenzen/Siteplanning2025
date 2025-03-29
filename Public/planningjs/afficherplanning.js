@@ -249,23 +249,32 @@ async function fetchPlanningData() {
     }
 }
 
-// Fonction pour supprimer la valeur dans le tableau tplanning
+// Fonction pour supprimer la valeur dans le tableau Tplanning
 async function removeValueFromPlanning(nom) {
     console.log('Appel de la fonction removeValueFromPlanning');
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const jour_id = currentDay; // Utiliser l'ID du jour
     const [horaire_debut, horaire_fin] = currentHorairesNom.split(' - '); // Séparer les horaires de début et de fin
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
 
-    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, currentCompetenceId, nom });
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
+        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
+        return;
+    }
+
+    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, currentCompetenceId, nom, siteId });
 
     try {
         const response = await fetch('/api/remove-planning', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Ajouter le token dans l'en-tête
             },
-            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: currentCompetenceId, nom })
+            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: currentCompetenceId, nom, site_id: siteId })
         });
 
         if (!response.ok) {
