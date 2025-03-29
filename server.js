@@ -11,22 +11,30 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Logs pour vérifier les variables d'environnement MySQL
-console.log('MYSQLHOST:', process.env.MYSQLHOST);
-console.log('MYSQLUSER:', process.env.MYSQLUSER);
-console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD);
-console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE);
-console.log('MYSQLPORT:', process.env.MYSQLPORT);
-console.log('Clé secrète JWT_SECRET :', process.env.JWT_SECRET);
+// Détecter l'environnement
+const environment = process.env.NODE_ENV || 'local';
+console.log(`Environnement détecté : ${environment}`);
 
-// Configuration de la connexion MySQL
-const connection = mysql.createConnection({
+// Configuration de la connexion MySQL en fonction de l'environnement
+const dbConfig = environment === 'production' ? {
     host: process.env.MYSQLHOST,
     user: process.env.MYSQLUSER,
     password: process.env.MYSQLPASSWORD,
     database: process.env.MYSQLDATABASE,
     port: process.env.MYSQLPORT
-});
+} : {
+    host: 'localhost',
+    user: 'root',
+    password: 'password',
+    database: 'nom_de_ta_base_local',
+    port: 3306
+};
+
+// Logs pour vérifier les variables d'environnement MySQL
+console.log('Configuration MySQL utilisée :', dbConfig);
+
+// Configuration de la connexion MySQL
+const connection = mysql.createConnection(dbConfig);
 
 // Test de la connexion MySQL
 connection.connect((err) => {
