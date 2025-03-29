@@ -2,6 +2,11 @@
 function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
     console.log(`Appel de showEmptyTooltip avec les paramètres : nom=${nom}, nom_id=${nom_id}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
     
+    // Vérifie si nom_id est null
+    if (!nom_id) {
+        console.warn("Aucun nom_id trouvé pour cette cellule.");
+    }
+
     // Récupérer les commentaires correspondants à partir de la base de données
     fetch(`/api/comment?nom_id=${nom_id}&jour_id=${jour_id}&semaine=${semaine}&annee=${annee}`)
         .then(response => {
@@ -22,7 +27,7 @@ function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, compete
             emptyTooltip.id = 'emptyTooltip';
             emptyTooltip.innerHTML = `
                 <div class="tooltip-item">
-                    <div class="tooltip-date">${nom}</div>
+                    <div class="tooltip-date">${nom || 'Aucun nom'}</div>
                     <div class="tooltip-comment">${commentaires}</div>
                     <div class="tooltip-options">
                         <button class="tooltip-option" id="deleteNameButton">Supprimer Nom</button>
@@ -31,8 +36,8 @@ function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, compete
                 </div>
             `;
             emptyTooltip.style.position = 'absolute';
-            emptyTooltip.style.left = `${event.pageX + 10}px`; // Slight offset for better visibility
-            emptyTooltip.style.top = `${event.pageY + 10}px`; // Slight offset for better visibility
+            emptyTooltip.style.left = `${event.pageX + 10}px`; // Décalage pour une meilleure visibilité
+            emptyTooltip.style.top = `${event.pageY + 10}px`; // Décalage pour une meilleure visibilité
             emptyTooltip.style.backgroundColor = 'white';
             emptyTooltip.style.border = '1px solid black';
             emptyTooltip.style.padding = '10px';

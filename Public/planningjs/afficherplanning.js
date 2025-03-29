@@ -171,6 +171,8 @@ async function fetchPlanningData() {
 
                 // Vérifie si la cellule contient des données
                 if (rowData.jours[day]) {
+                    console.log(`Données pour le jour ${day} :`, rowData.jours[day]);
+
                     const pairs = {};
 
                     // Créer des paires commentaire-nom regroupées par nom_id
@@ -185,6 +187,8 @@ async function fetchPlanningData() {
                             pairs[nom_id].commentaire = commentaire;
                         }
                     });
+
+                    console.log(`Paires générées pour le jour ${day} :`, pairs);
 
                     // Ajouter chaque paire dans un conteneur
                     Object.entries(pairs).forEach(([nom_id, { nom, commentaire }]) => {
@@ -201,11 +205,20 @@ async function fetchPlanningData() {
                             const div = document.createElement('div');
                             div.textContent = nom;
                             div.dataset.nomId = nom_id || null; // Ajouter l'ID du nom comme attribut de données
+                            div.dataset.nom = nom || null; // Ajouter le nom comme attribut de données
                             div.dataset.jourId = day; // Ajouter l'ID du jour comme attribut de données
                             div.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence comme attribut de données
                             div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
                             div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
-                            div.dataset.nom = nom || null; // Ajouter le nom (si disponible)
+
+                            console.log("Attributs ajoutés au div :", {
+                                "data-nom": div.dataset.nom,
+                                "data-nom-id": div.dataset.nomId,
+                                "data-jour-id": div.dataset.jourId,
+                                "data-competence-id": div.dataset.competenceId,
+                                "data-horaire-debut": div.dataset.horaireDebut,
+                                "data-horaire-fin": div.dataset.horaireFin
+                            });
 
                             container.appendChild(div);
 
@@ -486,13 +499,28 @@ function enableRightClickOnTable() {
         cell.addEventListener("contextmenu", (event) => {
             event.preventDefault(); // Empêcher le menu contextuel par défaut
 
-            // Récupérer les informations nécessaires depuis les attributs de la cellule
-            const jour_id = cell.dataset.jourId || null;
-            const competence_id = cell.dataset.competenceId || null;
-            const horaire_debut = cell.dataset.horaireDebut || null;
-            const horaire_fin = cell.dataset.horaireFin || null;
-            const nom = cell.dataset.nom || null;
-            const nom_id = cell.dataset.nomId || null;
+            // Vérifie si l'élément cible est un div
+            const targetDiv = event.target.closest('div');
+            if (targetDiv) {
+                console.log("Attributs du div cible :", {
+                    "data-nom": targetDiv.dataset.nom,
+                    "data-nom-id": targetDiv.dataset.nomId,
+                    "data-jour-id": targetDiv.dataset.jourId,
+                    "data-competence-id": targetDiv.dataset.competenceId,
+                    "data-horaire-debut": targetDiv.dataset.horaireDebut,
+                    "data-horaire-fin": targetDiv.dataset.horaireFin
+                });
+            } else {
+                console.warn("Aucun div trouvé comme cible du clic droit.");
+            }
+
+            // Récupérer les informations nécessaires depuis le div ou la cellule
+            const jour_id = targetDiv ? targetDiv.dataset.jourId : cell.dataset.jourId || null;
+            const competence_id = targetDiv ? targetDiv.dataset.competenceId : cell.dataset.competenceId || null;
+            const horaire_debut = targetDiv ? targetDiv.dataset.horaireDebut : cell.dataset.horaireDebut || null;
+            const horaire_fin = targetDiv ? targetDiv.dataset.horaireFin : cell.dataset.horaireFin || null;
+            const nom = targetDiv ? targetDiv.dataset.nom : cell.dataset.nom || null;
+            const nom_id = targetDiv ? targetDiv.dataset.nomId : cell.dataset.nomId || null;
             const semaine = document.getElementById("weekNumber").value;
             const annee = document.getElementById("yearNumber").value;
 
