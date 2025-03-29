@@ -1,5 +1,7 @@
 // Fonction pour récupérer les noms disponibles pour une compétence donnée dans le tooltip
 async function fetchNomIds(competenceId, event) {
+    console.log('fetchNomIds appelée avec competenceId :', competenceId);
+
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const jour_id = currentDay; // Utiliser l'ID du jour
@@ -13,6 +15,8 @@ async function fetchNomIds(competenceId, event) {
         }
         const data = await response.json();
         console.log('Noms récupérés :', data);
+
+        // Appeler showTooltip pour afficher les noms dans le tooltip
         showTooltip(event, data);
     } catch (error) {
         console.error('Erreur lors de la récupération des noms :', error);
