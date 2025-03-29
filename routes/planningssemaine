@@ -139,18 +139,22 @@ router.post('/remove-planning', (req, res) => {
 });
 
 // Route pour récupérer les noms disponibles pour les vacances
-router.get('/nom-ids-vacances', (req, res) => {
+router.get('/nom-ids-vacances', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token utilisateur
+
     const query = `
         SELECT n.nom
         FROM Tnom n
         WHERE n.nom_id NOT IN (
             SELECT v.nom_id
             FROM Tvacances v
-            WHERE v.semaine = ? AND v.annee = ?
+            JOIN Tvacances_Tsite vt ON v.vacances_id = vt.vacances_id
+            WHERE v.semaine = ? AND v.annee = ? AND vt.site_id = ?
         )
     `;
-    connection.query(query, [semaine, annee], (err, results) => {
+
+    connection.query(query, [semaine, annee, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des noms :', err.message);
             res.status(500).send('Erreur lors de la récupération des noms');
@@ -161,18 +165,32 @@ router.get('/nom-ids-vacances', (req, res) => {
 });
 
 // Route pour ajouter une entrée dans Tvacances
-router.post('/add-vacances', (req, res) => {
-    const { semaine, annee, nom } = req.body;
-    const query = `
+router.post('/add-vacances', authenticateToken, (req, res) => {
+    const { semaine, annee, nom, site_id } = req.body;
+
+    const queryVacances = `
         INSERT INTO Tvacances (semaine, annee, nom_id)
         VALUES (?, ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1))
     `;
-    connection.query(query, [semaine, annee, nom], (err, result) => {
+
+    connection.query(queryVacances, [semaine, annee, nom], (err, result) => {
         if (err) {
             console.error('Erreur lors de l\'ajout dans Tvacances :', err.message);
             res.status(500).send(`Erreur lors de l'ajout dans Tvacances : ${err.message}`);
         } else {
-            res.send('Vacances ajoutées avec succès');
+            const vacancesId = result.insertId; // Récupérer l'ID de la nouvelle entrée
+            const queryTsite = `
+                INSERT INTO Tvacances_Tsite (vacances_id, site_id)
+                VALUES (?, ?)
+            `;
+            connection.query(queryTsite, [vacancesId, site_id], (err) => {
+                if (err) {
+                    console.error('Erreur lors de l\'ajout dans Tvacances_Tsite :', err.message);
+                    res.status(500).send(`Erreur lors de l'ajout dans Tvacances_Tsite : ${err.message}`);
+                } else {
+                    res.send('Vacances ajoutées avec succès');
+                }
+            });
         }
     });
 });
@@ -201,13 +219,18 @@ router.get('/vacances-data', authenticateToken, (req, res) => {
 });
 
 // Route pour supprimer une entrée dans Tvacances
-router.post('/remove-vacances', (req, res) => {
-    const { semaine, annee, nom } = req.body;
+router.post('/remove-vacances', authenticateToken, (req, res) => {
+    const { semaine, annee, nom, site_id } = req.body;
+
     const query = `
-        DELETE FROM Tvacances
-        WHERE semaine = ? AND annee = ? AND nom_id = (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
+        DELETE v, vt
+        FROM Tvacances v
+        JOIN Tvacances_Tsite vt ON v.vacances_id = vt.vacances_id
+        WHERE v.semaine = ? AND v.annee = ? AND v.nom_id = (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1)
+        AND vt.site_id = ?
     `;
-    connection.query(query, [semaine, annee, nom], (err, result) => {
+
+    connection.query(query, [semaine, annee, nom, site_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression dans Tvacances :', err.message);
             res.status(500).send(`Erreur lors de la suppression dans Tvacances : ${err.message}`);
