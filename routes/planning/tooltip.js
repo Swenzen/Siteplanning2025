@@ -6,13 +6,14 @@ const authenticateToken = require('../../middleware/auth'); // Middleware d'auth
 // Route pour récupérer les noms disponibles pour une compétence donnée
 router.get('/nom-ids', authenticateToken, (req, res) => {
     const { competence_id, semaine, annee, jour_id } = req.query;
-    const siteId = req.user.site_id; // Récupérer le site_id depuis le middleware
+    const siteId = req.user?.site_id;
 
     if (!siteId) {
         console.error('Erreur : site_id manquant.');
         return res.status(400).send('Erreur : site_id est requis.');
     }
 
+    console.log('Utilisateur authentifié :', req.user);
     console.log('Site ID utilisé :', siteId);
 
     // Récupérer les noms des tables Tjrepos_
