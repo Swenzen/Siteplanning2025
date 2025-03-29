@@ -165,6 +165,7 @@ async function fetchPlanningData() {
             days.forEach(day => {
                 const cell = document.createElement("td");
 
+                // Vérifie si la cellule contient des données
                 if (rowData.jours[day]) {
                     const pairs = {};
 
@@ -203,16 +204,7 @@ async function fetchPlanningData() {
 
                             container.appendChild(div);
 
-                            div.addEventListener('contextmenu', (event) => {
-                                console.log('Clic droit détecté sur la cellule');
-                                event.preventDefault(); // Empêcher le menu contextuel par défaut
-                                currentCell = cell; // Stocker la cellule actuelle
-                                currentDay = day;
-                                currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
-                                currentCompetenceId = rowData.competence_id;
-                                showEmptyTooltip(event, nom, nom_id, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
-                            });
-
+                            // Gestionnaire de clic gauche
                             div.addEventListener('click', (event) => {
                                 console.log(`Clic gauche détecté sur la cellule : ${day}, ${rowData.competence_id}`);
                                 currentCell = cell; // Stocker la cellule actuelle
@@ -228,6 +220,18 @@ async function fetchPlanningData() {
                         cell.appendChild(container);
                     });
                 }
+
+                // Gestionnaire de clic pour les cases vides
+                cell.addEventListener('click', (event) => {
+                    console.log(`Clic gauche détecté sur une case vide : ${day}`);
+                    currentCell = cell; // Stocker la cellule actuelle
+                    currentDay = day;
+                    currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+                    currentCompetenceId = rowData.competence_id;
+
+                    // Afficher un tooltip vide ou effectuer une autre action
+                    showEmptyTooltip(event, null, null, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
+                });
 
                 row.appendChild(cell);
             });
