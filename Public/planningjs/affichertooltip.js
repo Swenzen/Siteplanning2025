@@ -1,5 +1,10 @@
 // Fonction pour récupérer les noms disponibles pour une compétence donnée dans le tooltip
 async function fetchNomIds(competenceId, siteId, event) {
+    if (!siteId) {
+        console.error('Erreur : siteId est manquant.');
+        return;
+    }
+
     console.log('fetchNomIds appelée avec competenceId :', competenceId, 'et siteId :', siteId);
 
     const semaine = document.getElementById("weekNumber").value;
@@ -48,12 +53,15 @@ function showTooltip(event, noms) {
 }
 
 // Fonction pour afficher le tooltip vide et charger les noms disponibles
-function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId, horaireDebut, horaireFin, siteId) {
+function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId, horaireDebut, horaireFin) {
     const tooltip = document.getElementById("tooltip");
     tooltip.innerHTML = `<p>Chargement des noms disponibles...</p>`;
     tooltip.style.display = 'block';
     tooltip.style.left = `${event.pageX + 10}px`; // Décalage pour une meilleure visibilité
     tooltip.style.top = `${event.pageY + 10}px`;
+
+    // Récupérer le siteId depuis le localStorage
+    const siteId = localStorage.getItem('site_id');
 
     // Appeler fetchNomIds pour récupérer les noms disponibles
     fetchNomIds(competenceId, siteId, event);
