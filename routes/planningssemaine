@@ -21,6 +21,7 @@ router.get('/planning-data', authenticateToken, (req, res) => {
             c.competence, c.competence_id, 
             p.jour_id, j.nom, j.nom_id, o.display_order
         FROM Thoraire_Tsite ht
+        JOIN Thoraire h ON ht.horaire_id = h.horaire_id
         JOIN Thoraire_competence_Tsite hct ON ht.horaire_id = hct.horaire_id AND hct.site_id = ?
         JOIN Tcompetence c ON hct.competence_id = c.competence_id
         LEFT JOIN Tplanning p ON ht.horaire_id = p.horaire_id AND c.competence_id = p.competence_id AND p.semaine = ? AND p.annee = ?
