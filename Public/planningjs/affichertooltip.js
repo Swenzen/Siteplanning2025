@@ -78,6 +78,12 @@ function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId,
 // Fonction pour mettre à jour le planning dans la base de données
 async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom) {
     const siteId = localStorage.getItem('site_id'); // Récupérer le siteId depuis le localStorage
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
+        return;
+    }
 
     console.log('Données envoyées pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom, siteId });
 
@@ -85,13 +91,14 @@ async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fi
         const response = await fetch('/api/update-planning', {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id: competenceId, nom, site_id: siteId })
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de la mise à jour du planning');
+            throw new Error(`Erreur lors de la mise à jour du planning : ${response.status}`);
         }
 
         const result = await response.text();
