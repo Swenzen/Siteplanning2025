@@ -25,8 +25,8 @@ const dbConfig = environment === 'production' ? {
 } : {
     host: 'localhost',
     user: 'root',
-    password: 'password',
-    database: 'nom_de_ta_base_local',
+    password: 'Testtest',
+    database: 'planning2',
     port: 3306
 };
 
