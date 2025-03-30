@@ -267,11 +267,6 @@ router.post('/add-comment', authenticateToken, (req, res) => {
         VALUES (?, ?, ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1), ?)
     `;
 
-    const queryCommentaireTsite = `
-        INSERT INTO Tcommentaire_Tsite (commentaire_id, site_id)
-        VALUES (?, ?)
-    `;
-
     connection.query(queryCommentaire, [semaine, annee, jour_id, nom, commentaire], (err, result) => {
         if (err) {
             console.error('Erreur lors de l\'ajout du commentaire :', err.message);
@@ -279,6 +274,11 @@ router.post('/add-comment', authenticateToken, (req, res) => {
         }
 
         const commentaireId = result.insertId; // Récupérer l'ID du commentaire inséré
+
+        const queryCommentaireTsite = `
+            INSERT INTO Tcommentaire_Tsite (commentaire_id, site_id)
+            VALUES (?, ?)
+        `;
 
         connection.query(queryCommentaireTsite, [commentaireId, site_id], (err) => {
             if (err) {

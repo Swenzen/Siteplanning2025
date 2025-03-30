@@ -74,7 +74,8 @@ function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, compete
             document.getElementById('commentButton').addEventListener('click', () => {
                 const commentaire = prompt('Entrez votre commentaire :');
                 if (commentaire) {
-                    addCommentToPlanning(nom, commentaire);
+                    console.log('Appel de addCommentToPlanning avec jour_id :', jour_id);
+                    addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin);
                 }
                 emptyTooltip.remove();
             });

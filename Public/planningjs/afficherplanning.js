@@ -317,12 +317,23 @@ async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_
     }
 }
 
-async function addCommentToPlanning(nom, commentaire) {
+
+async function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
     console.log('Appel de la fonction addCommentToPlanning');
-    const semaine = document.getElementById("weekNumber").value;
-    const annee = document.getElementById("yearNumber").value;
-    const jour_id = currentDay; // Utiliser l'ID du jour
     const site_id = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+
+    if (!jour_id) {
+        console.error('Erreur : jour_id est manquant.');
+        alert('Erreur : vous devez sélectionner un jour valide.');
+        return;
+    }
+
+    if (!token) {
+        console.error('Erreur : le token est manquant.');
+        alert('Erreur : vous devez être authentifié pour ajouter un commentaire.');
+        return;
+    }
 
     console.log('Données envoyées pour l\'ajout du commentaire :', { semaine, annee, jour_id, nom, commentaire, site_id });
 
@@ -330,7 +341,8 @@ async function addCommentToPlanning(nom, commentaire) {
         const response = await fetch('/api/add-comment', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Ajouter le token dans l'en-tête
             },
             body: JSON.stringify({ semaine, annee, jour_id, nom, commentaire, site_id })
         });
