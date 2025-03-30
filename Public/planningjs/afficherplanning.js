@@ -354,6 +354,12 @@ async function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, c
         const result = await response.text();
         console.log('Résultat de l\'ajout du commentaire :', result);
 
+        // Vérifie si currentCell est défini
+        if (!currentCell) {
+            console.warn('currentCell est null. Le commentaire a été ajouté dans la base de données, mais pas dans l\'interface utilisateur.');
+            return;
+        }
+
         // Ajouter le commentaire avant le nom dans la cellule
         const divs = currentCell.querySelectorAll('div');
         divs.forEach(div => {
