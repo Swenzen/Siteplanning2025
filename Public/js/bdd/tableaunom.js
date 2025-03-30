@@ -103,7 +103,7 @@ async function saveName() {
     }
 }
 
-//Fonction pour ajouter un nom *
+// Fonction pour ajouter un nom
 async function addNom() {
     const token = localStorage.getItem('token');
     const nom = document.getElementById('nomInput').value;
@@ -113,6 +113,9 @@ async function addNom() {
         alert('Veuillez entrer un nom.');
         return;
     }
+
+    console.log('Données envoyées :', { nom, site_id: siteId });
+    console.log('Token utilisé :', token);
 
     try {
         const response = await fetch('/api/add-nom', {
@@ -129,7 +132,9 @@ async function addNom() {
             fetchData(); // Rafraîchit le tableau des noms
             fetchCompetencesPersonnes(); // Rafraîchit le tableau des compétences des personnes
         } else {
-            alert('Erreur lors de l\'ajout du nom');
+            const error = await response.text();
+            console.error('Erreur lors de l\'ajout du nom :', error);
+            alert('Erreur lors de l\'ajout du nom : ' + error);
         }
     } catch (error) {
         console.error('Erreur lors de l\'ajout du nom :', error);

@@ -21,17 +21,25 @@ router.post('/update-name', authenticateToken, (req, res) => {
 
 
 
-
+// Route pour ajouter un nom
 router.post('/add-nom', authenticateToken, (req, res) => {
     const { nom, site_id } = req.body;
 
+    console.log('Requête reçue :', { nom, site_id, userSiteIds: req.user.siteIds });
+
+    if (!nom || !site_id) {
+        return res.status(400).send('Données manquantes (nom ou site_id)');
+    }
+
     if (!req.user.siteIds.includes(String(site_id))) {
+        console.error('Accès refusé : L\'utilisateur n\'a pas accès à ce site');
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
     const insertNomQuery = 'INSERT INTO Tnom (nom) VALUES (?)';
     connection.query(insertNomQuery, [nom], (err, nomResult) => {
         if (err) {
+            console.error('Erreur lors de l\'ajout du nom :', err.message);
             return res.status(500).send('Erreur lors de l\'ajout du nom');
         }
 
@@ -40,9 +48,11 @@ router.post('/add-nom', authenticateToken, (req, res) => {
         const insertNomSiteQuery = 'INSERT INTO Tnom_Tsite (nom_id, site_id) VALUES (?, ?)';
         connection.query(insertNomSiteQuery, [nomId, site_id], (err) => {
             if (err) {
+                console.error('Erreur lors de l\'association du nom au site :', err.message);
                 return res.status(500).send('Erreur lors de l\'association du nom au site');
             }
 
+            console.log('Nom ajouté avec succès :', { nomId, site_id });
             res.status(201).send('Nom ajouté avec succès');
         });
     });
