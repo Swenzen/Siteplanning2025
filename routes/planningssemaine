@@ -4,7 +4,6 @@ const connection = require('../db'); // Assurez-vous que la connexion à la base
 const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
 
 
-
 router.get('/planning-data', authenticateToken, (req, res) => {
     const { semaine, annee } = req.query;
     const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du tableau
@@ -255,35 +254,64 @@ router.post('/remove-vacances', authenticateToken, (req, res) => {
 });
 
 // Route pour ajouter un commentaire
-router.post('/add-comment', (req, res) => {
-    const { semaine, annee, jour_id, nom, commentaire } = req.body;
+router.post('/add-comment', authenticateToken, (req, res) => {
+    const { semaine, annee, jour_id, nom, commentaire, site_id } = req.body;
 
-    const query = `
+    if (!site_id) {
+        console.error('Erreur : site_id est requis.');
+        return res.status(400).send('Erreur : site_id est requis.');
+    }
+
+    const queryCommentaire = `
         INSERT INTO Tcommentaire (semaine, annee, jour_id, nom_id, commentaire)
         VALUES (?, ?, ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1), ?)
     `;
 
-    connection.query(query, [semaine, annee, jour_id, nom, commentaire], (err, result) => {
+    const queryCommentaireTsite = `
+        INSERT INTO Tcommentaire_Tsite (commentaire_id, site_id)
+        VALUES (?, ?)
+    `;
+
+    connection.query(queryCommentaire, [semaine, annee, jour_id, nom, commentaire], (err, result) => {
         if (err) {
             console.error('Erreur lors de l\'ajout du commentaire :', err.message);
-            res.status(500).send(`Erreur lors de l'ajout du commentaire : ${err.message}`);
-        } else {
-            res.send('Commentaire ajouté avec succès');
+            return res.status(500).send(`Erreur lors de l'ajout du commentaire : ${err.message}`);
         }
+
+        const commentaireId = result.insertId; // Récupérer l'ID du commentaire inséré
+
+        connection.query(queryCommentaireTsite, [commentaireId, site_id], (err) => {
+            if (err) {
+                console.error('Erreur lors de l\'ajout dans Tcommentaire_Tsite :', err.message);
+                return res.status(500).send(`Erreur lors de l'ajout dans Tcommentaire_Tsite : ${err.message}`);
+            }
+
+            res.send('Commentaire ajouté avec succès');
+        });
     });
 });
 
 
-// Route pour récupérer les commentaires
-router.get('/comments', (req, res) => {
-    const { semaine, annee } = req.query;
+// Route pour récupérer les commentaires pour un site spécifique
+router.get('/comments', authenticateToken, (req, res) => {
+    const { semaine, annee, site_id } = req.query;
 
+    console.log('Paramètres reçus par la route /comments :', req.query);
+
+    if (!site_id) {
+        console.error('Erreur : site_id est requis.');
+        return res.status(400).send('Erreur : site_id est requis.');
+    }
+
+    // Logique pour récupérer les commentaires
     const query = `
         SELECT 
-            c.semaine, c.annee, c.jour_id, c.nom_id, c.commentaire, 
+            c.commentaire_id, c.semaine, c.annee, c.jour_id, c.nom_id, c.commentaire, 
             comp.competence, h.horaire_debut, h.horaire_fin
         FROM 
             Tcommentaire c
+        JOIN 
+            Tcommentaire_Tsite ct ON c.commentaire_id = ct.commentaire_id
         JOIN 
             Tplanning p ON c.nom_id = p.nom_id AND c.semaine = p.semaine AND c.annee = p.annee AND c.jour_id = p.jour_id
         JOIN 
@@ -291,56 +319,77 @@ router.get('/comments', (req, res) => {
         JOIN 
             Thoraire h ON p.horaire_id = h.horaire_id
         WHERE 
-            c.semaine = ? AND c.annee = ?
+            c.semaine = ? AND c.annee = ? AND ct.site_id = ?
     `;
 
-    connection.query(query, [semaine, annee], (err, results) => {
+    connection.query(query, [semaine, annee, site_id], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des commentaires :', err.message);
-            res.status(500).send('Erreur lors de la récupération des commentaires');
-        } else {
-            res.json(results);
+            return res.status(500).send('Erreur lors de la récupération des commentaires');
         }
+
+        res.json(results);
     });
 });
 
-// Route pour récupérer tous les commentaires spécifiques
-router.get('/comment', (req, res) => {
+
+
+// Route pour récupérer les commentaires spécifiques à un nom, jour, semaine et année (en clic droit)
+router.get('/comment', authenticateToken, (req, res) => {
     const { nom_id, jour_id, semaine, annee } = req.query;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token utilisateur
+
+    if (!nom_id || !jour_id || !semaine || !annee || !siteId) {
+        console.error('Erreur : paramètres manquants.');
+        return res.status(400).send('Les champs "nom_id", "jour_id", "semaine", "annee" et "site_id" sont requis.');
+    }
 
     const query = `
-        SELECT commentaire_id, commentaire
-        FROM Tcommentaire
-        WHERE nom_id = ? AND jour_id = ? AND semaine = ? AND annee = ?
+        SELECT 
+            c.commentaire_id, c.commentaire
+        FROM 
+            Tcommentaire c
+        JOIN 
+            Tcommentaire_Tsite ct ON c.commentaire_id = ct.commentaire_id
+        WHERE 
+            c.nom_id = ? AND c.jour_id = ? AND c.semaine = ? AND c.annee = ? AND ct.site_id = ?
     `;
 
-    connection.query(query, [nom_id, jour_id, semaine, annee], (err, results) => {
+    connection.query(query, [nom_id, jour_id, semaine, annee, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des commentaires :', err.message);
-            res.status(500).send('Erreur lors de la récupération des commentaires');
-        } else {
-            res.json(results);
+            return res.status(500).send('Erreur lors de la récupération des commentaires.');
         }
+
+        res.json(results);
     });
 });
 
 
 // Route pour supprimer un commentaire spécifique
-router.delete('/delete-comment', (req, res) => {
+router.delete('/delete-comment', authenticateToken, (req, res) => {
     const { comment_id } = req.query;
+    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token utilisateur
+
+    if (!comment_id || !siteId) {
+        console.error('Erreur : paramètres manquants.');
+        return res.status(400).send('Les champs "comment_id" et "site_id" sont requis.');
+    }
 
     const query = `
-        DELETE FROM Tcommentaire
-        WHERE commentaire_id = ?
+        DELETE c, ct
+        FROM Tcommentaire c
+        JOIN Tcommentaire_Tsite ct ON c.commentaire_id = ct.commentaire_id
+        WHERE c.commentaire_id = ? AND ct.site_id = ?
     `;
 
-    connection.query(query, [comment_id], (err, results) => {
+    connection.query(query, [comment_id, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la suppression du commentaire :', err.message);
-            res.status(500).send('Erreur lors de la suppression du commentaire');
-        } else {
-            res.sendStatus(204); // No Content
+            return res.status(500).send('Erreur lors de la suppression du commentaire.');
         }
+
+        res.send('Commentaire supprimé avec succès');
     });
 });
 

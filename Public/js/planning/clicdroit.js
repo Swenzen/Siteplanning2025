@@ -5,10 +5,17 @@ function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, compete
     // Vérifie si nom_id est null
     if (!nom_id) {
         console.warn("Aucun nom_id trouvé pour cette cellule.");
+        return;
     }
 
     // Récupérer les commentaires correspondants à partir de la base de données
-    fetch(`/api/comment?nom_id=${nom_id}&jour_id=${jour_id}&semaine=${semaine}&annee=${annee}`)
+    fetch(`/api/comment?nom_id=${nom_id}&jour_id=${jour_id}&semaine=${semaine}&annee=${annee}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+        }
+    })
         .then(response => {
             if (!response.ok) {
                 throw new Error('Erreur lors de la récupération des commentaires');
@@ -84,10 +91,21 @@ function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, compete
         });
 }
 
-// Fonction pour supprimer un commentaire
 function deleteComment(commentId, callback) {
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+
+    if (!token) {
+        console.error('Erreur : le token est manquant.');
+        alert('Erreur : vous devez être authentifié pour supprimer un commentaire.');
+        return;
+    }
+
     fetch(`/api/delete-comment?comment_id=${commentId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
     })
     .then(response => {
         if (!response.ok) {
@@ -101,6 +119,7 @@ function deleteComment(commentId, callback) {
         console.error('Erreur lors de la suppression du commentaire :', error);
     });
 }
+
 // Nouvelle fonction pour afficher un tooltip spécifique pour les cellules vides
 function showTooltipForEmptyCell(event, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
     console.log(`Appel de showTooltipForEmptyCell avec les paramètres : jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);

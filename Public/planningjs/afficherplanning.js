@@ -24,7 +24,8 @@ async function fetchPlanningData() {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
     const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
 
-    console.log('Paramètres envoyés à fetchPlanningData :', { semaine, annee, siteId, token });
+    console.log('Token récupéré :', token);
+    console.log('Site ID récupéré :', siteId);
 
     if (!token) {
         console.error('Erreur : le token est manquant.');
@@ -38,20 +39,15 @@ async function fetchPlanningData() {
         return;
     }
 
+    console.log('Paramètres envoyés à fetchPlanningData :', { semaine, annee, siteId, token });
+
     try {
         // Effectuer les requêtes en parallèle
-        const [planningResponse, commentsResponse, fermeturesResponse] = await Promise.all([
+        const [planningResponse, fermeturesResponse] = await Promise.all([
             fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}&siteId=${siteId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
-                    'Content-Type': 'application/json'
-                }
-            }),
-            fetch(`/api/comments?semaine=${semaine}&annee=${annee}&siteId=${siteId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             }),
@@ -64,17 +60,37 @@ async function fetchPlanningData() {
             })
         ]);
 
+        fetch(`/api/comments?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des commentaires');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Commentaires récupérés :', data);
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération des commentaires :', error);
+            });
+
+        console.log('Requête envoyée :', `/api/comments?semaine=${semaine}&annee=${annee}&site_id=${siteId}`);
+        console.log('En-têtes :', {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        });
+
         // Vérifier si les réponses sont valides
         if (!planningResponse.ok) {
             const errorText = await planningResponse.text();
             console.error('Erreur lors de la récupération des données du planning :', errorText);
             alert('Erreur lors de la récupération des données du planning.');
-            return;
-        }
-        if (!commentsResponse.ok) {
-            const errorText = await commentsResponse.text();
-            console.error('Erreur lors de la récupération des commentaires :', errorText);
-            alert('Erreur lors de la récupération des commentaires.');
             return;
         }
         if (!fermeturesResponse.ok) {
@@ -86,11 +102,9 @@ async function fetchPlanningData() {
 
         // Extraire les données des réponses
         const planningData = await planningResponse.json();
-        const commentsData = await commentsResponse.json();
         const fermeturesData = await fermeturesResponse.json();
 
         console.log('Données du planning récupérées :', planningData);
-        console.log('Commentaires récupérés :', commentsData);
         console.log('Fermetures récupérées :', fermeturesData);
 
         // Vérifie si les données du planning sont vides
@@ -117,18 +131,6 @@ async function fetchPlanningData() {
             }
             return acc;
         }, {});
-
-        // Ajouter les commentaires aux données regroupées
-        commentsData.forEach(comment => {
-            const key = `${comment.competence}-${comment.horaire_debut}-${comment.horaire_fin}`;
-            if (!groupedData[key]) {
-                groupedData[key] = { competence: comment.competence, horaire_debut: comment.horaire_debut, horaire_fin: comment.horaire_fin, jours: {} };
-            }
-            if (!groupedData[key].jours[comment.jour_id]) {
-                groupedData[key].jours[comment.jour_id] = [];
-            }
-            groupedData[key].jours[comment.jour_id].push({ nom: comment.nom, nom_id: comment.nom_id, commentaire: comment.commentaire });
-        });
 
         // Trier les données regroupées par display_order, heure de début et heure de fin
         const sortedData = Object.values(groupedData).sort((a, b) => {
@@ -307,14 +309,14 @@ async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_
     }
 }
 
-// Fonction pour ajouter un commentaire dans le planning
 async function addCommentToPlanning(nom, commentaire) {
     console.log('Appel de la fonction addCommentToPlanning');
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const jour_id = currentDay; // Utiliser l'ID du jour
+    const site_id = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
 
-    console.log('Données envoyées pour l\'ajout du commentaire :', { semaine, annee, jour_id, nom, commentaire });
+    console.log('Données envoyées pour l\'ajout du commentaire :', { semaine, annee, jour_id, nom, commentaire, site_id });
 
     try {
         const response = await fetch('/api/add-comment', {
@@ -322,7 +324,7 @@ async function addCommentToPlanning(nom, commentaire) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ semaine, annee, jour_id, nom, commentaire })
+            body: JSON.stringify({ semaine, annee, jour_id, nom, commentaire, site_id })
         });
 
         if (!response.ok) {

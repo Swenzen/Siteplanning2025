@@ -185,6 +185,16 @@ CREATE TABLE Tvacances_Tsite (
     FOREIGN KEY (vacances_id) REFERENCES Tvacances(vacances_id) ON DELETE CASCADE,
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
+
+-- Ajouter la table Tcommentaire_Tsite
+CREATE TABLE Tcommentaire_Tsite (
+    commentaire_id INT NOT NULL,
+    site_id INT NOT NULL,
+    PRIMARY KEY (commentaire_id, site_id),
+    FOREIGN KEY (commentaire_id) REFERENCES Tcommentaire(commentaire_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);
+
 -- Insérer des valeurs dans Tnom
 INSERT INTO Tnom (nom_id, nom) VALUES
 (1, 'Pierre'),
