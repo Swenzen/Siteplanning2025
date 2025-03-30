@@ -29,7 +29,7 @@ async function fetchPlanningData() {
 
     if (!token) {
         console.error('Erreur : le token est manquant.');
-        alert('Erreur : vous devez être authentifié.');
+        alert('Erreur : vous n\'êtes pas authentifié.'); // Ajout de l'alerte
         return;
     }
 
@@ -287,7 +287,6 @@ async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_
 
     if (!token || !site_id) {
         console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
@@ -325,13 +324,11 @@ async function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, c
 
     if (!jour_id) {
         console.error('Erreur : jour_id est manquant.');
-        alert('Erreur : vous devez sélectionner un jour valide.');
         return;
     }
 
     if (!token) {
         console.error('Erreur : le token est manquant.');
-        alert('Erreur : vous devez être authentifié pour ajouter un commentaire.');
         return;
     }
 

@@ -5,7 +5,6 @@ async function fetchHoraires() {
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
@@ -61,7 +60,6 @@ async function addHoraire() {
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
@@ -98,7 +96,6 @@ async function deleteHoraire(horaire_id) {
 
     if (!token) {
         console.error('Erreur : le token d\'authentification est introuvable.');
-        alert('Erreur : vous devez être authentifié.');
         return;
     }
 

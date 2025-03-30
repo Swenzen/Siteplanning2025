@@ -7,7 +7,6 @@ async function fetchNomIdsVacances(event) {
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
@@ -61,7 +60,6 @@ async function addVacances(semaine, annee, nom) {
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
@@ -98,7 +96,6 @@ async function removeVacances(semaine, annee, nom) {
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
@@ -137,7 +134,6 @@ async function fetchVacancesData() {
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 

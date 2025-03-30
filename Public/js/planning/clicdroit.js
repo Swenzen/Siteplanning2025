@@ -97,7 +97,6 @@ function deleteComment(commentId, callback) {
 
     if (!token) {
         console.error('Erreur : le token est manquant.');
-        alert('Erreur : vous devez être authentifié pour supprimer un commentaire.');
         return;
     }
 

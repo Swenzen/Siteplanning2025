@@ -5,7 +5,6 @@ async function fetchCompetencesPersonnes() {
 
     if (!siteId || !token) {
         console.error('Erreur : site_id ou token manquant.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
@@ -68,7 +67,6 @@ async function toggleCompetence(nom_id, competence_id, cell) {
 
     if (!siteId || !token) {
         console.error('Erreur : site_id ou token manquant.');
-        alert('Erreur : vous devez être authentifié et un site doit être chargé.');
         return;
     }
 
