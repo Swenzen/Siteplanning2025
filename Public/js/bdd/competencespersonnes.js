@@ -72,7 +72,7 @@ async function toggleCompetence(nom_id, competence_id, cell) {
 
     try {
         if (cell.textContent === '✔') {
-            const response = await fetch('/api/delete-competence', {
+            const response = await fetch('/api/delete-competence2', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

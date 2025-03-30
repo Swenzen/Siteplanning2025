@@ -91,7 +91,7 @@ router.post('/add-competence', authenticateToken, (req, res) => {
 });
 
 // Route pour supprimer une compétence d'une personne pour un site (protégée)
-router.post('/delete-competence', authenticateToken, (req, res) => {
+router.post('/delete-competence2', authenticateToken, (req, res) => {
     const { nom_id, competence_id } = req.body;
     const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
 

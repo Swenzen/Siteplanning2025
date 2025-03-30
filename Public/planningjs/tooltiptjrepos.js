@@ -2,12 +2,28 @@
 async function fetchNomIdsRepos(event, tableName, jourId) {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
+        return;
+    }
 
     try {
-        const response = await fetch(`/api/nom-ids-repos?semaine=${semaine}&annee=${annee}&jourId=${jourId}`);
+        const response = await fetch(`/api/nom-ids-repos?semaine=${semaine}&annee=${annee}&jourId=${jourId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                'site-id': siteId, // Ajouter le site_id dans l'en-tête
+                'Content-Type': 'application/json'
+            }
+        });
+
         if (!response.ok) {
             throw new Error('Erreur lors de la récupération des nom_id');
         }
+
         const data = await response.json();
         console.log('Nom_id récupérés :', data);
         showTooltipRepos(event, data, tableName, jourId);

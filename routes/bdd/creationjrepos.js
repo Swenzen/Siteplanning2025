@@ -116,10 +116,13 @@ router.post('/add-repos-data', async (req, res) => {
 router.get('/nom-ids-repos', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
     const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
-    const { semaine, annee, jourId } = req.query;
+    const { jourId } = req.query;
 
-    if (!siteId || !semaine || !annee || !jourId) {
-        return res.status(400).send('Données manquantes (site_id, semaine, annee ou jourId).');
+    console.log('Requête reçue :', { token, siteId, jourId });
+
+    if (!siteId || !jourId) {
+        console.error('Données manquantes :', { siteId, jourId });
+        return res.status(400).send('Données manquantes (site_id ou jourId).');
     }
 
     try {
@@ -129,10 +132,11 @@ router.get('/nom-ids-repos', async (req, res) => {
             WHERE tn.nom_id NOT IN (
                 SELECT tpt.planning_id
                 FROM Tplanning_Trepos_Tsite tpt
-                WHERE tpt.site_id = ? AND tpt.semaine = ? AND tpt.annee = ? AND tpt.jour_id = ?
+                WHERE tpt.site_id = ? AND tpt.jour_id = ?
             )
         `;
-        const [results] = await connection.promise().query(query, [siteId, semaine, annee, jourId]);
+        const [results] = await connection.promise().query(query, [siteId, jourId]);
+        console.log('Résultats récupérés :', results);
         res.json(results);
     } catch (error) {
         console.error('Erreur lors de la récupération des nom_id :', error.message);
