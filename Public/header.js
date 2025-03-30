@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (username) {
         // Si l'utilisateur est connecté
-        userInfo.textContent = `Connecté en tant que : ${username}`;
+        userInfo.textContent = `${username}`;
         logoutButton.style.display = "inline-block";
     } else if (window.location.pathname.includes("index.html")) {
         // Si l'utilisateur est sur la page d'index (afficher inscription/connexion)

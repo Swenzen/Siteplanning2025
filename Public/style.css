@@ -88,12 +88,14 @@ header nav ul li a.active {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Ombre plus marquée */
 }
 
-/* Section utilisateur (à droite) */
+/* Section utilisateur (en ligne, en haut à droite) */
 header #user-section {
-    display: flex;
-    flex-direction: column; /* Affiche les éléments en colonne */
-    align-items: flex-end; /* Aligne les éléments à droite */
+    display: flex; /* Affiche les éléments en ligne */
+    flex-direction: row; /* Aligne les éléments horizontalement */
+    align-items: center; /* Aligne verticalement les éléments */
+    justify-content: flex-end; /* Place les éléments à droite */
     gap: 10px; /* Espacement entre le texte et le bouton */
+    color: #22222c; /* Texte gris clair pour être visible sur le fond sombre */
 }
 
 /* Style pour le bouton "Se déconnecter" */
@@ -102,7 +104,7 @@ header #user-section #logoutButton {
     color: white; /* Texte blanc */
     border: none; /* Supprime la bordure */
     padding: 8px 15px; /* Espacement interne */
-    border-radius: 20px; /* Arrondit complètement les coins */
+    border-radius: 20px; /* Coins arrondis */
     cursor: pointer; /* Change le curseur en pointeur */
     font-size: 14px; /* Taille du texte */
     transition: background-color 0.3s; /* Transition pour le survol */
@@ -297,4 +299,91 @@ tr:nth-child(even) {
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+
+/* ========================= */
+/* SECTION AUTHENTIFICATION  */
+/* ========================= */
+
+/* Conteneur principal pour la section d'authentification */
+#auth-section {
+    width: 400px; /* Largeur fixe pour un design cohérent */
+    margin: 50px auto; /* Centre horizontalement et ajoute un espacement vertical */
+    background-color: #ffffff; /* Fond blanc */
+    border-radius: 10px; /* Coins arrondis */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
+    padding: 20px; /* Espacement interne */
+    text-align: center; /* Centre le texte */
+}
+
+/* Titres des formulaires */
+#auth-section h2 {
+    color: #2c3e50; /* Couleur sombre pour les titres */
+    margin-bottom: 20px; /* Espacement sous le titre */
+}
+
+/* Champs de formulaire */
+#auth-section input[type="text"],
+#auth-section input[type="password"],
+#auth-section input[type="email"] {
+    width: 90%; /* Champs presque aussi larges que le conteneur */
+    padding: 10px; /* Espacement interne */
+    margin: 10px 0; /* Espacement vertical entre les champs */
+    border: 1px solid #ddd; /* Bordure légère */
+    border-radius: 5px; /* Coins arrondis */
+    font-size: 14px; /* Taille du texte */
+}
+
+/* Boutons des formulaires */
+#auth-section button {
+    background-color: #3498db; /* Couleur bleue */
+    color: white; /* Texte blanc */
+    border: none; /* Supprime la bordure */
+    padding: 10px 15px; /* Espacement interne */
+    border-radius: 5px; /* Coins arrondis */
+    cursor: pointer; /* Change le curseur en pointeur */
+    font-size: 14px; /* Taille du texte */
+    transition: background-color 0.3s; /* Transition pour le survol */
+    margin-top: 10px; /* Espacement au-dessus des boutons */
+}
+
+/* Effet au survol des boutons */
+#auth-section button:hover {
+    background-color: #2980b9; /* Couleur bleue plus sombre au survol */
+}
+
+/* Section utilisateur (après connexion) */
+#user-info {
+    width: 400px; /* Largeur fixe pour correspondre à la section d'authentification */
+    margin: 50px auto; /* Centre horizontalement et ajoute un espacement vertical */
+    background-color: #ffffff; /* Fond blanc */
+    border-radius: 10px; /* Coins arrondis */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
+    padding: 20px; /* Espacement interne */
+    text-align: center; /* Centre le texte */
+}
+
+/* Texte de bienvenue */
+#user-info p {
+    color: #2c3e50; /* Couleur sombre */
+    font-size: 16px; /* Taille du texte */
+    margin-bottom: 20px; /* Espacement sous le texte */
+}
+
+/* Bouton "Se déconnecter" */
+#user-info button {
+    background-color: #e74c3c; /* Couleur rouge */
+    color: white; /* Texte blanc */
+    border: none; /* Supprime la bordure */
+    padding: 10px 15px; /* Espacement interne */
+    border-radius: 20px; /* Coins arrondis */
+    cursor: pointer; /* Change le curseur en pointeur */
+    font-size: 14px; /* Taille du texte */
+    transition: background-color 0.3s; /* Transition pour le survol */
+}
+
+/* Effet au survol du bouton "Se déconnecter" */
+#user-info button:hover {
+    background-color: #c0392b; /* Rouge plus sombre au survol */
 }

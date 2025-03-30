@@ -27,3 +27,30 @@ async function login(username, password) {
         return false;
     }
 }
+
+document.getElementById("loginForm").addEventListener("submit", async (event) => {
+    event.preventDefault(); // Empêche le rechargement par défaut du formulaire
+
+    const username = document.getElementById("loginUsername").value;
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+        // Simuler une requête d'authentification (remplace par ton API réelle)
+        const response = await fakeLogin(username, password);
+
+        if (response.success) {
+            // Stocker les informations de l'utilisateur dans le localStorage
+            localStorage.setItem("username", username);
+            localStorage.setItem("token", response.token);
+
+            // Rafraîchir la page après connexion réussie
+            window.location.reload();
+        } else {
+            alert("Nom d'utilisateur ou mot de passe incorrect.");
+        }
+    } catch (error) {
+        console.error("Erreur lors de la connexion :", error);
+        alert("Une erreur est survenue. Veuillez réessayer.");
+    }
+});
+
