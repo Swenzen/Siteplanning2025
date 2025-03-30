@@ -9,107 +9,123 @@
 </head>
 <body>
     <div id="content">
-        <h1>Base de Donnée</h1>
-        
-        <!-- Tableau des noms -->
-        <h2>Noms</h2>
-        <table id="databaseTable">
-            <thead>
-                <tr>
-                    <th>nom_id</th>
-                    <th>nom</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Les lignes seront ajoutées ici dynamiquement -->
-            </tbody>
-        </table>
-        <div>
-            <input type="text" id="nomInput" placeholder="Entrez un nom">
-            <button id="addNameButton">Ajouter un nom</button>
+       
+        <!-- Conteneur pour les noms -->
+        <div class="section-container">
+            <h2>Noms</h2>
+            <table id="databaseTable">
+                <thead>
+                    <tr>
+                        <th>nom_id</th>
+                        <th>nom</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées ici dynamiquement -->
+                </tbody>
+            </table>
+            <div class="form-container">
+                <input type="text" id="nomInput" placeholder="Entrez un nom">
+                <button id="addNameButton">Ajouter un nom</button>
+            </div>
         </div>
 
-        <!-- Tableau des compétences -->
-        <h2>Compétences</h2>
-        <table id="competencesTable">
-            <thead>
-                <tr>
-                    <th>Compétence</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Les lignes seront ajoutées ici dynamiquement -->
-            </tbody>
-        </table>
-        <button id="addCompetenceButton">Ajouter une compétence</button>
+        <!-- Conteneur pour les compétences -->
+        <div class="section-container">
+            <h2>Compétences</h2>
+            <table id="competencesTable">
+                <thead>
+                    <tr>
+                        <th>Compétence</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées ici dynamiquement -->
+                </tbody>
+            </table>
+            <div class="form-container">
+                <button id="addCompetenceButton">Ajouter une compétence</button>
+            </div>
+        </div>
 
-        <!-- Tableau des horaires -->
-        <h2>Horaires</h2>
-        <table id="horairesTable">
-            <thead>
-                <tr>
-                    <th>Horaire début</th>
-                    <th>Horaire fin</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Les lignes seront ajoutées ici dynamiquement -->
-            </tbody>
-        </table>
-        <button id="addHoraireButton">Ajouter un horaire</button>
+        <!-- Conteneur pour les horaires -->
+        <div class="section-container">
+            <h2>Horaires</h2>
+            <table id="horairesTable">
+                <thead>
+                    <tr>
+                        <th>Horaire début</th>
+                        <th>Horaire fin</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées ici dynamiquement -->
+                </tbody>
+            </table>
+            <div class="form-container">
+                <button id="addHoraireButton">Ajouter un horaire</button>
+            </div>
+        </div>
 
-        <!-- Tableau des horaires par compétence -->
-        <h2>Horaires par compétence</h2>
-        <table id="horairescompetenceTable">
-            <thead>
-                <tr>
-                    <th>Horaires</th>
-                    <!-- Les compétences seront ajoutées ici dynamiquement -->
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Les lignes seront ajoutées ici dynamiquement -->
-            </tbody>
-        </table>
+        <!-- Conteneur pour les horaires par compétence -->
+        <div class="section-container">
+            <h2>Horaires par compétence</h2>
+            <table id="horairescompetenceTable">
+                <thead>
+                    <tr>
+                        <th>Horaires</th>
+                        <!-- Les compétences seront ajoutées ici dynamiquement -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées ici dynamiquement -->
+                </tbody>
+            </table>
+        </div>
 
-        <!-- Tableau des compétences des personnes -->
-        <h2>Compétences des personnes</h2>
-        <table id="competencesPersonnesTable">
-            <thead>
-                <tr>
-                    <th>Nom</th>
-                    <!-- Les compétences seront ajoutées ici dynamiquement -->
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Les lignes seront ajoutées ici dynamiquement -->
-            </tbody>
-        </table>
+        <!-- Conteneur pour les compétences des personnes -->
+        <div class="section-container">
+            <h2>Compétences des personnes</h2>
+            <table id="competencesPersonnesTable">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <!-- Les compétences seront ajoutées ici dynamiquement -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées ici dynamiquement -->
+                </tbody>
+            </table>
+        </div>
 
-        <!-- Tableau des jours repos des personnes -->
-        <h2>Jours repos</h2>
-        <table id="joursrepos">
-            <thead>
-                <tr>
-                    <th>Absence</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Les lignes seront ajoutées ici dynamiquement -->
-            </tbody>
-        </table>
-        <button id="ajouterjoursrepos">Ajouter un jour de repos</button>
+        <!-- Conteneur pour les jours repos -->
+        <div class="section-container">
+            <h2>Jours repos</h2>
+            <table id="joursrepos">
+                <thead>
+                    <tr>
+                        <th>Absence</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées ici dynamiquement -->
+                </tbody>
+            </table>
+            <div class="form-container">
+                <button id="ajouterjoursrepos">Ajouter un jour de repos</button>
+            </div>
+        </div>
         
     </div>
     
     <div id="main-column">
         <!-- Affichage du site -->
         <div id="site-info">
-            <p id="site-display">Site : </p>
         </div>
 
         <!-- Menu -->
@@ -140,60 +156,7 @@
     <script src="js/bdd/tableaureposrttforma.js"></script>
     <script src="js/bdd/tableaunom.js"></script>
     <script>
-        // Fonction pour afficher le nom de l'utilisateur connecté
-        function displayUser() {
-            const username = localStorage.getItem('username'); // Récupérer le nom de l'utilisateur depuis le localStorage
-            if (username) {
-                document.getElementById('user-info').style.display = 'block';
-                document.getElementById('username-display').textContent = username;
-            } else {
-                // Si aucun utilisateur n'est connecté, rediriger vers la page de connexion
-                window.location.href = 'index.html';
-            }
-        }
-
-        // Fonction pour gérer la déconnexion
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            localStorage.removeItem('token'); // Supprimer le jeton
-            localStorage.removeItem('username'); // Supprimer le nom de l'utilisateur
-            window.location.href = 'index.html'; // Rediriger vers la page de connexion
-        });
-
-        // Appeler la fonction pour afficher l'utilisateur connecté au chargement de la page
-        document.addEventListener('DOMContentLoaded', displayUser);
-
-        async function fetchSite() {
-    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
-
-    try {
-        const response = await fetch('/api/site', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            const { sites } = await response.json();
-            console.log('Sites récupérés :', sites);
-
-            // Afficher les sites dans l'interface utilisateur
-            const siteElement = document.getElementById('site-display');
-            if (sites.length === 1) {
-                // Si un seul site est associé
-                siteElement.textContent = `Site : ${sites[0].site_name}`;
-            } else {
-                // Si plusieurs sites sont associés
-                siteElement.textContent = `Sites : ${sites.map(site => site.site_name).join(', ')}`;
-            }
-        } else {
-            console.error('Erreur lors de la récupération des sites');
-        }
-    } catch (error) {
-        console.error('Erreur lors de la requête :', error);
-    }
-}
+        
 
         // Appeler la fonction pour récupérer le site au chargement de la page
         document.addEventListener('DOMContentLoaded', fetchSite);

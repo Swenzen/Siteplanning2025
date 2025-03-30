@@ -9,6 +9,84 @@ body {
 
 
 /* ========================= */
+/* STYLE DES TABLEAUX        */
+/* ========================= */
+
+/* Conteneur des tableaux */
+table {
+    width: 90%; /* Largeur ajustée pour un meilleur rendu */
+    margin: 20px auto; /* Centre le tableau horizontalement */
+    border-collapse: separate; /* Permet les bordures arrondies */
+    border-spacing: 0; /* Supprime les espaces entre les cellules */
+    background-color: #ffffff; /* Fond blanc */
+    border-radius: 10px; /* Coins arrondis */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
+    overflow: hidden; /* Empêche les débordements */
+}
+
+/* En-tête des tableaux */
+table thead {
+    background-color: #3498db; /* Couleur bleue pour l'en-tête */
+    color: white; /* Texte blanc */
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Cellules de l'en-tête */
+table thead th {
+    padding: 15px; /* Espacement interne */
+    font-size: 16px; /* Taille du texte */
+    text-transform: uppercase; /* Texte en majuscules */
+}
+
+/* Lignes du corps du tableau */
+table tbody tr {
+    border-bottom: 1px solid #ddd; /* Ligne de séparation */
+    transition: background-color 0.3s; /* Transition pour le survol */
+}
+
+/* Cellules du corps du tableau */
+table tbody td {
+    padding: 12px; /* Espacement interne */
+    text-align: center; /* Centre le texte */
+    font-size: 14px; /* Taille du texte */
+    color: #333; /* Couleur du texte */
+}
+
+/* Effet au survol des lignes */
+table tbody tr:hover {
+    background-color: #f9f9f9; /* Fond gris clair au survol */
+}
+
+/* Dernière ligne sans bordure */
+table tbody tr:last-child {
+    border-bottom: none;
+}
+
+/* Boutons dans les tableaux */
+table tbody td button {
+    background-color: #e74c3c; /* Couleur rouge */
+    color: white; /* Texte blanc */
+    border: none; /* Supprime la bordure */
+    padding: 8px 12px; /* Espacement interne */
+    border-radius: 5px; /* Coins arrondis */
+    cursor: pointer; /* Change le curseur en pointeur */
+    font-size: 12px; /* Taille du texte */
+    transition: background-color 0.3s; /* Transition pour le survol */
+}
+
+/* Effet au survol des boutons */
+table tbody td button:hover {
+    background-color: #c0392b; /* Rouge plus sombre au survol */
+}
+
+
+
+
+
+
+
+/* ========================= */
 /* HEADER (Bandeau en haut)  */
 /* ========================= */
 
@@ -385,5 +463,82 @@ tr:nth-child(even) {
 
 /* Effet au survol du bouton "Se déconnecter" */
 #user-info button:hover {
+    background-color: #c0392b; /* Rouge plus sombre au survol */
+}
+
+/* ========================= */
+/* STYLE DES CONTENEURS      */
+/* ========================= */
+
+/* Conteneur principal pour chaque section */
+.section-container {
+    background-color: #ffffff; /* Fond blanc */
+    border-radius: 10px; /* Coins arrondis */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
+    margin: 20px auto; /* Espacement autour du conteneur */
+    padding: 20px; /* Espacement interne */
+    width: 90%; /* Largeur ajustée */
+}
+
+/* Titre des sections */
+.section-container h2 {
+    color: #2c3e50; /* Couleur sombre */
+    margin-bottom: 20px; /* Espacement sous le titre */
+    text-align: center; /* Centre le titre */
+}
+
+/* ========================= */
+/* STYLE DES FORMULAIRES     */
+/* ========================= */
+
+/* Conteneur pour les champs de formulaire */
+.form-container {
+    display: flex;
+    justify-content: center; /* Centre les éléments horizontalement */
+    align-items: center; /* Aligne les éléments verticalement */
+    gap: 10px; /* Espacement entre les champs */
+    margin-top: 20px; /* Espacement au-dessus du formulaire */
+}
+
+/* Champs de saisie */
+.form-container input[type="text"] {
+    width: 70%; /* Largeur ajustée */
+    padding: 10px; /* Espacement interne */
+    border: 1px solid #ddd; /* Bordure légère */
+    border-radius: 5px; /* Coins arrondis */
+    font-size: 14px; /* Taille du texte */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Légère ombre */
+}
+
+/* ========================= */
+/* STYLE DES BOUTONS         */
+/* ========================= */
+
+/* Boutons généraux */
+button {
+    background-color: #3498db; /* Couleur bleue */
+    color: white; /* Texte blanc */
+    border: none; /* Supprime la bordure */
+    padding: 10px 15px; /* Espacement interne */
+    border-radius: 5px; /* Coins arrondis */
+    cursor: pointer; /* Change le curseur en pointeur */
+    font-size: 14px; /* Taille du texte */
+    transition: background-color 0.3s, transform 0.2s; /* Transition pour le survol */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Légère ombre */
+}
+
+/* Effet au survol des boutons */
+button:hover {
+    background-color: #2980b9; /* Couleur bleue plus sombre au survol */
+    transform: translateY(-2px); /* Légère élévation au survol */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Ombre plus marquée */
+}
+
+/* Boutons spécifiques (rouge) */
+button.danger {
+    background-color: #e74c3c; /* Couleur rouge */
+}
+
+button.danger:hover {
     background-color: #c0392b; /* Rouge plus sombre au survol */
 }
