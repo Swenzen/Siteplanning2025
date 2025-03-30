@@ -1,16 +1,105 @@
+/* Style global pour le body */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f4f4f9;
-    display: flex;
+    display: block; /* Empile les éléments verticalement */
 }
 
+/* ========================= */
+/* HEADER (Bandeau en haut)  */
+/* ========================= */
+
+
+header {
+    width: 100%;
+    background-color: #2c3e50; /* Couleur de fond sombre */
+    color: white; /* Texte blanc */
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between; /* Espacement entre le menu et la section utilisateur */
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Légère ombre */
+    position: sticky; /* Reste en haut même en scrollant */
+    top: 0;
+    z-index: 1000; /* S'assurer qu'il est au-dessus des autres éléments */
+}
+
+/* Menu de navigation dans le header */
+header nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px; /* Espacement entre les liens */
+}
+
+header nav ul li {
+    display: inline;
+}
+
+header nav ul li a {
+    text-decoration: none;
+    color: white; /* Texte blanc pour un bon contraste */
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+header nav ul li a:hover {
+    color: #1abc9c; /* Couleur verte au survol */
+}
+
+/* Section utilisateur dans le header */
+header #user-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+header #user-section a {
+    color: white; /* Texte blanc pour un bon contraste */
+    text-decoration: none; /* Supprime le soulignement */
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+header #user-section a:hover {
+    color: #1abc9c; /* Couleur verte au survol */
+}
+
+header #user-section a:visited {
+    color: white; /* Garde la couleur blanche même après avoir cliqué */
+}
+
+header #user-section #user-info {
+    font-size: 14px;
+}
+
+header #user-section #logoutButton {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+header #user-section #logoutButton:hover {
+    background-color: #c0392b;
+}
+/* ========================= */
+/* CONTENU PRINCIPAL         */
+/* ========================= */
 #content {
-    flex: 1;
+    margin-top: 70px; /* Laisser de l'espace pour le header */
     padding: 20px;
 }
 
+/* ========================= */
+/* MENU LATÉRAL              */
+/* ========================= */
 #menu {
     width: 200px;
     background-color: #f4f4f4;
@@ -36,11 +125,9 @@ body {
     text-decoration: underline; /* Souligner au survol */
 }
 
-h1 {
-    text-align: center;
-    color: #333;
-}
-
+/* ========================= */
+/* TABLEAU                   */
+/* ========================= */
 table {
     width: 80%;
     margin: 20px auto;
@@ -63,6 +150,9 @@ tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
+/* ========================= */
+/* TOOLTIP                   */
+/* ========================= */
 #tooltip {
     display: none;
     position: absolute;
@@ -71,35 +161,128 @@ tr:nth-child(even) {
     padding: 10px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    pointer-events: auto; /* Allows the tooltip to receive mouse events */
+    pointer-events: auto; /* Permet au tooltip de recevoir des événements de souris */
 }
 
 .tooltip-date {
-    cursor: pointer; /* Change cursor to pointer (hand) */
-    margin: 5px 0; /* Add some spacing between dates */
+    cursor: pointer; /* Change le curseur en pointeur */
+    margin: 5px 0; /* Espacement entre les dates */
 }
 
-/* Styles existants... */
+/* ========================= */
+/* TOOLTIP (Style général)   */
+/* ========================= */
+#emptyTooltip {
+    position: absolute;
+    background-color: white;
+    border: 1px solid black;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
+    width: 250px; /* Largeur fixe pour un affichage cohérent */
+    display: flex;
+    flex-direction: column; /* Affichage en colonne */
+    gap: 10px; /* Espacement entre les éléments */
+    z-index: 1000; /* S'assurer qu'il est au-dessus des autres éléments */
+}
 
+/* Style pour chaque élément du tooltip */
+.tooltip-item {
+    display: flex;
+    flex-direction: column; /* Affichage en colonne */
+    gap: 10px; /* Espacement entre les sous-éléments */
+}
+
+/* Style pour les dates dans le tooltip */
+.tooltip-date {
+    font-weight: bold;
+    color: #2c3e50; /* Couleur sombre */
+    margin-bottom: 5px;
+}
+
+/* Style pour les commentaires */
+.tooltip-comment {
+    background-color: #f9f9f9; /* Fond clair pour différencier */
+    border: 1px solid #ddd;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+/* Style pour chaque commentaire individuel */
+.comment-item {
+    display: flex;
+    justify-content: space-between; /* Espacement entre le texte et le bouton */
+    align-items: center;
+    gap: 10px;
+}
+
+/* Style pour le texte du commentaire */
+.comment-text {
+    font-size: 14px;
+    color: #333;
+}
+
+/* Style pour le bouton de suppression des commentaires */
+.delete-comment-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s;
+}
+
+.delete-comment-button:hover {
+    background-color: #c0392b;
+}
+
+/* Style pour les options du tooltip */
+.tooltip-options {
+    display: flex;
+    flex-direction: column; /* Affichage en colonne */
+    gap: 10px; /* Espacement entre les boutons */
+}
+
+/* Style pour les boutons dans le tooltip */
+.tooltip-option {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s;
+}
+
+.tooltip-option:hover {
+    background-color: #2980b9;
+}
+
+
+/* ========================= */
+/* MODAL                     */
+/* ========================= */
 .modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    display: none; /* Caché par défaut */
+    position: fixed; /* Reste en place */
+    z-index: 1; /* Au-dessus des autres éléments */
     left: 0;
     top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0, 0, 0); /* Fallback color */
-    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    width: 100%; /* Largeur complète */
+    height: 100%; /* Hauteur complète */
+    overflow: auto; /* Permet le défilement si nécessaire */
+    background-color: rgba(0, 0, 0, 0.4); /* Fond noir avec opacité */
 }
 
 .modal-content {
     background-color: #fefefe;
-    margin: 15% auto; /* 15% from the top and centered */
+    margin: 15% auto; /* Centré verticalement et horizontalement */
     padding: 20px;
     border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
+    width: 80%; /* Largeur ajustable */
 }
 
 .close {
@@ -114,83 +297,4 @@ tr:nth-child(even) {
     color: black;
     text-decoration: none;
     cursor: pointer;
-}
-
-/* CSS pour le tooltip de clic droit */
-#emptyTooltip {
-    display: block; /* Assurez-vous que le tooltip est visible */
-    position: absolute;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    pointer-events: auto; /* Allows the tooltip to receive mouse events */
-}
-
-.tooltip-item {
-    margin-bottom: 10px;
-}
-
-.tooltip-date {
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.tooltip-comment {
-    margin-top: 5px;
-    font-style: italic;
-    color: #555;
-}
-
-.tooltip-options {
-    display: flex;
-    flex-direction: column;
-    margin-top: 10px;
-}
-
-.tooltip-option {
-    cursor: pointer;
-    color: blue;
-    text-decoration: underline;
-    margin-top: 5px;
-    background: none;
-    border: none;
-    padding: 5px;
-    text-align: left;
-}
-
-#site-info {
-    background-color: #f8f9fa; /* Couleur de fond légère */
-    border: 1px solid #ddd; /* Bordure fine */
-    border-radius: 5px; /* Coins arrondis */
-    padding: 10px; /* Espacement interne */
-    margin-bottom: 20px; /* Espacement avec le menu */
-    text-align: center; /* Centrer le texte */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Légère ombre */
-}
-
-#site-display {
-    font-size: 18px; /* Taille de police plus grande */
-    font-weight: bold; /* Texte en gras */
-    color: #333; /* Couleur du texte */
-}
-
-/* Conteneur principal pour regrouper les éléments */
-#main-column {
-    display: flex;
-    flex-direction: column; /* Aligner les éléments verticalement */
-    align-items: center; /* Centrer les éléments horizontalement */
-    margin: 20px auto; /* Ajouter un espacement autour */
-    max-width: 300px; /* Limiter la largeur */
-    text-align: center; /* Centrer le texte */
-}
-
-/* Style pour les informations utilisateur */
-#user-info {
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
