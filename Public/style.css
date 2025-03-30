@@ -16,17 +16,24 @@ body {
 table {
     width: 90%; /* Largeur ajustée pour un meilleur rendu */
     margin: 20px auto; /* Centre le tableau horizontalement */
-    border-collapse: separate; /* Permet les bordures arrondies */
-    border-spacing: 0; /* Supprime les espaces entre les cellules */
+    border-collapse: collapse; /* Fusionne les bordures pour des lignes internes visibles */
     background-color: #ffffff; /* Fond blanc */
     border-radius: 10px; /* Coins arrondis */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
     overflow: hidden; /* Empêche les débordements */
 }
 
-/* En-tête des tableaux */
+/* Ajouter des bordures internes */
+table th,
+table td {
+    border: 1px solid #ddd; /* Bordure grise claire entre les cellules */
+    padding: 12px; /* Espacement interne */
+    text-align: center; /* Centre le texte */
+}
+
+/* Couleur des en-têtes de colonnes des tableaux */
 table thead {
-    background-color: #3498db; /* Couleur bleue pour l'en-tête */
+    background-color: #3498db; /* Bleu utilisé dans les boutons du header */
     color: white; /* Texte blanc */
     font-weight: bold;
     text-align: center;
@@ -205,30 +212,6 @@ header #user-section #logoutButton:hover {
 
 
 
-/* ========================= */
-/* TABLEAU                   */
-/* ========================= */
-table {
-    width: 80%;
-    margin: 20px auto;
-    border-collapse: collapse;
-    background-color: #fff;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-}
-
-th {
-    background-color: #007BFF;
-    color: white;
-}
-
-tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
 
 /* ========================= */
 /* TOOLTIP                   */
