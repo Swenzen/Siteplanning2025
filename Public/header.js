@@ -7,9 +7,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <div id="header-container">
             <nav id="menu">
                 <ul>
-                    <li><a href="index.html">Index</a></li>
-                    <li><a href="base-de-donnee.html">Base de donnée</a></li>
-                    <li><a href="planning.html">Planning</a></li>
+                    <li><a href="index.html" class="${window.location.pathname.includes('index.html') ? 'active' : ''}">Index</a></li>
+                    <li><a href="base-de-donnee.html" class="${window.location.pathname.includes('base-de-donnee.html') ? 'active' : ''}">Base de donnée</a></li>
+                    <li><a href="planning.html" class="${window.location.pathname.includes('planning.html') ? 'active' : ''}">Planning</a></li>
                 </ul>
             </nav>
             <div id="user-section">

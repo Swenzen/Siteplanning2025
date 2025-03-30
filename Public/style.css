@@ -7,18 +7,29 @@ body {
     display: block; /* Empile les éléments verticalement */
 }
 
+
 /* ========================= */
 /* HEADER (Bandeau en haut)  */
 /* ========================= */
 
+/* Conteneur principal du header */
+#header-container {
+    width: 90%; /* Le conteneur occupe 90% de la largeur */
+    margin: 0 auto; /* Centre le conteneur horizontalement */
+    display: flex; /* Active le mode flexbox */
+    justify-content: space-between; /* Place les éléments aux extrémités */
+    align-items: center; /* Aligne verticalement les éléments */
+    padding: 10px 0; /* Espacement vertical */
+}
 
+/* Style général du header */
 header {
     width: 100%;
     background-color: #2c3e50; /* Couleur de fond sombre */
     color: white; /* Texte blanc */
     padding: 10px 20px;
     display: flex;
-    justify-content: space-between; /* Espacement entre le menu et la section utilisateur */
+    justify-content: center; /* Centre le contenu horizontalement */
     align-items: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Légère ombre */
     position: sticky; /* Reste en haut même en scrollant */
@@ -26,69 +37,83 @@ header {
     z-index: 1000; /* S'assurer qu'il est au-dessus des autres éléments */
 }
 
-/* Menu de navigation dans le header */
+/* Conteneur du menu (à gauche) */
+header nav {
+    flex-grow: 1; /* Permet au menu de prendre tout l'espace disponible */
+    display: flex;
+    justify-content: flex-start; /* Aligne les boutons à gauche */
+}
+
+/* Liste des boutons dans le menu */
 header nav ul {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
-    gap: 20px; /* Espacement entre les liens */
+    gap: 15px; /* Espacement entre les boutons */
 }
 
-header nav ul li {
-    display: inline;
-}
-
+/* Style des boutons du menu */
 header nav ul li a {
-    text-decoration: none;
-    color: white; /* Texte blanc pour un bon contraste */
-    font-weight: bold;
-    transition: color 0.3s;
-}
-
-header nav ul li a:hover {
-    color: #1abc9c; /* Couleur verte au survol */
-}
-
-/* Section utilisateur dans le header */
-header #user-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-header #user-section a {
-    color: white; /* Texte blanc pour un bon contraste */
+    display: inline-block;
+    background-color: #3498db; /* Couleur de fond des boutons */
+    color: white; /* Texte blanc */
     text-decoration: none; /* Supprime le soulignement */
     font-weight: bold;
-    transition: color 0.3s;
+    padding: 10px 15px; /* Espacement interne */
+    border-radius: 5px; /* Coins arrondis */
+    transition: background-color 0.3s, transform 0.2s; /* Transition pour le survol */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Légère ombre */
+    white-space: nowrap; /* Empêche les boutons de se couper sur plusieurs lignes */
 }
 
-header #user-section a:hover {
-    color: #1abc9c; /* Couleur verte au survol */
+/* Effet au survol des boutons */
+header nav ul li a:hover {
+    background-color: #2980b9; /* Couleur plus sombre au survol */
+    transform: translateY(-2px); /* Légère élévation au survol */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Ombre plus marquée */
 }
 
-header #user-section a:visited {
-    color: white; /* Garde la couleur blanche même après avoir cliqué */
+/* Effet pour les boutons cliqués */
+header nav ul li a:active {
+    transform: translateY(0); /* Réinitialise l'élévation */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Réduit l'ombre */
 }
 
-header #user-section #user-info {
-    font-size: 14px;
+/* Style pour le bouton actif (page actuelle) */
+header nav ul li a.active {
+    background-color: #1abc9c; /* Couleur verte pour le bouton actif */
+    color: white; /* Texte blanc pour le bouton actif */
+    pointer-events: none; /* Désactive les clics sur le bouton actif */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Ombre plus marquée */
 }
 
+/* Section utilisateur (à droite) */
+header #user-section {
+    display: flex;
+    flex-direction: column; /* Affiche les éléments en colonne */
+    align-items: flex-end; /* Aligne les éléments à droite */
+    gap: 10px; /* Espacement entre le texte et le bouton */
+}
+
+/* Style pour le bouton "Se déconnecter" */
 header #user-section #logoutButton {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    background-color: #e74c3c; /* Couleur rouge */
+    color: white; /* Texte blanc */
+    border: none; /* Supprime la bordure */
+    padding: 8px 15px; /* Espacement interne */
+    border-radius: 20px; /* Arrondit complètement les coins */
+    cursor: pointer; /* Change le curseur en pointeur */
+    font-size: 14px; /* Taille du texte */
+    transition: background-color 0.3s; /* Transition pour le survol */
 }
 
+/* Effet au survol du bouton */
 header #user-section #logoutButton:hover {
-    background-color: #c0392b;
+    background-color: #c0392b; /* Rouge plus sombre au survol */
 }
+
+
 /* ========================= */
 /* CONTENU PRINCIPAL         */
 /* ========================= */
@@ -97,33 +122,8 @@ header #user-section #logoutButton:hover {
     padding: 20px;
 }
 
-/* ========================= */
-/* MENU LATÉRAL              */
-/* ========================= */
-#menu {
-    width: 200px;
-    background-color: #f4f4f4;
-    padding: 20px;
-    border-left: 1px solid #ccc;
-    margin-bottom: 20px; /* Espacement avec les autres sections */
-}
 
-#menu h2 {
-    margin-top: 0;
-    font-size: 20px;
-    margin-bottom: 10px;
-}
 
-#menu a {
-    display: block;
-    margin: 5px 0; /* Espacement entre les liens */
-    text-decoration: none;
-    color: #007bff; /* Couleur des liens */
-}
-
-#menu a:hover {
-    text-decoration: underline; /* Souligner au survol */
-}
 
 /* ========================= */
 /* TABLEAU                   */
