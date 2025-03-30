@@ -47,11 +47,20 @@ router.get('/get-repos', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
     const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
 
+    if (!token) {
+        console.error('Token manquant.');
+        return res.status(401).send('Authentification requise.');
+    }
+
     if (!siteId) {
+        console.error('site_id manquant.');
         return res.status(400).send('site_id manquant.');
     }
 
     try {
+        console.log('Token reçu :', token);
+        console.log('site_id reçu :', siteId);
+
         const query = `
             SELECT r.repos_id, r.repos
             FROM Trepos r
@@ -59,6 +68,8 @@ router.get('/get-repos', async (req, res) => {
             WHERE ts.site_id = ?
         `;
         const [results] = await connection.promise().query(query, [siteId]);
+
+        console.log('Repos récupérés :', results);
         res.json(results);
     } catch (error) {
         console.error('Erreur lors de la récupération des repos :', error.message);
@@ -154,22 +165,22 @@ router.get('/repos-data', async (req, res) => {
     }
 });
 
-// Route pour supprimer des données dans Tplanning_Trepos_Tsite
+// Route pour supprimer une valeur dans Tplanning_Trepos_Tsite
 router.post('/remove-repos-data', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
-    const { planningId, reposId, siteId } = req.body;
+    const { reposId, siteId } = req.body; // Récupérer les données nécessaires
 
-    if (!planningId || !reposId || !siteId) {
-        return res.status(400).send('Données manquantes (planningId, reposId ou siteId).');
+    if (!reposId || !siteId) {
+        return res.status(400).send('Données manquantes (reposId ou siteId).');
     }
 
     try {
-        const query = `DELETE FROM Tplanning_Trepos_Tsite WHERE planning_id = ? AND repos_id = ? AND site_id = ?`;
-        await connection.promise().query(query, [planningId, reposId, siteId]);
-        res.send('Données supprimées avec succès.');
+        const query = `DELETE FROM Trepos_Tsite WHERE repos_id = ? AND site_id = ?`;
+        await connection.promise().query(query, [reposId, siteId]);
+        res.send('Repos supprimé avec succès.');
     } catch (error) {
-        console.error('Erreur lors de la suppression des données :', error.message);
-        res.status(500).send('Erreur lors de la suppression des données.');
+        console.error('Erreur lors de la suppression du repos :', error.message);
+        res.status(500).send('Erreur lors de la suppression du repos.');
     }
 });
 
