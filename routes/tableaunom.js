@@ -26,6 +26,7 @@ router.post('/add-nom', authenticateToken, (req, res) => {
     const { nom, site_id } = req.body;
 
     console.log('Requête reçue :', { nom, site_id, userSiteIds: req.user.siteIds });
+    console.log('site_id récupéré depuis localStorage :', site_id);
 
     if (!nom || !site_id) {
         return res.status(400).send('Données manquantes (nom ou site_id)');
