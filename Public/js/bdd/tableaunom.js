@@ -109,19 +109,30 @@ async function addNom() {
     const nom = document.getElementById('nomInput').value;
     const siteId = localStorage.getItem('site_id');
 
-    const response = await fetch('/api/add-nom', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ nom, site_id: siteId })
-    });
+    if (!nom) {
+        alert('Veuillez entrer un nom.');
+        return;
+    }
 
-    if (response.ok) {
-        alert('Nom ajouté avec succès');
-    } else {
-        alert('Erreur lors de l\'ajout du nom');
+    try {
+        const response = await fetch('/api/add-nom', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nom, site_id: siteId })
+        });
+
+        if (response.ok) {
+            document.getElementById('nomInput').value = ''; // Réinitialise le champ de saisie
+            fetchData(); // Rafraîchit le tableau des noms
+            fetchCompetencesPersonnes(); // Rafraîchit le tableau des compétences des personnes
+        } else {
+            alert('Erreur lors de l\'ajout du nom');
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout du nom :', error);
     }
 }
 
@@ -136,8 +147,6 @@ async function deleteName(nom_id) {
         return;
     }
 
-    console.log('Données envoyées pour suppression :', { nom_id, site_id: siteId });
-
     try {
         const response = await fetch('/api/delete-nom', {
             method: 'POST',
@@ -149,8 +158,8 @@ async function deleteName(nom_id) {
         });
 
         if (response.ok) {
-            alert('Nom supprimé avec succès');
-            fetchData(); // Rafraîchir la liste des noms
+            fetchData(); // Rafraîchit le tableau des noms
+            fetchCompetencesPersonnes(); // Rafraîchit le tableau des compétences des personnes
         } else {
             const error = await response.text();
             console.error('Erreur lors de la suppression du nom :', error);

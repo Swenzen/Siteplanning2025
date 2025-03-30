@@ -121,6 +121,8 @@ async function addCompetence() {
             if (response.ok) {
                 console.log('Compétence ajoutée avec succès');
                 fetchCompetences(); // Rafraîchir la liste des compétences
+                fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
+                fetchCompetencesPersonnes(); // Rafraîchir le tableau des compétences des personnes
             } else {
                 const error = await response.text();
                 console.error('Erreur lors de l\'ajout de la compétence :', error);
@@ -148,6 +150,9 @@ async function deleteCompetence(competenceId) {
 
         if (response.ok) {
             console.log('Compétence supprimée avec succès');
+            fetchCompetences(); // Rafraîchir la liste des compétences
+            fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
+            fetchCompetencesPersonnes(); // Rafraîchir le tableau des compétences des personnes
         } else {
             const error = await response.text();
             console.error('Erreur lors de la suppression de la compétence :', error);

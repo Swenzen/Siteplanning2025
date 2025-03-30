@@ -81,8 +81,8 @@ async function addHoraire() {
             });
 
             if (response.ok) {
-                alert('Horaire ajouté avec succès');
-                fetchHoraires();
+                fetchHoraires(); // Rafraîchir le tableau des horaires
+                fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
             } else {
                 console.error('Erreur lors de l\'ajout de l\'horaire');
             }
@@ -114,7 +114,8 @@ async function deleteHoraire(horaire_id) {
             });
 
             if (response.ok) {
-                fetchHoraires();
+                fetchHoraires(); // Rafraîchir le tableau des horaires
+                fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
             } else {
                 console.error('Erreur lors de la suppression de l\'horaire');
             }
