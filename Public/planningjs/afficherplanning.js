@@ -43,7 +43,7 @@ async function fetchPlanningData() {
 
     try {
         // Effectuer les requêtes en parallèle
-        const [planningResponse, fermeturesResponse] = await Promise.all([
+        const [planningResponse, fermeturesResponse, commentsResponse] = await Promise.all([
             fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}&siteId=${siteId}`, {
                 method: 'GET',
                 headers: {
@@ -57,34 +57,15 @@ async function fetchPlanningData() {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
+            }),
+            fetch(`/api/comments?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             })
         ]);
-
-        fetch(`/api/comments?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la récupération des commentaires');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Commentaires récupérés :', data);
-            })
-            .catch(error => {
-                console.error('Erreur lors de la récupération des commentaires :', error);
-            });
-
-        console.log('Requête envoyée :', `/api/comments?semaine=${semaine}&annee=${annee}&site_id=${siteId}`);
-        console.log('En-têtes :', {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        });
 
         // Vérifier si les réponses sont valides
         if (!planningResponse.ok) {
@@ -99,13 +80,21 @@ async function fetchPlanningData() {
             alert('Erreur lors de la récupération des fermetures.');
             return;
         }
+        if (!commentsResponse.ok) {
+            const errorText = await commentsResponse.text();
+            console.error('Erreur lors de la récupération des commentaires :', errorText);
+            alert('Erreur lors de la récupération des commentaires.');
+            return;
+        }
 
         // Extraire les données des réponses
         const planningData = await planningResponse.json();
         const fermeturesData = await fermeturesResponse.json();
+        const commentsData = await commentsResponse.json();
 
         console.log('Données du planning récupérées :', planningData);
         console.log('Fermetures récupérées :', fermeturesData);
+        console.log('Commentaires récupérés :', commentsData);
 
         // Vérifie si les données du planning sont vides
         if (!planningData || planningData.length === 0) {
@@ -131,6 +120,24 @@ async function fetchPlanningData() {
             }
             return acc;
         }, {});
+
+        // Associer les commentaires récupérés aux noms dans rowData.jours
+        const commentairesMap = {};
+        commentsData.forEach(comment => {
+            const key = `${comment.jour_id}-${comment.nom_id}`;
+            commentairesMap[key] = comment.commentaire;
+        });
+
+        Object.values(groupedData).forEach(rowData => {
+            Object.keys(rowData.jours).forEach(day => {
+                rowData.jours[day].forEach(entry => {
+                    const key = `${day}-${entry.nom_id}`;
+                    if (commentairesMap[key]) {
+                        entry.commentaire = commentairesMap[key];
+                    }
+                });
+            });
+        });
 
         // Trier les données regroupées par display_order, heure de début et heure de fin
         const sortedData = Object.values(groupedData).sort((a, b) => {
@@ -197,6 +204,7 @@ async function fetchPlanningData() {
                         const container = document.createElement('div');
 
                         if (commentaire) {
+                            console.log(`Ajout du commentaire : ${commentaire}`);
                             const commentDiv = document.createElement('div');
                             commentDiv.textContent = commentaire;
                             commentDiv.style.fontWeight = 'bold'; // Changer le style pour gras
