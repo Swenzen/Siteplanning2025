@@ -14,7 +14,6 @@ async function login(username, password) {
             localStorage.setItem('token', result.token);
             localStorage.setItem('username', result.username);
 
-            alert('Connexion réussie !');
             return true;
         } else {
             const error = await response.text();
@@ -28,29 +27,24 @@ async function login(username, password) {
     }
 }
 
-document.getElementById("loginForm").addEventListener("submit", async (event) => {
-    event.preventDefault(); // Empêche le rechargement par défaut du formulaire
-
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
     const username = document.getElementById("loginUsername").value;
     const password = document.getElementById("loginPassword").value;
 
+    const loginButton = e.target.querySelector("button[type='submit']");
+    loginButton.disabled = true; // Désactive le bouton pour éviter les clics multiples
+
     try {
-        // Simuler une requête d'authentification (remplace par ton API réelle)
-        const response = await fakeLogin(username, password);
-
-        if (response.success) {
-            // Stocker les informations de l'utilisateur dans le localStorage
-            localStorage.setItem("username", username);
-            localStorage.setItem("token", response.token);
-
-            // Rafraîchir la page après connexion réussie
-            window.location.reload();
-        } else {
-            alert("Nom d'utilisateur ou mot de passe incorrect.");
+        const success = await login(username, password); // Appelle la fonction login
+        if (success) {
+            alert("Connexion réussie !");
+            window.location.reload(); // Rafraîchit la page après connexion
         }
     } catch (error) {
         console.error("Erreur lors de la connexion :", error);
-        alert("Une erreur est survenue. Veuillez réessayer.");
+        alert("Une erreur est survenue, veuillez réessayer.");
+    } finally {
+        loginButton.disabled = false; // Réactive le bouton après la requête
     }
 });
-
