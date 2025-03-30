@@ -103,19 +103,16 @@ async function saveName() {
     }
 }
 
-// Fonction pour ajouter un nom
 async function addNom() {
     const token = localStorage.getItem('token');
     const nom = document.getElementById('nomInput').value;
-    const siteId = localStorage.getItem('site_id');
 
     if (!nom) {
         alert('Veuillez entrer un nom.');
         return;
     }
 
-    console.log('Données envoyées :', { nom, site_id: siteId });
-    console.log('Token utilisé :', token);
+    console.log('Données envoyées :', { nom });
 
     try {
         const response = await fetch('/api/add-nom', {
@@ -124,7 +121,7 @@ async function addNom() {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ nom, site_id: siteId })
+            body: JSON.stringify({ nom }) // On n'envoie plus le site_id
         });
 
         if (response.ok) {

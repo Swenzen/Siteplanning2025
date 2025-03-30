@@ -21,15 +21,14 @@ router.post('/update-name', authenticateToken, (req, res) => {
 
 
 
-// Route pour ajouter un nom
 router.post('/add-nom', authenticateToken, (req, res) => {
-    const { nom, site_id } = req.body;
+    const { nom } = req.body; // On ne récupère plus le site_id depuis le client
+    const site_id = req.user.siteIds[0]; // Utilise le premier site_id du token
 
     console.log('Requête reçue :', { nom, site_id, userSiteIds: req.user.siteIds });
-    console.log('site_id récupéré depuis localStorage :', site_id);
 
-    if (!nom || !site_id) {
-        return res.status(400).send('Données manquantes (nom ou site_id)');
+    if (!nom) {
+        return res.status(400).send('Données manquantes (nom)');
     }
 
     if (!req.user.siteIds.includes(String(site_id))) {
