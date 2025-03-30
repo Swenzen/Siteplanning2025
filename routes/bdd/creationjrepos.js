@@ -2,49 +2,68 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../../db'); // Assurez-vous que le chemin est correct
 
-// Route pour créer une table de repos
-router.post('/create-repos-table', (req, res) => {
+//table ok ajout
+
+router.post('/create-repos-table', async (req, res) => {
     const { nomRepos } = req.body;
-    const tableName = `Tjrepos_${nomRepos}`;
+    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
+    const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
 
-    const query = `
-        CREATE TABLE ?? (
-            Tjrepos_id INT AUTO_INCREMENT PRIMARY KEY,
-            semaine INT,
-            annee INT,
-            jour_id INT,
-            nom_id INT,
-            FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE,
-            FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id) ON DELETE CASCADE
-        )
-    `;
+    console.log('Données reçues :', { nomRepos, siteId });
 
-    connection.query(query, [tableName], (err, result) => {
-        if (err) {
-            console.error('Erreur lors de la création de la table de repos :', err.message);
-            res.status(500).send(`Erreur lors de la création de la table de repos : ${err.message}`);
+    if (!nomRepos || !siteId) {
+        console.error('Nom du repos ou site_id manquant.');
+        return res.status(400).send('Nom du repos ou site_id manquant.');
+    }
+
+    try {
+        // Vérifier si le repos existe déjà dans Trepos
+        const checkReposQuery = `SELECT repos_id FROM Trepos WHERE repos = ?`;
+        const [reposResult] = await connection.promise().query(checkReposQuery, [nomRepos]);
+
+        let reposId;
+        if (reposResult.length === 0) {
+            // Ajouter le repos dans Trepos
+            const insertReposQuery = `INSERT INTO Trepos (repos) VALUES (?)`;
+            const [insertResult] = await connection.promise().query(insertReposQuery, [nomRepos]);
+            reposId = insertResult.insertId;
         } else {
-            res.send('Table de repos créée avec succès');
+            reposId = reposResult[0].repos_id;
         }
-    });
+
+        // Lier le repos au site dans Trepos_Tsite
+        const linkReposQuery = `INSERT IGNORE INTO Trepos_Tsite (repos_id, site_id) VALUES (?, ?)`;
+        await connection.promise().query(linkReposQuery, [reposId, siteId]);
+
+        res.send('Repos créé et lié au site avec succès.');
+    } catch (error) {
+        console.error('Erreur lors de la création du repos :', error.message);
+        res.status(500).send('Erreur lors de la création du repos.');
+    }
 });
 
-// Route pour récupérer les noms des tables qui commencent par Tjrepos_
-router.get('/get-repos-tables', (req, res) => {
-    const query = `
-        SELECT TABLE_NAME
-        FROM information_schema.tables
-        WHERE table_schema = DATABASE() AND TABLE_NAME LIKE 'Tjrepos_%'
-    `;
+// Route pour récupérer les repos liés à un site
+router.get('/get-repos', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
+    const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
 
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Erreur lors de la récupération des tables de repos :', err.message);
-            res.status(500).send(`Erreur lors de la récupération des tables de repos : ${err.message}`);
-        } else {
-           res.json(results.map(row => row.TABLE_NAME));
-        }
-    });
+    if (!siteId) {
+        return res.status(400).send('site_id manquant.');
+    }
+
+    try {
+        const query = `
+            SELECT r.repos_id, r.repos
+            FROM Trepos r
+            JOIN Trepos_Tsite ts ON r.repos_id = ts.repos_id
+            WHERE ts.site_id = ?
+        `;
+        const [results] = await connection.promise().query(query, [siteId]);
+        res.json(results);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des repos :', error.message);
+        res.status(500).send('Erreur lors de la récupération des repos.');
+    }
 });
 
 // Route pour supprimer une table de repos
@@ -63,142 +82,95 @@ router.post('/delete-repos-table', (req, res) => {
     });
 });
 
-// Route pour ajouter des données dans la table Tjrepos_*
-router.post('/add-repos-data', (req, res) => {
-    const { tableName, semaine, annee, jourId, nomId } = req.body;
+// Route pour ajouter des données dans Tplanning_Trepos_Tsite
+router.post('/add-repos-data', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
+    const { planningId, reposId, siteId } = req.body;
 
-    const query = `
-        INSERT INTO ?? (semaine, annee, jour_id, nom_id)
-        VALUES (?, ?, ?, ?)
-    `;
+    if (!planningId || !reposId || !siteId) {
+        return res.status(400).send('Données manquantes (planningId, reposId ou siteId).');
+    }
 
-    connection.query(query, [tableName, semaine, annee, jourId, nomId], (err, result) => {
-        if (err) {
-            console.error('Erreur lors de l\'ajout des données dans', tableName, ':', err.message);
-            res.status(500).send(`Erreur lors de l'ajout des données dans ${tableName} : ${err.message}`);
-        } else {
-            res.send('Données ajoutées avec succès');
-        }
-    });
+    try {
+        const query = `INSERT INTO Tplanning_Trepos_Tsite (planning_id, repos_id, site_id) VALUES (?, ?, ?)`;
+        await connection.promise().query(query, [planningId, reposId, siteId]);
+        res.send('Données ajoutées avec succès.');
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout des données :', error.message);
+        res.status(500).send('Erreur lors de l\'ajout des données.');
+    }
 });
 
 // Route pour récupérer les nom_id disponibles pour les repos
-router.get('/nom-ids-repos', (req, res) => {
+router.get('/nom-ids-repos', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
+    const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
     const { semaine, annee, jourId } = req.query;
 
-    // Récupérer les noms des tables Tjrepos_
-    const getTablesQuery = `
-        SELECT TABLE_NAME
-        FROM information_schema.tables
-        WHERE table_schema = DATABASE() AND TABLE_NAME LIKE 'Tjrepos_%'
-    `;
+    if (!siteId || !semaine || !annee || !jourId) {
+        return res.status(400).send('Données manquantes (site_id, semaine, annee ou jourId).');
+    }
 
-    connection.query(getTablesQuery, (err, tables) => {
-        if (err) {
-            console.error('Erreur lors de la récupération des tables de repos :', err.message);
-            res.status(500).send(`Erreur lors de la récupération des tables de repos : ${err.message}`);
-        } else {
-            const tableNames = tables.map(row => row.TABLE_NAME);
-            if (tableNames.length === 0) {
-                res.json([]);
-                return;
-            }
-
-            // Construire la requête pour vérifier les nom_id dans toutes les tables Tjrepos_ existantes pour le jour spécifique
-            const queries = tableNames.map(tableName => `
-                SELECT nom_id
-                FROM ${tableName}
-                WHERE semaine = ${connection.escape(semaine)} AND annee = ${connection.escape(annee)} AND jour_id = ${connection.escape(jourId)}
-            `).join(' UNION ');
-
-            connection.query(queries, (err, results) => {
-                if (err) {
-                    console.error('Erreur lors de la récupération des nom_id :', err.message);
-                    res.status(500).send(`Erreur lors de la récupération des nom_id : ${err.message}`);
-                } else {
-                    const usedNomIds = results.map(row => row.nom_id);
-                    const getNomIdsQuery = usedNomIds.length > 0 ? `
-                        SELECT nom_id, nom
-                        FROM Tnom
-                        WHERE nom_id NOT IN (?)
-                    ` : `
-                        SELECT nom_id, nom
-                        FROM Tnom
-                    `;
-
-                    connection.query(getNomIdsQuery, [usedNomIds], (err, nomIds) => {
-                        if (err) {
-                            console.error('Erreur lors de la récupération des nom_id :', err.message);
-                            res.status(500).send(`Erreur lors de la récupération des nom_id : ${err.message}`);
-                        } else {
-                            res.json(nomIds);
-                        }
-                    });
-                }
-            });
-        }
-    });
+    try {
+        const query = `
+            SELECT tn.nom_id, tn.nom
+            FROM Tnom tn
+            WHERE tn.nom_id NOT IN (
+                SELECT tpt.planning_id
+                FROM Tplanning_Trepos_Tsite tpt
+                WHERE tpt.site_id = ? AND tpt.semaine = ? AND tpt.annee = ? AND tpt.jour_id = ?
+            )
+        `;
+        const [results] = await connection.promise().query(query, [siteId, semaine, annee, jourId]);
+        res.json(results);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des nom_id :', error.message);
+        res.status(500).send('Erreur lors de la récupération des nom_id.');
+    }
 });
 
-// Route pour récupérer les données des tables Tjrepos_*
-router.get('/repos-data', (req, res) => {
+// Route pour récupérer les données des repos pour un site spécifique
+router.get('/repos-data', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
+    const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
     const { semaine, annee } = req.query;
 
-    // Récupérer les noms des tables Tjrepos_
-    const getTablesQuery = `
-        SELECT TABLE_NAME
-        FROM information_schema.tables
-        WHERE table_schema = DATABASE() AND TABLE_NAME LIKE 'Tjrepos_%'
-    `;
+    if (!siteId || !semaine || !annee) {
+        return res.status(400).send('Données manquantes (site_id, semaine ou annee).');
+    }
 
-    connection.query(getTablesQuery, (err, tables) => {
-        if (err) {
-            // console.error('Erreur lors de la récupération des tables de repos :', err.message);
-            res.status(500).send(`Erreur lors de la récupération des tables de repos : ${err.message}`);
-        } else {
-            const tableNames = tables.map(row => row.TABLE_NAME);
-            if (tableNames.length === 0) {
-                res.json([]);
-                return;
-            }
-
-            // Construire la requête pour récupérer les données dans toutes les tables Tjrepos_ existantes
-            const queries = tableNames.map(tableName => `
-                SELECT ${connection.escape(tableName)} AS tableName, semaine, annee, jour_id, Tnom.nom
-                FROM ${tableName}
-                JOIN Tnom ON ${tableName}.nom_id = Tnom.nom_id
-                WHERE semaine = ${connection.escape(semaine)} AND annee = ${connection.escape(annee)}
-            `).join(' UNION ');
-
-            connection.query(queries, (err, results) => {
-                if (err) {
-                    // console.error('Erreur lors de la récupération des données :', err.message);
-                    res.status(500).send(`Erreur lors de la récupération des données : ${err.message}`);
-                } else {
-                    res.json(results);
-                }
-            });
-        }
-    });
+    try {
+        const query = `
+            SELECT tpt.repos_id, tpt.site_id, tpt.planning_id, tn.nom, tpt.jour_id
+            FROM Tplanning_Trepos_Tsite tpt
+            JOIN Tnom tn ON tpt.planning_id = tn.nom_id
+            WHERE tpt.site_id = ? AND tpt.semaine = ? AND tpt.annee = ?
+        `;
+        const [results] = await connection.promise().query(query, [siteId, semaine, annee]);
+        res.json(results);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des données des repos :', error.message);
+        res.status(500).send('Erreur lors de la récupération des données des repos.');
+    }
 });
 
-// Route pour supprimer des données dans la table Tjrepos_*
-router.post('/remove-repos-data', (req, res) => {
-    const { tableName, semaine, annee, jourId, nomId } = req.body;
+// Route pour supprimer des données dans Tplanning_Trepos_Tsite
+router.post('/remove-repos-data', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
+    const { planningId, reposId, siteId } = req.body;
 
-    const query = `
-        DELETE FROM ??
-        WHERE semaine = ? AND annee = ? AND jour_id = ? AND nom_id = ?
-    `;
+    if (!planningId || !reposId || !siteId) {
+        return res.status(400).send('Données manquantes (planningId, reposId ou siteId).');
+    }
 
-    connection.query(query, [tableName, semaine, annee, jourId, nomId], (err, result) => {
-        if (err) {
-            // console.error('Erreur lors de la suppression des données dans', tableName, ':', err.message);
-            res.status(500).send(`Erreur lors de la suppression des données dans ${tableName} : ${err.message}`);
-        } else {
-            res.send('Données supprimées avec succès');
-        }
-    });
+    try {
+        const query = `DELETE FROM Tplanning_Trepos_Tsite WHERE planning_id = ? AND repos_id = ? AND site_id = ?`;
+        await connection.promise().query(query, [planningId, reposId, siteId]);
+        res.send('Données supprimées avec succès.');
+    } catch (error) {
+        console.error('Erreur lors de la suppression des données :', error.message);
+        res.status(500).send('Erreur lors de la suppression des données.');
+    }
 });
 
 // Route pour récupérer le nom_id à partir du nom

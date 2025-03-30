@@ -195,6 +195,32 @@ CREATE TABLE Tcommentaire_Tsite (
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
 
+-- Table Trepos : Contient les types de repos
+CREATE TABLE Trepos (
+    repos_id INT AUTO_INCREMENT PRIMARY KEY,
+    repos VARCHAR(255) NOT NULL UNIQUE
+);
+
+-- Table Trepos_Tsite : Lie un repos à un site
+CREATE TABLE Trepos_Tsite (
+    repos_id INT NOT NULL,
+    site_id INT NOT NULL,
+    PRIMARY KEY (repos_id, site_id),
+    FOREIGN KEY (repos_id) REFERENCES Trepos(repos_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);
+
+-- Table Tplanning_Trepos_Tsite : Lie un planning à un repos et un site
+CREATE TABLE Tplanning_Trepos_Tsite (
+    planning_id INT NOT NULL,
+    repos_id INT NOT NULL,
+    site_id INT NOT NULL,
+    PRIMARY KEY (planning_id, repos_id, site_id),
+    FOREIGN KEY (planning_id) REFERENCES Tplanning(planning_id) ON DELETE CASCADE,
+    FOREIGN KEY (repos_id) REFERENCES Trepos(repos_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);
+
 -- Insérer des valeurs dans Tnom
 INSERT INTO Tnom (nom_id, nom) VALUES
 (1, 'Pierre'),

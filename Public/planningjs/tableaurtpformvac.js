@@ -1,6 +1,6 @@
 // Fonction pour créer un tableau supplémentaire avec 9 colonnes
 async function createAdditionalTable() {
-    const container = document.getElementById("additionalTableContainer"); // Assurez-vous d'avoir un conteneur pour le nouveau tableau
+    const container = document.getElementById("additionalTableContainer"); // Conteneur pour le tableau
 
     if (!container) {
         console.error('Élément #additionalTableContainer non trouvé');
@@ -32,59 +32,84 @@ async function createAdditionalTable() {
 
     const tbody = document.createElement("tbody");
 
-    // Récupérer les noms des tables Tjrepos_ existantes
     try {
-        const response = await fetch('/api/get-repos-tables');
-        if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des tables de repos');
+        // Récupérer le site_id depuis le localStorage
+        const siteId = localStorage.getItem('site_id');
+        if (!siteId) {
+            throw new Error('site_id manquant dans le localStorage.');
         }
 
-        const tables = await response.json();
-        console.log('Tables récupérées :', tables); // Journal de débogage
-
-        // Ajouter des lignes dynamiques sous la colonne "Repos"
-        tables.forEach((table, index) => {
-            if (table) { // Vérifier que table n'est pas null ou undefined
-                const row = document.createElement("tr");
-                for (let i = 0; i < headers.length; i++) {
-                    const td = document.createElement("td");
-                    if (i === 0 && index === 0) { // Ajouter un gestionnaire de clics à la cellule en dessous de "Vacances" dans la première ligne
-                        td.addEventListener('click', (event) => {
-                            currentCell = td; // Stocker la cellule actuelle
-                            fetchNomIdsVacances(event);
-                        });
-                    }
-                    if (i === 1) { // Ajouter les valeurs sous l'en-tête "Repos"
-                        td.textContent = table.replace(/^Tjrepos_/i, '').toUpperCase(); // Afficher le nom sans le préfixe et en majuscules
-                    }
-                    if (i > 1) { // Ajouter un gestionnaire de clics aux colonnes des jours de la semaine
-                        td.addEventListener('click', (event) => {
-                            currentCell = td; // Stocker la cellule actuelle
-                            const jourId = i - 1; // Calculer le jour_id en fonction de l'index de la colonne
-                            fetchNomIdsRepos(event, table, jourId);
-                        });
-                    }
-                    row.appendChild(td);
-                }
-                tbody.appendChild(row);
+        // Récupérer les repos liés au site
+        const response = await fetch('/api/get-repos', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`, // Ajouter le token
+                'site-id': siteId // Ajouter le site_id
             }
         });
 
-        // Récupérer et afficher les données des tables Tjrepos_ existantes
-        const reposDataResponse = await fetch(`/api/repos-data?semaine=${document.getElementById("weekNumber").value}&annee=${document.getElementById("yearNumber").value}`);
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des repos');
+        }
+
+        const repos = await response.json();
+        console.log('Repos récupérés :', repos);
+
+        // Ajouter des lignes dynamiques sous la colonne "Repos"
+        repos.forEach(reposItem => {
+            const row = document.createElement("tr");
+
+            headers.forEach((header, index) => {
+                const td = document.createElement("td");
+
+                if (index === 0) {
+                    // Colonne "Vacances"
+                    td.addEventListener('click', (event) => {
+                        currentCell = td; // Stocker la cellule actuelle
+                        fetchNomIdsVacances(event);
+                    });
+                } else if (index === 1) {
+                    // Colonne "Repos"
+                    td.textContent = reposItem.repos; // Afficher le nom du repos
+                } else {
+                    // Colonnes des jours de la semaine
+                    td.addEventListener('click', (event) => {
+                        currentCell = td; // Stocker la cellule actuelle
+                        const jourId = index - 1; // Calculer le jour_id en fonction de l'index de la colonne
+                        fetchNomIdsRepos(event, reposItem.repos_id, jourId);
+                    });
+                }
+
+                row.appendChild(td);
+            });
+
+            tbody.appendChild(row);
+        });
+
+        // Récupérer et afficher les données des repos pour chaque jour
+        const semaine = document.getElementById("weekNumber").value;
+        const annee = document.getElementById("yearNumber").value;
+
+        const reposDataResponse = await fetch(`/api/repos-data?semaine=${semaine}&annee=${annee}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`, // Ajouter le token
+                'site-id': siteId // Ajouter le site_id
+            }
+        });
+
         if (!reposDataResponse.ok) {
             throw new Error('Erreur lors de la récupération des données de repos');
         }
 
         const reposData = await reposDataResponse.json();
-        console.log('Données de repos récupérées :', reposData); // Journal de débogage
+        console.log('Données de repos récupérées :', reposData);
 
         reposData.forEach(data => {
-            const tableName = data.tableName.replace(/^Tjrepos_/i, '').toUpperCase();
             const rows = tbody.getElementsByTagName('tr');
             for (let row of rows) {
                 const reposCell = row.cells[1];
-                if (reposCell && reposCell.textContent === tableName) {
+                if (reposCell && reposCell.textContent === data.repos) {
                     const cell = row.cells[data.jour_id + 1]; // Trouver la cellule correspondant au jour_id
                     const div = document.createElement('div');
                     div.textContent = data.nom; // Afficher le nom dans la cellule
@@ -92,15 +117,15 @@ async function createAdditionalTable() {
                     div.dataset.nom = data.nom; // Stocker le nom dans un attribut de données pour vérification
                     div.addEventListener('contextmenu', (event) => {
                         event.preventDefault(); // Empêcher le menu contextuel par défaut
-                        console.log('Clic droit détecté sur:', div.dataset.nom, 'nom_id:', div.dataset.nomId); // Ajouter un log pour vérifier le nom_id
-                        fetchNomIdAndRemoveReposData(data.tableName, data.semaine, data.annee, data.jour_id, div.dataset.nom);
+                        console.log('Clic droit détecté sur:', div.dataset.nom, 'nom_id:', div.dataset.nomId);
+                        removeReposData(data.repos_id, data.jour_id, div.dataset.nom_id);
                     });
                     cell.appendChild(div);
                 }
             }
         });
     } catch (error) {
-        console.error('Erreur lors de la récupération des tables de repos :', error);
+        console.error('Erreur lors de la récupération des repos :', error);
     }
 
     table.appendChild(tbody);
@@ -154,7 +179,6 @@ async function removeReposData(tableName, semaine, annee, jourId, nomId) {
         console.error('Erreur lors de la suppression dans', tableName, ':', error);
     }
 }
-
 
 // Fonction pour ajouter les données dans la table Tvacances
 async function addVacances(semaine, annee, nom) {
