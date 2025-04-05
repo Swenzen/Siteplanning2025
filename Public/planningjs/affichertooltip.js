@@ -1,9 +1,18 @@
 // Fonction pour récupérer les noms disponibles pour une compétence donnée dans le tooltip
-async function fetchNomIds(competenceId, siteId, event) {
+async function fetchNomIds(competenceId, event) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
 
     if (!token) {
         console.error('Erreur : aucun token trouvé.');
+        return;
+    }
+
+    // Décoder le token pour récupérer le site_id
+    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Décoder le payload du token
+    const siteId = decodedToken.siteIds[0]; // Utiliser le premier site_id du token
+
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le token.');
         return;
     }
 

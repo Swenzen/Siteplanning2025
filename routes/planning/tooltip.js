@@ -5,7 +5,10 @@ const authenticateToken = require('../../middleware/auth'); // Middleware d'auth
 
 // Route pour récupérer les noms disponibles pour une compétence donnée
 router.get('/nom-ids', authenticateToken, (req, res) => {
-    const { competence_id, site_id, semaine, annee, jour_id } = req.query;
+    const { competence_id, semaine, annee, jour_id } = req.query;
+
+    // Récupérer le site_id depuis le token JWT
+    const site_id = req.user.siteIds[0]; // Utiliser le premier site_id du token
 
     console.log('Paramètres reçus :', { competence_id, site_id, semaine, annee, jour_id });
 
