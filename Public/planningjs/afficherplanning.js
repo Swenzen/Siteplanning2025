@@ -22,24 +22,27 @@ async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
-
-    console.log('Token récupéré :', token);
-    console.log('Site ID récupéré :', siteId);
-
+    
     if (!token) {
         console.error('Erreur : le token est manquant.');
-        alert('Erreur : vous n\'êtes pas authentifié.'); // Ajout de l'alerte
+        alert('Erreur : vous n\'êtes pas authentifié.');
         return;
     }
 
+    // Décoder le token pour récupérer le site_id
+    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Décoder le payload du token
+    const siteId = decodedToken.siteIds ? decodedToken.siteIds[0] : null; // Utiliser le premier site_id du token
+
     if (!siteId) {
-        console.error('Erreur : le site_id est manquant.');
+        console.error('Erreur : aucun site_id trouvé dans le token.');
         alert('Erreur : un site doit être sélectionné.');
         return;
     }
 
-    console.log('Paramètres envoyés à fetchPlanningData :', { semaine, annee, siteId, token });
+console.log('Token récupéré :', token);
+    console.log('Site ID récupéré depuis le token :', siteId);
+
+    console.log('Paramètres envoyés à fetchPlanningData :', { semaine, annee, siteId });
 
     try {
         // Effectuer les requêtes en parallèle
