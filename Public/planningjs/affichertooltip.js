@@ -89,11 +89,19 @@ function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId,
 
 // Fonction pour mettre à jour le planning dans la base de données
 async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom) {
-    const siteId = localStorage.getItem('site_id'); // Récupérer le siteId depuis le localStorage
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
 
     if (!token) {
         console.error('Erreur : aucun token trouvé.');
+        return;
+    }
+
+    // Décoder le token pour récupérer le site_id
+    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Décoder le payload du token
+    const siteId = decodedToken.siteIds ? decodedToken.siteIds[0] : null; // Utiliser le premier site_id du token
+
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le token.');
         return;
     }
 
@@ -122,11 +130,3 @@ async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fi
         console.error('Erreur lors de la mise à jour du planning :', error);
     }
 }
-
-// Cacher le tooltip lorsque l'utilisateur clique ailleurs
-document.addEventListener('click', (event) => {
-    const tooltip = document.getElementById("tooltip");
-    if (!event.target.closest('td') && !event.target.closest('#tooltip')) {
-        tooltip.style.display = 'none';
-    }
-});

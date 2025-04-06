@@ -54,7 +54,8 @@ router.get('/planning-data', authenticateToken, (req, res) => {
 
 // Route pour insérer ou mettre à jour le planning
 router.post('/update-planning', authenticateToken, (req, res) => {
-    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id } = req.body;
+    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
+    const site_id = req.user.siteIds[0]; // Récupérer le site_id depuis le token JWT
 
     console.log('Données reçues pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id });
 
@@ -94,7 +95,6 @@ router.post('/update-planning', authenticateToken, (req, res) => {
         site_id, semaine, annee, jour_id, horaire_debut, horaire_fin
     ];
 
-    
     // Exécuter les deux requêtes séquentiellement
     connection.query(insertPlanningQuery, planningParams, (err, result) => {
         if (err) {
