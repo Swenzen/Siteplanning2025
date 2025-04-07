@@ -22,6 +22,7 @@ async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteIdFromLocalStorage = localStorage.getItem('site_id');
     
     if (!token) {
         console.error('Erreur : le token est manquant.');
