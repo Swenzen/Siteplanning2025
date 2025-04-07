@@ -1,19 +1,26 @@
-// Fonction pour afficher les horaires par compétence dans le tableau
 async function fetchHorairesCompetences() {
-    const siteId = localStorage.getItem('site_id');
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
 
-    if (!siteId || !token) {
-        console.error('Erreur : site_id ou token manquant.');
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
+        return;
+    }
+
+    // Décoder le token pour récupérer le site_id
+    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Décoder le payload du token
+    const siteId = decodedToken.siteIds ? decodedToken.siteIds[0] : null; // Utiliser le premier site_id du token
+
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le token.');
         return;
     }
 
     try {
         const [competencesResponse, horairesResponse] = await Promise.all([
-            fetch(`/api/competences?site_id=${siteId}`, {
+            fetch(`/api/competences`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
-            fetch(`/api/horaires-competences?site_id=${siteId}`, {
+            fetch(`/api/horaires-competences`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
         ]);

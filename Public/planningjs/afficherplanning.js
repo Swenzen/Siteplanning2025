@@ -41,6 +41,7 @@ async function fetchPlanningData() {
 
 console.log('Token récupéré :', token);
     console.log('Site ID récupéré depuis le token :', siteId);
+    console.log('Site ID depuis le localStorage :', siteIdFromLocalStorage);
 
     console.log('Paramètres envoyés à fetchPlanningData :', { semaine, annee, siteId });
 
