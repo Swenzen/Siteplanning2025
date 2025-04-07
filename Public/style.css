@@ -201,6 +201,28 @@ header #user-section #logoutButton:hover {
 }
 
 
+
+
+
+#user-info-container {
+    display: flex;
+    flex-direction: column; /* Empile les éléments verticalement */
+    align-items: flex-start; /* Aligne les éléments à gauche */
+    margin-top: 10px; /* Ajoute un espace entre le nom et le menu déroulant */
+}
+
+/* Style pour le menu déroulant */
+#siteSelector {
+    margin-top: 5px; /* Ajoute un petit espace au-dessus du menu déroulant */
+    padding: 5px; /* Ajoute un peu de padding pour un meilleur rendu */
+    font-size: 14px; /* Ajuste la taille de la police */
+}
+
+
+
+
+
+
 /* ========================= */
 /* CONTENU PRINCIPAL         */
 /* ========================= */
