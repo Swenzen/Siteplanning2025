@@ -178,6 +178,20 @@ router.get('/nom-ids-vacances', authenticateToken, (req, res) => {
 // Route pour ajouter une entrée dans Tvacances
 router.post('/add-vacances', authenticateToken, (req, res) => {
     const { semaine, annee, nom, site_id } = req.body;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
+
+    console.log('Requête reçue pour /add-vacances :', { semaine, annee, nom, site_id, userSiteIds });
+
+    // Vérifier que le site_id est fourni et que l'utilisateur y a accès
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé ou manquant.');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
+
+    if (!semaine || !annee || !nom) {
+        console.error('Erreur : Les champs "semaine", "annee" et "nom" sont requis.');
+        return res.status(400).send('Erreur : Les champs "semaine", "annee" et "nom" sont requis.');
+    }
 
     const queryVacances = `
         INSERT INTO Tvacances (semaine, annee, nom_id)
@@ -187,22 +201,23 @@ router.post('/add-vacances', authenticateToken, (req, res) => {
     connection.query(queryVacances, [semaine, annee, nom], (err, result) => {
         if (err) {
             console.error('Erreur lors de l\'ajout dans Tvacances :', err.message);
-            res.status(500).send(`Erreur lors de l'ajout dans Tvacances : ${err.message}`);
-        } else {
-            const vacancesId = result.insertId; // Récupérer l'ID de la nouvelle entrée
-            const queryTsite = `
-                INSERT INTO Tvacances_Tsite (vacances_id, site_id)
-                VALUES (?, ?)
-            `;
-            connection.query(queryTsite, [vacancesId, site_id], (err) => {
-                if (err) {
-                    console.error('Erreur lors de l\'ajout dans Tvacances_Tsite :', err.message);
-                    res.status(500).send(`Erreur lors de l'ajout dans Tvacances_Tsite : ${err.message}`);
-                } else {
-                    res.send('Vacances ajoutées avec succès');
-                }
-            });
+            return res.status(500).send(`Erreur lors de l'ajout dans Tvacances : ${err.message}`);
         }
+
+        const vacancesId = result.insertId; // Récupérer l'ID de la nouvelle entrée
+        const queryTsite = `
+            INSERT INTO Tvacances_Tsite (vacances_id, site_id)
+            VALUES (?, ?)
+        `;
+
+        connection.query(queryTsite, [vacancesId, site_id], (err) => {
+            if (err) {
+                console.error('Erreur lors de l\'ajout dans Tvacances_Tsite :', err.message);
+                return res.status(500).send(`Erreur lors de l'ajout dans Tvacances_Tsite : ${err.message}`);
+            }
+
+            res.send('Vacances ajoutées avec succès');
+        });
     });
 });
 
@@ -226,8 +241,9 @@ router.get('/vacances-data', authenticateToken, (req, res) => {
     const query = `
         SELECT v.vacances_id, v.semaine, v.annee, n.nom
         FROM Tvacances v
+        JOIN Tvacances_Tsite vt ON v.vacances_id = vt.vacances_id
         JOIN Tnom n ON v.nom_id = n.nom_id
-        WHERE v.semaine = ? AND v.annee = ? AND v.site_id = ?
+        WHERE v.semaine = ? AND v.annee = ? AND vt.site_id = ?
     `;
 
     connection.query(query, [semaine, annee, site_id], (err, results) => {
