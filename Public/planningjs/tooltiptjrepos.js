@@ -3,25 +3,32 @@ async function fetchNomIdsRepos(event, tableName, jourId) {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
         return;
     }
 
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
+        return;
+    }
+
+    console.log('Données envoyées pour fetchNomIdsRepos :', { semaine, annee, jourId, siteId });
+
     try {
-        const response = await fetch(`/api/nom-ids-repos?semaine=${semaine}&annee=${annee}&jourId=${jourId}`, {
+        const response = await fetch(`/api/nom-ids-repos?semaine=${semaine}&annee=${annee}&jourId=${jourId}&site_id=${siteId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
-                'site-id': siteId, // Ajouter le site_id dans l'en-tête
                 'Content-Type': 'application/json'
             }
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des nom_id');
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la récupération des nom_id : ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
@@ -37,17 +44,23 @@ function showTooltipRepos(event, nomIds, tableName, jourId) {
     const tooltip = document.getElementById("tooltip");
     tooltip.innerHTML = nomIds.map(nom => `<div class="tooltip-date" data-nom-id="${nom.nom_id}">${nom.nom}</div>`).join('');
     tooltip.style.display = 'block';
-    tooltip.style.left = `${event.pageX + 10}px`; // Slight offset for better visibility
-    tooltip.style.top = `${event.pageY + 10}px`; // Slight offset for better visibility
+    tooltip.style.left = `${event.pageX + 10}px`; // Décalage pour une meilleure visibilité
+    tooltip.style.top = `${event.pageY + 10}px`; // Décalage pour une meilleure visibilité
 
     // Ajouter un gestionnaire de clics aux éléments de nom_id dans le tooltip
     document.querySelectorAll('.tooltip-date').forEach(element => {
-        element.addEventListener('click', function() {
-            currentCell.textContent = this.textContent; // Remplacer le contenu de la cellule
-            const semaine = document.getElementById("weekNumber").value;
-            const annee = document.getElementById("yearNumber").value;
-            const nom_id = this.getAttribute('data-nom-id');
-            addReposData(tableName, semaine, annee, jourId, nom_id);
+        element.addEventListener('click', function () {
+            const nomId = this.getAttribute('data-nom-id');
+            const nom = this.textContent;
+
+            // Vérifiez que tableName est valide avant d'appeler addReposData
+            if (!tableName || typeof tableName !== 'string' || tableName.trim() === '' || !isNaN(tableName)) {
+                console.error('Erreur : tableName est invalide.', tableName);
+                return;
+            }
+
+            console.log(`Ajout du nom "${nom}" avec nom_id=${nomId} dans la table ${tableName}`);
+            addReposData(tableName, document.getElementById("weekNumber").value, document.getElementById("yearNumber").value, jourId, nomId);
             tooltip.style.display = 'none'; // Fermer le tooltip
         });
     });
@@ -55,18 +68,34 @@ function showTooltipRepos(event, nomIds, tableName, jourId) {
 
 // Fonction pour ajouter les données dans la table Tjrepos_*
 async function addReposData(tableName, semaine, annee, jourId, nomId) {
-    console.log('Données envoyées pour l\'ajout dans', tableName, ':', { semaine, annee, jourId, nomId });
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
+        return;
+    }
+
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
+        return;
+    }
+
+    console.log('Données envoyées pour l\'ajout dans', tableName, ':', { semaine, annee, jourId, nomId, siteId });
+
     try {
         const response = await fetch('/api/add-repos-data', {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ tableName, semaine, annee, jourId, nomId })
+            body: JSON.stringify({ tableName, semaine, annee, jourId, nomId, site_id: siteId })
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de l\'ajout dans ' + tableName);
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de l'ajout dans ${tableName} : ${response.status} - ${errorText}`);
         }
 
         const result = await response.text();
