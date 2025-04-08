@@ -1,6 +1,5 @@
-// Fonction pour créer un tableau supplémentaire avec 9 colonnes
 async function createAdditionalTable() {
-    const container = document.getElementById("additionalTableContainer"); // Conteneur pour le tableau
+    const container = document.getElementById("additionalTableContainer");
 
     if (!container) {
         console.error('Élément #additionalTableContainer non trouvé');
@@ -33,26 +32,25 @@ async function createAdditionalTable() {
     const tbody = document.createElement("tbody");
 
     try {
-        // Récupérer le site_id depuis sessionStorage
         const siteId = sessionStorage.getItem('selectedSite');
         if (!siteId) {
             throw new Error('site_id manquant dans sessionStorage.');
         }
 
         // Récupérer les repos liés au site
-        const response = await fetch(`/api/get-repos?site_id=${siteId}`, {
+        const reposResponse = await fetch(`/api/get-repos?site_id=${siteId}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`, // Ajouter le token
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             }
         });
 
-        if (!response.ok) {
+        if (!reposResponse.ok) {
             throw new Error('Erreur lors de la récupération des repos');
         }
 
-        const repos = await response.json();
+        const repos = await reposResponse.json();
         console.log('Repos récupérés :', repos);
 
         // Ajouter des lignes dynamiques sous la colonne "Repos"
@@ -65,17 +63,17 @@ async function createAdditionalTable() {
                 if (index === 0) {
                     // Colonne "Vacances"
                     td.addEventListener('click', (event) => {
-                        currentCell = td; // Stocker la cellule actuelle
+                        currentCell = td;
                         fetchNomIdsVacances(event);
                     });
                 } else if (index === 1) {
                     // Colonne "Repos"
-                    td.textContent = reposItem.repos; // Afficher le nom du repos
+                    td.textContent = reposItem.repos;
                 } else {
                     // Colonnes des jours de la semaine
                     td.addEventListener('click', (event) => {
-                        currentCell = td; // Stocker la cellule actuelle
-                        const jourId = index - 1; // Calculer le jour_id en fonction de l'index de la colonne
+                        currentCell = td;
+                        const jourId = index - 1;
                         fetchNomIdsRepos(event, reposItem.repos_id, jourId);
                     });
                 }
@@ -93,7 +91,7 @@ async function createAdditionalTable() {
         const reposDataResponse = await fetch(`/api/repos-data?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`, // Ajouter le token
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -110,13 +108,13 @@ async function createAdditionalTable() {
             for (let row of rows) {
                 const reposCell = row.cells[1];
                 if (reposCell && reposCell.textContent === data.repos) {
-                    const cell = row.cells[data.jour_id + 1]; // Trouver la cellule correspondant au jour_id
+                    const cell = row.cells[data.jour_id + 1];
                     const div = document.createElement('div');
-                    div.textContent = data.nom; // Afficher le nom dans la cellule
-                    div.dataset.nomId = data.nom_id; // Stocker le nom_id dans un attribut de données
-                    div.dataset.nom = data.nom; // Stocker le nom dans un attribut de données pour vérification
+                    div.textContent = data.nom;
+                    div.dataset.nomId = data.nom_id;
+                    div.dataset.nom = data.nom;
                     div.addEventListener('contextmenu', (event) => {
-                        event.preventDefault(); // Empêcher le menu contextuel par défaut
+                        event.preventDefault();
                         console.log('Clic droit détecté sur:', div.dataset.nom, 'nom_id:', div.dataset.nomId);
                         removeReposData(data.repos_id, data.jour_id, div.dataset.nom_id);
                     });

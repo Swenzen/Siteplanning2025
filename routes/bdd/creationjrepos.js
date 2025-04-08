@@ -106,32 +106,50 @@ router.post('/delete-repos-table', authenticateToken, async (req, res) => {
     }
 });
 
-router.post('/add-repos-planning', authenticateToken, (req, res) => {
-    const { planning_id, repos_id, site_id, jour_id, semaine, annee } = req.body;
+router.post('/add-repos-data', authenticateToken, async (req, res) => {
+    const { tableName, semaine, annee, jourId, nomId, site_id } = req.body;
     const userSiteIds = req.user.siteIds;
 
-    console.log('Requête reçue pour /add-repos-planning :', { planning_id, repos_id, site_id, jour_id, semaine, annee, userSiteIds });
+    console.log('Requête reçue pour /add-repos-data :', { tableName, semaine, annee, jourId, nomId, site_id, userSiteIds });
 
-    // Vérifier que le site_id est fourni et que l'utilisateur y a accès
+    // Vérifier que le site_id est autorisé
     if (!site_id || !userSiteIds.includes(String(site_id))) {
-        console.error('Accès refusé : site_id non autorisé ou manquant.');
+        console.error('Accès refusé : site_id non autorisé.');
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
-    const query = `
-        INSERT INTO Tplanning_TRepos_Tsite (planning_id, repos_id, site_id, jour_id, semaine, annee)
-        VALUES (?, ?, ?, ?, ?, ?)
-    `;
+    // Validation stricte pour tableName
+    if (!tableName || isNaN(tableName)) {
+        console.error('Erreur : tableName est invalide.', tableName);
+        return res.status(400).send('Nom de table invalide.');
+    }
 
-    connection.query(query, [planning_id, repos_id, site_id, jour_id, semaine, annee], (err, result) => {
-        if (err) {
-            console.error('Erreur lors de l\'ajout dans Tplanning_TRepos_Tsite :', err.message);
-            return res.status(500).send('Erreur lors de l\'ajout dans Tplanning_TRepos_Tsite.');
-        }
+    try {
+        // Étape 1 : Insérer ou récupérer le planning_id dans Tplanning
+        const planningQuery = `
+            INSERT INTO Tplanning (semaine, annee, jour_id, nom_id)
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE planning_id = LAST_INSERT_ID(planning_id)
+        `;
+        const [planningResult] = await connection.promise().query(planningQuery, [semaine, annee, jourId, nomId]);
+        const planningId = planningResult.insertId;
 
-        console.log('Données ajoutées avec succès dans Tplanning_TRepos_Tsite.');
-        res.send('Données ajoutées avec succès.');
-    });
+        console.log('Planning ID récupéré ou inséré :', planningId);
+
+        // Étape 2 : Insérer la liaison dans Tplanning_TRepos_Tsite
+        const linkQuery = `
+            INSERT INTO Tplanning_TRepos_Tsite (planning_id, repos_id, site_id)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE planning_id = VALUES(planning_id)
+        `;
+        await connection.promise().query(linkQuery, [planningId, tableName, site_id]);
+
+        console.log('Liaison ajoutée avec succès dans Tplanning_TRepos_Tsite.');
+        res.send('Repos ajouté au planning avec succès.');
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout au planning :', error.message);
+        res.status(500).send('Erreur lors de l\'ajout au planning.');
+    }
 });
 
 // Route pour récupérer les nom_id disponibles pour les repos
@@ -172,24 +190,42 @@ router.get('/nom-ids-repos', authenticateToken, (req, res) => {
 });
 
 
-// Route pour récupérer les données des repos pour un site spécifique
-router.get('/repos-data', async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
-    const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
-    const { semaine, annee } = req.query;
+router.get('/repos-data', authenticateToken, async (req, res) => {
+    const { semaine, annee, site_id } = req.query;
+    const userSiteIds = req.user.siteIds;
 
-    if (!siteId || !semaine || !annee) {
-        return res.status(400).send('Données manquantes (site_id, semaine ou annee).');
+    console.log('Requête reçue pour /repos-data :', { semaine, annee, site_id, userSiteIds });
+
+    // Vérifier que le site_id est autorisé
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé.');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     try {
         const query = `
-            SELECT tpt.repos_id, tpt.site_id, tpt.planning_id, tn.nom, tpt.jour_id
-            FROM Tplanning_Trepos_Tsite tpt
-            JOIN Tnom tn ON tpt.planning_id = tn.nom_id
-            WHERE tpt.site_id = ? AND tpt.semaine = ? AND tpt.annee = ?
+            SELECT 
+                tpt.repos_id, 
+                tpt.site_id, 
+                tpt.planning_id, 
+                tn.nom, 
+                tn.nom_id, 
+                tp.jour_id, -- Correction ici
+                tr.repos
+            FROM Tplanning_TRepos_Tsite tpt
+            LEFT JOIN Tplanning tp ON tpt.planning_id = tp.planning_id
+            LEFT JOIN Tnom tn ON tp.nom_id = tn.nom_id
+            LEFT JOIN Trepos tr ON tpt.repos_id = tr.repos_id
+            WHERE tpt.site_id = ? AND tp.semaine = ? AND tp.annee = ?
         `;
-        const [results] = await connection.promise().query(query, [siteId, semaine, annee]);
+        const [results] = await connection.promise().query(query, [site_id, semaine, annee]);
+
+        if (results.length === 0) {
+            console.warn('Aucune donnée trouvée pour /repos-data.');
+            return res.status(404).send('Aucune donnée trouvée.');
+        }
+
+        console.log('Données récupérées pour /repos-data :', results);
         res.json(results);
     } catch (error) {
         console.error('Erreur lors de la récupération des données des repos :', error.message);

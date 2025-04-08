@@ -54,19 +54,18 @@ function showTooltipRepos(event, nomIds, tableName, jourId) {
             const nom = this.textContent;
 
             // Vérifiez que tableName est valide avant d'appeler addReposData
-            if (!tableName || typeof tableName !== 'string' || tableName.trim() === '' || !isNaN(tableName)) {
+            if (!tableName || isNaN(Number(tableName))) {
                 console.error('Erreur : tableName est invalide.', tableName);
                 return;
             }
 
             console.log(`Ajout du nom "${nom}" avec nom_id=${nomId} dans la table ${tableName}`);
-            addReposData(tableName, document.getElementById("weekNumber").value, document.getElementById("yearNumber").value, jourId, nomId);
+            addReposData(Number(tableName), document.getElementById("weekNumber").value, document.getElementById("yearNumber").value, jourId, nomId);
             tooltip.style.display = 'none'; // Fermer le tooltip
         });
     });
 }
 
-// Fonction pour ajouter les données dans la table Tjrepos_*
 async function addReposData(tableName, semaine, annee, jourId, nomId) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
     const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
@@ -81,7 +80,13 @@ async function addReposData(tableName, semaine, annee, jourId, nomId) {
         return;
     }
 
-    console.log('Données envoyées pour l\'ajout dans', tableName, ':', { semaine, annee, jourId, nomId, siteId });
+    // Validation stricte pour tableName
+    if (!tableName || isNaN(tableName)) {
+        console.error('Erreur : tableName est invalide.', tableName);
+        return;
+    }
+
+    console.log('Données envoyées pour l\'ajout :', { tableName, semaine, annee, jourId, nomId, siteId });
 
     try {
         const response = await fetch('/api/add-repos-data', {
@@ -95,15 +100,15 @@ async function addReposData(tableName, semaine, annee, jourId, nomId) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Erreur lors de l'ajout dans ${tableName} : ${response.status} - ${errorText}`);
+            throw new Error(`Erreur lors de l'ajout : ${response.status} - ${errorText}`);
         }
 
         const result = await response.text();
-        console.log('Résultat de l\'ajout dans', tableName, ':', result);
+        console.log('Résultat de l\'ajout :', result);
 
         // Réactualiser le tableau après l'ajout
         createAdditionalTable();
     } catch (error) {
-        console.error('Erreur lors de l\'ajout dans', tableName, ':', error);
+        console.error('Erreur lors de l\'ajout :', error);
     }
 }
