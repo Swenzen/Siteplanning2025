@@ -4,12 +4,16 @@ const connection = require('../../db'); // Assurez-vous que le chemin est correc
 const authenticateToken = require('../../middleware/auth'); // Importer le middleware d'authentification
 
 
-//route pour compétences tableau *
 router.get('/competences', authenticateToken, (req, res) => {
-    const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du token
+    const siteId = req.query.site_id; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!siteId) {
-        return res.status(400).send('Le site_id est introuvable dans le token');
+    console.log('Requête reçue pour /competences :', { siteId, userSiteIds });
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(siteId))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     const query = `
@@ -28,21 +32,27 @@ router.get('/competences', authenticateToken, (req, res) => {
             return res.status(500).send('Erreur lors de la récupération des compétences');
         }
 
-        console.log('Compétences récupérées :', results); // Ajoute ce log
+        console.log('Compétences récupérées :', results);
         res.json(results);
     });
 });
 
 
-// Route pour ajouter une compétence avec liaison à Tsite *
 router.post('/add-competence2', authenticateToken, (req, res) => {
     const { competence, displayOrder } = req.body;
-    const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du token
+    const siteId = req.body.site_id; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
     console.log('Données utilisateur (req.user) :', req.user);
 
     if (!competence || !siteId) {
         return res.status(400).send('Les champs "competence" et "site_id" sont requis');
+    }
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(siteId))) {
+        console.error('Accès refusé : L\'utilisateur n\'a pas accès à ce site');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
     // Étape 1 : Ajouter la compétence dans Tcompetence
@@ -71,22 +81,27 @@ router.post('/add-competence2', authenticateToken, (req, res) => {
                     return res.status(500).send('Erreur lors de la création de la liaison compétence-site');
                 }
 
-                console.log(`Liaison créée : competence_id=${competenceId}, site_id=${siteId}`); // Ajoute ce log
+                console.log(`Liaison créée : competence_id=${competenceId}, site_id=${siteId}`);
                 res.send('Compétence ajoutée avec succès et liée au site');
             });
         });
     });
 });
 
-// Route pour supprimer une compétence liée à un site *
 router.post('/delete-competence', authenticateToken, (req, res) => {
-    const { competence_id } = req.body;
-    const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du token
+    const { competence_id, site_id } = req.body; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
     console.log('Données utilisateur (req.user) :', req.user);
 
-    if (!competence_id || !siteId) {
+    if (!competence_id || !site_id) {
         return res.status(400).send('Les champs "competence_id" et "site_id" sont requis');
+    }
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
     const deleteQuery = `
@@ -97,15 +112,15 @@ router.post('/delete-competence', authenticateToken, (req, res) => {
     `;
 
     console.log('Requête SQL exécutée :', deleteQuery);
-    console.log('Paramètres SQL :', [competence_id, siteId]);
+    console.log('Paramètres SQL :', [competence_id, site_id]);
 
-    connection.query(deleteQuery, [competence_id, siteId], (err, result) => {
+    connection.query(deleteQuery, [competence_id, site_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression de la compétence :', err.message);
             return res.status(500).send('Erreur lors de la suppression de la compétence');
         }
 
-        console.log('Résultat de la suppression :', result); // Ajoute ce log
+        console.log('Résultat de la suppression :', result);
 
         if (result.affectedRows === 0) {
             return res.status(404).send('Aucune compétence trouvée pour ce site');

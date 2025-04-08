@@ -3,8 +3,8 @@ async function fetchCompetences() {
     try {
         console.time('fetchCompetences');
 
-        // Récupérer le site_id depuis le localStorage
-        const siteId = localStorage.getItem('site_id');
+        // Récupérer le site_id depuis le sessionStorage
+        const siteId = sessionStorage.getItem('selectedSite');
         if (!siteId) {
             console.error('Erreur : le site_id est introuvable.');
             alert('Erreur : le site n\'est pas chargé.');
@@ -64,15 +64,14 @@ async function fetchCompetences() {
     }
 }
 
-// Fonction pour ajouter une compétence *
 async function addCompetence() {
     const competence = prompt("Entrez la compétence");
     if (competence) {
         try {
             console.time('addCompetence');
 
-            // Récupérer le site_id depuis le localStorage
-            const siteId = localStorage.getItem('site_id');
+            // Récupérer le site_id depuis le sessionStorage
+            const siteId = sessionStorage.getItem('selectedSite');
             if (!siteId) {
                 console.error('Erreur : le site_id est introuvable.');
                 alert('Erreur : le site n\'est pas chargé.');
@@ -91,13 +90,15 @@ async function addCompetence() {
             const responseOrder = await fetch('/api/max-display-order', {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
 
             if (!responseOrder.ok) {
-                console.error('Erreur lors de la récupération du display_order');
+                const error = await responseOrder.text();
+                console.error('Erreur lors de la récupération du display_order maximum :', error);
+                alert('Erreur lors de la récupération du display_order maximum.');
                 return;
             }
 
@@ -108,13 +109,13 @@ async function addCompetence() {
             const response = await fetch('/api/add-competence2', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     competence,
                     displayOrder: maxDisplayOrder + 1,
-                    site_id: siteId // Inclure le site_id dans la requête
+                    site_id: siteId
                 })
             });
 
@@ -134,9 +135,15 @@ async function addCompetence() {
     }
 }
 
-// Fonction pour supprimer une compétence *
 async function deleteCompetence(competenceId) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+
+    if (!siteId) {
+        console.error('Erreur : le site_id est introuvable.');
+        alert('Erreur : le site n\'est pas chargé.');
+        return;
+    }
 
     try {
         const response = await fetch('/api/delete-competence', {
@@ -145,7 +152,7 @@ async function deleteCompetence(competenceId) {
                 'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ competence_id: competenceId })
+            body: JSON.stringify({ competence_id: competenceId, site_id: siteId })
         });
 
         if (response.ok) {
@@ -161,14 +168,6 @@ async function deleteCompetence(competenceId) {
         console.error('Erreur lors de la requête :', error);
     }
 }
-
-// Utiliser la délégation d'événements pour gérer les clics sur les boutons de suppression
-document.querySelector("#competencesTable tbody").addEventListener("click", (event) => {
-    if (event.target.tagName === "BUTTON" && event.target.textContent === "Supprimer") {
-        const competenceId = event.target.dataset.competenceId;
-        deleteCompetence(competenceId);
-    }
-});
 
 // Gestionnaire d'événements pour ajouter une compétence
 document.getElementById("addCompetenceButton").addEventListener("click", addCompetence);
