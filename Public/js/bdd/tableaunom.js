@@ -112,6 +112,7 @@ async function saveName() {
 
 async function addNom() {
     const token = localStorage.getItem('token');
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
     const nom = document.getElementById('nomInput').value;
 
     if (!nom) {
@@ -119,7 +120,13 @@ async function addNom() {
         return;
     }
 
-    console.log('Données envoyées :', { nom });
+    if (!siteId) {
+        console.error('Erreur : le site_id est introuvable.');
+        alert('Erreur : le site n\'est pas chargé.');
+        return;
+    }
+
+    console.log('Données envoyées :', { nom, site_id: siteId });
 
     try {
         const response = await fetch('/api/add-nom', {
@@ -128,27 +135,25 @@ async function addNom() {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ nom }) // On n'envoie plus le site_id
+            body: JSON.stringify({ nom, site_id: siteId })
         });
 
         if (response.ok) {
-            document.getElementById('nomInput').value = ''; // Réinitialise le champ de saisie
-            fetchData(); // Rafraîchit le tableau des noms
-            fetchCompetencesPersonnes(); // Rafraîchit le tableau des compétences des personnes
+            alert('Nom ajouté avec succès.');
+            fetchData(); // Recharger les données après l'ajout
         } else {
             const error = await response.text();
             console.error('Erreur lors de l\'ajout du nom :', error);
-            alert('Erreur lors de l\'ajout du nom : ' + error);
+            alert('Erreur lors de l\'ajout du nom.');
         }
     } catch (error) {
         console.error('Erreur lors de l\'ajout du nom :', error);
     }
 }
 
-// Fonction pour supprimer un nom *
 async function deleteName(nom_id) {
     const token = localStorage.getItem('token');
-    const siteId = localStorage.getItem('site_id');
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
     if (!siteId) {
         console.error('Erreur : le site_id est introuvable.');
@@ -167,14 +172,15 @@ async function deleteName(nom_id) {
         });
 
         if (response.ok) {
-            fetchData(); // Rafraîchit le tableau des noms
-            fetchCompetencesPersonnes(); // Rafraîchit le tableau des compétences des personnes
+            alert('Nom supprimé avec succès.');
+            fetchData(); // Recharger les données après la suppression
         } else {
             const error = await response.text();
             console.error('Erreur lors de la suppression du nom :', error);
+            alert('Erreur lors de la suppression du nom.');
         }
     } catch (error) {
-        console.error('Erreur lors de la requête :', error);
+        console.error('Erreur lors de la suppression du nom :', error);
     }
 }
 

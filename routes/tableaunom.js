@@ -22,16 +22,17 @@ router.post('/update-name', authenticateToken, (req, res) => {
 
 
 router.post('/add-nom', authenticateToken, (req, res) => {
-    const { nom } = req.body; // On ne récupère plus le site_id depuis le client
-    const site_id = req.user.siteIds[0]; // Utilise le premier site_id du token
+    const { nom, site_id } = req.body; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    console.log('Requête reçue :', { nom, site_id, userSiteIds: req.user.siteIds });
+    console.log('Requête reçue :', { nom, site_id, userSiteIds });
 
-    if (!nom) {
-        return res.status(400).send('Données manquantes (nom)');
+    if (!nom || !site_id) {
+        return res.status(400).send('Données manquantes (nom ou site_id)');
     }
 
-    if (!req.user.siteIds.includes(String(site_id))) {
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
         console.error('Accès refusé : L\'utilisateur n\'a pas accès à ce site');
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
@@ -58,15 +59,21 @@ router.post('/add-nom', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour supprimer un nom (protégée)
-
 router.post('/delete-nom', authenticateToken, (req, res) => {
-    console.log('Requête reçue pour /delete-nom :', req.body);
-    const { nom_id } = req.body;
+    const { nom_id, site_id } = req.body; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!nom_id) {
-        console.error('Erreur : Le champ "nom_id" est requis');
-        return res.status(400).send('Le champ "nom_id" est requis');
+    console.log('Requête reçue pour /delete-nom :', { nom_id, site_id, userSiteIds });
+
+    if (!nom_id || !site_id) {
+        console.error('Erreur : Les champs "nom_id" et "site_id" sont requis');
+        return res.status(400).send('Les champs "nom_id" et "site_id" sont requis');
+    }
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
     const deleteNomQuery = `
