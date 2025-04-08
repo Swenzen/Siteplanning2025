@@ -321,9 +321,10 @@ async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_
 }
 
 
+// Fonction pour ajouter un commentaire au planning
 async function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
     console.log('Appel de la fonction addCommentToPlanning');
-    const site_id = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
 
     if (!jour_id) {
@@ -336,7 +337,12 @@ async function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, c
         return;
     }
 
-    console.log('Données envoyées pour l\'ajout du commentaire :', { semaine, annee, jour_id, nom, commentaire, site_id });
+    if (!siteId) {
+        console.error('Erreur : le site_id est manquant.');
+        return;
+    }
+
+    console.log('Données envoyées pour l\'ajout du commentaire :', { semaine, annee, jour_id, nom, commentaire, siteId });
 
     try {
         const response = await fetch('/api/add-comment', {
@@ -345,11 +351,12 @@ async function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, c
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` // Ajouter le token dans l'en-tête
             },
-            body: JSON.stringify({ semaine, annee, jour_id, nom, commentaire, site_id })
+            body: JSON.stringify({ semaine, annee, jour_id, nom, commentaire, site_id: siteId })
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de l\'ajout du commentaire');
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de l'ajout du commentaire : ${response.status} - ${errorText}`);
         }
 
         const result = await response.text();
@@ -358,22 +365,24 @@ async function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, c
         // Vérifie si currentCell est défini
         if (!currentCell) {
             console.warn('currentCell est null. Le commentaire a été ajouté dans la base de données, mais pas dans l\'interface utilisateur.');
-            return;
+        } else {
+            // Ajouter le commentaire avant le nom dans la cellule
+            const divs = currentCell.querySelectorAll('div');
+            divs.forEach(div => {
+                if (div.textContent === nom) {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.textContent = commentaire;
+                    commentDiv.style.fontStyle = 'italic'; // Optionnel : pour différencier visuellement le commentaire
+                    currentCell.insertBefore(commentDiv, div);
+                }
+            });
         }
 
-        // Ajouter le commentaire avant le nom dans la cellule
-        const divs = currentCell.querySelectorAll('div');
-        divs.forEach(div => {
-            if (div.textContent === nom) {
-                const commentDiv = document.createElement('div');
-                commentDiv.textContent = commentaire;
-                commentDiv.style.fontStyle = 'italic'; // Optionnel : pour différencier visuellement le commentaire
-                currentCell.insertBefore(commentDiv, div);
-            }
-        });
-
+        // Actualiser le tableau après l'ajout du commentaire
+        fetchPlanningData();
     } catch (error) {
         console.error('Erreur lors de l\'ajout du commentaire :', error);
+        alert('Une erreur est survenue lors de l\'ajout du commentaire.');
     }
 }
 

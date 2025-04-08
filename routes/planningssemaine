@@ -254,54 +254,77 @@ router.post('/remove-vacances', authenticateToken, (req, res) => {
 // Route pour ajouter un commentaire
 router.post('/add-comment', authenticateToken, (req, res) => {
     const { semaine, annee, jour_id, nom, commentaire, site_id } = req.body;
+    const userSiteIds = req.user.siteIds;
 
-    if (!site_id) {
-        console.error('Erreur : site_id est requis.');
-        return res.status(400).send('Erreur : site_id est requis.');
+    console.log('Données reçues pour /add-comment :', { semaine, annee, jour_id, nom, commentaire, site_id, userSiteIds });
+
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
-    const queryCommentaire = `
+    if (!semaine || !annee || !jour_id || !nom || !commentaire) {
+        console.error('Données manquantes pour l\'ajout du commentaire.');
+        return res.status(400).send('Données manquantes pour l\'ajout du commentaire.');
+    }
+
+    const insertCommentQuery = `
         INSERT INTO Tcommentaire (semaine, annee, jour_id, nom_id, commentaire)
-        VALUES (?, ?, ?, (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1), ?)
+        VALUES (?, ?, ?, 
+            (SELECT nom_id FROM Tnom WHERE nom = ? LIMIT 1), 
+            ?
+        )
     `;
 
-    connection.query(queryCommentaire, [semaine, annee, jour_id, nom, commentaire], (err, result) => {
+    const params = [semaine, annee, jour_id, nom, commentaire];
+
+    connection.query(insertCommentQuery, params, (err, result) => {
         if (err) {
             console.error('Erreur lors de l\'ajout du commentaire :', err.message);
-            return res.status(500).send(`Erreur lors de l'ajout du commentaire : ${err.message}`);
+            return res.status(500).send('Erreur lors de l\'ajout du commentaire.');
         }
 
-        const commentaireId = result.insertId; // Récupérer l'ID du commentaire inséré
+        const commentaireId = result.insertId;
 
-        const queryCommentaireTsite = `
+        // Ajouter la liaison dans Tcommentaire_Tsite
+        const insertCommentSiteQuery = `
             INSERT INTO Tcommentaire_Tsite (commentaire_id, site_id)
             VALUES (?, ?)
         `;
 
-        connection.query(queryCommentaireTsite, [commentaireId, site_id], (err) => {
+        connection.query(insertCommentSiteQuery, [commentaireId, site_id], (err) => {
             if (err) {
-                console.error('Erreur lors de l\'ajout dans Tcommentaire_Tsite :', err.message);
-                return res.status(500).send(`Erreur lors de l'ajout dans Tcommentaire_Tsite : ${err.message}`);
+                console.error('Erreur lors de l\'ajout de la liaison Tcommentaire_Tsite :', err.message);
+                return res.status(500).send('Erreur lors de l\'ajout de la liaison Tcommentaire_Tsite.');
             }
 
-            res.send('Commentaire ajouté avec succès');
+            console.log('Commentaire ajouté avec succès et lié au site.');
+            res.send('Commentaire ajouté avec succès.');
         });
     });
 });
 
 
 // Route pour récupérer les commentaires pour un site spécifique
+// Route pour récupérer les commentaires pour un site spécifique
 router.get('/comments', authenticateToken, (req, res) => {
     const { semaine, annee, site_id } = req.query;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    console.log('Paramètres reçus par la route /comments :', req.query);
+    console.log('Paramètres reçus par la route /comments :', { semaine, annee, site_id, userSiteIds });
 
-    if (!site_id) {
-        console.error('Erreur : site_id est requis.');
-        return res.status(400).send('Erreur : site_id est requis.');
+    // Vérifier que le site_id est fourni et que l'utilisateur y a accès
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé ou manquant.');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
-    // Logique pour récupérer les commentaires
+    if (!semaine || !annee) {
+        console.error('Erreur : Les paramètres "semaine" et "annee" sont requis.');
+        return res.status(400).send('Erreur : Les paramètres "semaine" et "annee" sont requis.');
+    }
+
+    // Requête SQL pour récupérer les commentaires
     const query = `
         SELECT 
             c.commentaire_id, c.semaine, c.annee, c.jour_id, c.nom_id, c.commentaire, 
@@ -323,9 +346,10 @@ router.get('/comments', authenticateToken, (req, res) => {
     connection.query(query, [semaine, annee, site_id], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des commentaires :', err.message);
-            return res.status(500).send('Erreur lors de la récupération des commentaires');
+            return res.status(500).send('Erreur lors de la récupération des commentaires.');
         }
 
+        console.log('Commentaires récupérés :', results);
         res.json(results);
     });
 });
