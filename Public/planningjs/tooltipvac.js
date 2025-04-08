@@ -130,15 +130,22 @@ async function fetchVacancesData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
         return;
     }
 
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
+        return;
+    }
+
+    console.log('Données envoyées pour fetchVacancesData :', { semaine, annee, siteId });
+
     try {
-        const response = await fetch(`/api/vacances-data?semaine=${semaine}&annee=${annee}`, {
+        const response = await fetch(`/api/vacances-data?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
@@ -147,7 +154,8 @@ async function fetchVacancesData() {
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des données de vacances');
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la récupération des données de vacances : ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
