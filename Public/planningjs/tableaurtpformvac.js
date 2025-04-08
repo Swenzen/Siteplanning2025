@@ -33,18 +33,18 @@ async function createAdditionalTable() {
     const tbody = document.createElement("tbody");
 
     try {
-        // Récupérer le site_id depuis le localStorage
-        const siteId = localStorage.getItem('site_id');
+        // Récupérer le site_id depuis sessionStorage
+        const siteId = sessionStorage.getItem('selectedSite');
         if (!siteId) {
-            throw new Error('site_id manquant dans le localStorage.');
+            throw new Error('site_id manquant dans sessionStorage.');
         }
 
         // Récupérer les repos liés au site
-        const response = await fetch('/api/get-repos', {
+        const response = await fetch(`/api/get-repos?site_id=${siteId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`, // Ajouter le token
-                'site-id': siteId // Ajouter le site_id
+                'Content-Type': 'application/json'
             }
         });
 
@@ -90,11 +90,11 @@ async function createAdditionalTable() {
         const semaine = document.getElementById("weekNumber").value;
         const annee = document.getElementById("yearNumber").value;
 
-        const reposDataResponse = await fetch(`/api/repos-data?semaine=${semaine}&annee=${annee}`, {
+        const reposDataResponse = await fetch(`/api/repos-data?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`, // Ajouter le token
-                'site-id': siteId // Ajouter le site_id
+                'Content-Type': 'application/json'
             }
         });
 
@@ -134,7 +134,6 @@ async function createAdditionalTable() {
     // Appeler la fonction pour récupérer et afficher les données de vacances
     fetchVacancesData();
 }
-
 // Fonction pour récupérer le nom_id et supprimer les données dans la table Tjrepos_*
 async function fetchNomIdAndRemoveReposData(tableName, semaine, annee, jourId, nom) {
     try {
