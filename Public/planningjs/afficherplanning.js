@@ -282,16 +282,17 @@ function displayPlanningData(planningData, fermeturesData, commentsData, semaine
 }
 
 // Fonction pour supprimer un nom du planning
-async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin, site_id) {
+async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
     console.log('Appel de la fonction removeValueFromPlanning');
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!token || !site_id) {
+    if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
         return;
     }
 
-    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id });
+    console.log('Données envoyées pour la suppression du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, siteId });
 
     try {
         const response = await fetch('/api/remove-planning', {
@@ -300,11 +301,12 @@ async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` // Ajouter le token dans l'en-tête
             },
-            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id })
+            body: JSON.stringify({ semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id: siteId })
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de la suppression du planning');
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la suppression du planning : ${response.status} - ${errorText}`);
         }
 
         const result = await response.text();
@@ -314,6 +316,7 @@ async function removeValueFromPlanning(nom, jour_id, semaine, annee, competence_
         fetchPlanningData(); // Actualiser le tableau après la suppression
     } catch (error) {
         console.error('Erreur lors de la suppression du planning :', error);
+        alert('Une erreur est survenue lors de la suppression du planning.');
     }
 }
 
