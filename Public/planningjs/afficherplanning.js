@@ -22,41 +22,33 @@ async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteIdFromLocalStorage = localStorage.getItem('site_id');
-    
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+
     if (!token) {
         console.error('Erreur : le token est manquant.');
         alert('Erreur : vous n\'êtes pas authentifié.');
         return;
     }
 
-    // Décoder le token pour récupérer le site_id
-    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Décoder le payload du token
-    const siteId = decodedToken.siteIds ? decodedToken.siteIds[0] : null; // Utiliser le premier site_id du token
-
     if (!siteId) {
-        console.error('Erreur : aucun site_id trouvé dans le token.');
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
         alert('Erreur : un site doit être sélectionné.');
         return;
     }
-
-console.log('Token récupéré :', token);
-    console.log('Site ID récupéré depuis le token :', siteId);
-    console.log('Site ID depuis le localStorage :', siteIdFromLocalStorage);
 
     console.log('Paramètres envoyés à fetchPlanningData :', { semaine, annee, siteId });
 
     try {
         // Effectuer les requêtes en parallèle
         const [planningResponse, fermeturesResponse, commentsResponse] = await Promise.all([
-            fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}&siteId=${siteId}`, {
+            fetch(`/api/planning-data?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             }),
-            fetch(`/api/fermetures?semaine=${semaine}&annee=${annee}&siteId=${siteId}`, {
+            fetch(`/api/fermetures?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -108,181 +100,185 @@ console.log('Token récupéré :', token);
             return;
         }
 
-        const tableBody = document.querySelector("#planningTable tbody");
-        tableBody.innerHTML = ''; // Vider le contenu du tableau
-
-        // Regrouper les données par compétence et horaire
-        const groupedData = planningData.reduce((acc, row) => {
-            const key = `${row.competence}-${row.horaire_debut}-${row.horaire_fin}`;
-            if (!acc[key]) {
-                acc[key] = { ...row, jours: {} };
-            }
-            if (row.jour_id) {
-                if (!acc[key].jours[row.jour_id]) {
-                    acc[key].jours[row.jour_id] = [];
-                }
-                acc[key].jours[row.jour_id].push({ nom: row.nom, nom_id: row.nom_id });
-            }
-            return acc;
-        }, {});
-
-        // Associer les commentaires récupérés aux noms dans rowData.jours
-        const commentairesMap = {};
-        commentsData.forEach(comment => {
-            const key = `${comment.jour_id}-${comment.nom_id}`;
-            commentairesMap[key] = comment.commentaire;
-        });
-
-        Object.values(groupedData).forEach(rowData => {
-            Object.keys(rowData.jours).forEach(day => {
-                rowData.jours[day].forEach(entry => {
-                    const key = `${day}-${entry.nom_id}`;
-                    if (commentairesMap[key]) {
-                        entry.commentaire = commentairesMap[key];
-                    }
-                });
-            });
-        });
-
-        // Trier les données regroupées par display_order, heure de début et heure de fin
-        const sortedData = Object.values(groupedData).sort((a, b) => {
-            if (a.display_order < b.display_order) return -1;
-            if (a.display_order > b.display_order) return 1;
-            if (a.horaire_debut < b.horaire_debut) return -1;
-            if (a.horaire_debut > b.horaire_debut) return 1;
-            if (a.horaire_fin < b.horaire_fin) return -1;
-            if (a.horaire_fin > b.horaire_fin) return 1;
-            return 0;
-        });
-
-        // Ajouter les données triées au tableau
-        sortedData.forEach((rowData) => {
-            console.log('Ajout de la ligne :', rowData);
-            const row = document.createElement("tr");
-            row.setAttribute('draggable', true); // Rendre la ligne draggable
-            row.addEventListener('dragstart', handleDragStart);
-            row.addEventListener('dragover', handleDragOver);
-            row.addEventListener('drop', handleDrop);
-
-            const modalitiesCell = document.createElement("td");
-            modalitiesCell.textContent = rowData.competence;
-            modalitiesCell.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence
-            modalitiesCell.dataset.displayOrder = rowData.display_order; // Utiliser l'ordre d'affichage depuis les données
-            console.log(`Compétence ID: ${rowData.competence_id}, Display Order: ${rowData.display_order}`); // Ajouter un log pour vérifier les valeurs
-            row.appendChild(modalitiesCell);
-
-            const horairesCell = document.createElement("td");
-            horairesCell.textContent = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
-            row.appendChild(horairesCell);
-
-            const days = ['1', '2', '3', '4', '5', '6', '7']; // Utiliser les IDs des jours
-            days.forEach(day => {
-                const cell = document.createElement("td");
-                cell.dataset.jourId = day; // Ajouter l'ID du jour
-                cell.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence
-                cell.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début
-                cell.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin
-
-                // Vérifie si la cellule contient des données
-                if (rowData.jours[day]) {
-                    console.log(`Données pour le jour ${day} :`, rowData.jours[day]);
-
-                    const pairs = {};
-
-                    // Créer des paires commentaire-nom regroupées par nom_id
-                    rowData.jours[day].forEach(({ nom, nom_id, commentaire }) => {
-                        if (!pairs[nom_id]) {
-                            pairs[nom_id] = { nom: undefined, commentaire: undefined };
-                        }
-                        if (nom) {
-                            pairs[nom_id].nom = nom;
-                        }
-                        if (commentaire) {
-                            pairs[nom_id].commentaire = commentaire;
-                        }
-                    });
-
-                    console.log(`Paires générées pour le jour ${day} :`, pairs);
-
-                    // Ajouter chaque paire dans un conteneur
-                    Object.entries(pairs).forEach(([nom_id, { nom, commentaire }]) => {
-                        const container = document.createElement('div');
-
-                        if (commentaire) {
-                            console.log(`Ajout du commentaire : ${commentaire}`);
-                            const commentDiv = document.createElement('div');
-                            commentDiv.textContent = commentaire;
-                            commentDiv.style.fontWeight = 'bold'; // Changer le style pour gras
-                            container.appendChild(commentDiv);
-                        }
-
-                        if (nom) {
-                            const div = document.createElement('div');
-                            div.textContent = nom;
-                            div.dataset.nomId = nom_id || null; // Ajouter l'ID du nom comme attribut de données
-                            div.dataset.nom = nom || null; // Ajouter le nom comme attribut de données
-                            div.dataset.jourId = day; // Ajouter l'ID du jour comme attribut de données
-                            div.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence comme attribut de données
-                            div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
-                            div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
-
-                            console.log("Attributs ajoutés au div :", {
-                                "data-nom": div.dataset.nom,
-                                "data-nom-id": div.dataset.nomId,
-                                "data-jour-id": div.dataset.jourId,
-                                "data-competence-id": div.dataset.competenceId,
-                                "data-horaire-debut": div.dataset.horaireDebut,
-                                "data-horaire-fin": div.dataset.horaireFin
-                            });
-
-                            container.appendChild(div);
-
-                            // Gestionnaire de clic gauche
-                            div.addEventListener('click', (event) => {
-                                console.log(`Clic gauche détecté sur la cellule : ${day}, ${rowData.competence_id}`);
-                                currentCell = cell; // Stocker la cellule actuelle
-                                currentDay = day;
-                                currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
-                                currentCompetenceId = rowData.competence_id;
-
-                                // Appeler fetchNomIds pour afficher le tooltip ou effectuer une autre action
-                                fetchNomIds(rowData.competence_id, event);
-                            });
-                        }
-
-                        cell.appendChild(container);
-                    });
-                }
-
-                // Gestionnaire de clic pour les cases vides
-                cell.addEventListener('click', (event) => {
-                    console.log(`Clic gauche détecté sur une case vide : ${day}`);
-                    currentCell = cell; // Stocker la cellule actuelle
-                    currentDay = day;
-                    currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
-                    currentCompetenceId = rowData.competence_id;
-
-                    // Afficher un tooltip vide ou effectuer une autre action
-                    showEmptyTooltip(event, null, null, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
-                });
-
-                row.appendChild(cell);
-            });
-
-            tableBody.appendChild(row);
-        });
-
-        // Appeler les fonctions supplémentaires pour créer les tableaux
-        createAdditionalTable();
-        createCompetenceTable(semaine, annee, siteId);
-
-        // Activer le clic droit sur les cellules du tableau
-        enableRightClickOnTable();
-
+        // Appeler une fonction pour afficher les données dans le tableau
+        displayPlanningData(planningData, fermeturesData, commentsData, semaine, annee, siteId);
     } catch (error) {
         console.error('Erreur lors de la récupération des données du planning :', error);
         alert('Une erreur est survenue lors de la récupération des données du planning.');
     }
+}
+
+function displayPlanningData(planningData, fermeturesData, commentsData, semaine, annee, siteId) {
+    const tableBody = document.querySelector("#planningTable tbody");
+    tableBody.innerHTML = ''; // Vider le contenu du tableau
+
+    // Regrouper les données par compétence et horaire
+    const groupedData = planningData.reduce((acc, row) => {
+        const key = `${row.competence}-${row.horaire_debut}-${row.horaire_fin}`;
+        if (!acc[key]) {
+            acc[key] = { ...row, jours: {} };
+        }
+        if (row.jour_id) {
+            if (!acc[key].jours[row.jour_id]) {
+                acc[key].jours[row.jour_id] = [];
+            }
+            acc[key].jours[row.jour_id].push({ nom: row.nom, nom_id: row.nom_id });
+        }
+        return acc;
+    }, {});
+
+    // Associer les commentaires récupérés aux noms dans rowData.jours
+    const commentairesMap = {};
+    commentsData.forEach(comment => {
+        const key = `${comment.jour_id}-${comment.nom_id}`;
+        commentairesMap[key] = comment.commentaire;
+    });
+
+    Object.values(groupedData).forEach(rowData => {
+        Object.keys(rowData.jours).forEach(day => {
+            rowData.jours[day].forEach(entry => {
+                const key = `${day}-${entry.nom_id}`;
+                if (commentairesMap[key]) {
+                    entry.commentaire = commentairesMap[key];
+                }
+            });
+        });
+    });
+
+    // Trier les données regroupées par display_order, heure de début et heure de fin
+    const sortedData = Object.values(groupedData).sort((a, b) => {
+        if (a.display_order < b.display_order) return -1;
+        if (a.display_order > b.display_order) return 1;
+        if (a.horaire_debut < b.horaire_debut) return -1;
+        if (a.horaire_debut > b.horaire_debut) return 1;
+        if (a.horaire_fin < b.horaire_fin) return -1;
+        if (a.horaire_fin > b.horaire_fin) return 1;
+        return 0;
+    });
+
+    // Ajouter les données triées au tableau
+    sortedData.forEach((rowData) => {
+        console.log('Ajout de la ligne :', rowData);
+        const row = document.createElement("tr");
+        row.setAttribute('draggable', true); // Rendre la ligne draggable
+        row.addEventListener('dragstart', handleDragStart);
+        row.addEventListener('dragover', handleDragOver);
+        row.addEventListener('drop', handleDrop);
+
+        const modalitiesCell = document.createElement("td");
+        modalitiesCell.textContent = rowData.competence;
+        modalitiesCell.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence
+        modalitiesCell.dataset.displayOrder = rowData.display_order; // Utiliser l'ordre d'affichage depuis les données
+        console.log(`Compétence ID: ${rowData.competence_id}, Display Order: ${rowData.display_order}`); // Ajouter un log pour vérifier les valeurs
+        row.appendChild(modalitiesCell);
+
+        const horairesCell = document.createElement("td");
+        horairesCell.textContent = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+        row.appendChild(horairesCell);
+
+        const days = ['1', '2', '3', '4', '5', '6', '7']; // Utiliser les IDs des jours
+        days.forEach(day => {
+            const cell = document.createElement("td");
+            cell.dataset.jourId = day; // Ajouter l'ID du jour
+            cell.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence
+            cell.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début
+            cell.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin
+
+            // Vérifie si la cellule contient des données
+            if (rowData.jours[day]) {
+                console.log(`Données pour le jour ${day} :`, rowData.jours[day]);
+
+                const pairs = {};
+
+                // Créer des paires commentaire-nom regroupées par nom_id
+                rowData.jours[day].forEach(({ nom, nom_id, commentaire }) => {
+                    if (!pairs[nom_id]) {
+                        pairs[nom_id] = { nom: undefined, commentaire: undefined };
+                    }
+                    if (nom) {
+                        pairs[nom_id].nom = nom;
+                    }
+                    if (commentaire) {
+                        pairs[nom_id].commentaire = commentaire;
+                    }
+                });
+
+                console.log(`Paires générées pour le jour ${day} :`, pairs);
+
+                // Ajouter chaque paire dans un conteneur
+                Object.entries(pairs).forEach(([nom_id, { nom, commentaire }]) => {
+                    const container = document.createElement('div');
+
+                    if (commentaire) {
+                        console.log(`Ajout du commentaire : ${commentaire}`);
+                        const commentDiv = document.createElement('div');
+                        commentDiv.textContent = commentaire;
+                        commentDiv.style.fontWeight = 'bold'; // Changer le style pour gras
+                        container.appendChild(commentDiv);
+                    }
+
+                    if (nom) {
+                        const div = document.createElement('div');
+                        div.textContent = nom;
+                        div.dataset.nomId = nom_id || null; // Ajouter l'ID du nom comme attribut de données
+                        div.dataset.nom = nom || null; // Ajouter le nom comme attribut de données
+                        div.dataset.jourId = day; // Ajouter l'ID du jour comme attribut de données
+                        div.dataset.competenceId = rowData.competence_id; // Ajouter l'ID de la compétence comme attribut de données
+                        div.dataset.horaireDebut = rowData.horaire_debut; // Ajouter l'horaire de début comme attribut de données
+                        div.dataset.horaireFin = rowData.horaire_fin; // Ajouter l'horaire de fin comme attribut de données
+
+                        console.log("Attributs ajoutés au div :", {
+                            "data-nom": div.dataset.nom,
+                            "data-nom-id": div.dataset.nomId,
+                            "data-jour-id": div.dataset.jourId,
+                            "data-competence-id": div.dataset.competenceId,
+                            "data-horaire-debut": div.dataset.horaireDebut,
+                            "data-horaire-fin": div.dataset.horaireFin
+                        });
+
+                        container.appendChild(div);
+
+                        // Gestionnaire de clic gauche
+                        div.addEventListener('click', (event) => {
+                            console.log(`Clic gauche détecté sur la cellule : ${day}, ${rowData.competence_id}`);
+                            currentCell = cell; // Stocker la cellule actuelle
+                            currentDay = day;
+                            currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+                            currentCompetenceId = rowData.competence_id;
+
+                            // Appeler fetchNomIds pour afficher le tooltip ou effectuer une autre action
+                            fetchNomIds(rowData.competence_id, event);
+                        });
+                    }
+
+                    cell.appendChild(container);
+                });
+            }
+
+            // Gestionnaire de clic pour les cases vides
+            cell.addEventListener('click', (event) => {
+                console.log(`Clic gauche détecté sur une case vide : ${day}`);
+                currentCell = cell; // Stocker la cellule actuelle
+                currentDay = day;
+                currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
+                currentCompetenceId = rowData.competence_id;
+
+                // Afficher un tooltip vide ou effectuer une autre action
+                showEmptyTooltip(event, null, null, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
+            });
+
+            row.appendChild(cell);
+        });
+
+        tableBody.appendChild(row);
+    });
+
+    // Appeler les fonctions supplémentaires pour créer les tableaux
+    createAdditionalTable();
+    createCompetenceTable(semaine, annee, siteId);
+
+    // Activer le clic droit sur les cellules du tableau
+    enableRightClickOnTable();
 }
 
 // Fonction pour supprimer un nom du planning

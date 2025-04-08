@@ -5,14 +5,14 @@ const authenticateToken = require('../middleware/auth'); // Importer le middlewa
 
 
 router.get('/planning-data', authenticateToken, (req, res) => {
-    const { semaine, annee } = req.query;
-    const siteId = req.user.siteIds[0]; // Utiliser le premier site_id du tableau
+    const { semaine, annee, site_id } = req.query;
+    const userSiteIds = req.user.siteIds;
 
-    console.log('Paramètres reçus :', { semaine, annee, siteId });
+    console.log('Requête reçue pour /planning-data :', { semaine, annee, site_id, userSiteIds });
 
-    if (!semaine || !annee || !siteId) {
-        console.error('Erreur : paramètres manquants.');
-        return res.status(400).send('Les champs "semaine", "annee" et "site_id" sont requis');
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé ou manquant');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     const query = `
@@ -32,22 +32,13 @@ router.get('/planning-data', authenticateToken, (req, res) => {
         ORDER BY o.display_order ASC, c.competence ASC, h.horaire_debut ASC, h.horaire_fin ASC, p.jour_id ASC
     `;
 
-    console.log('Requête SQL exécutée :', query);
-    console.log('Paramètres SQL :', [siteId, semaine, annee, siteId, siteId]);
-
-    connection.query(query, [siteId, semaine, annee, siteId, siteId], (err, results) => {
+    connection.query(query, [site_id, semaine, annee, site_id, site_id], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données du planning :', err.message);
-            return res.status(500).send('Erreur lors de la récupération des données du planning');
+            return res.status(500).send('Erreur lors de la récupération des données du planning.');
         }
 
-        console.log('Résultats SQL :', results);
-
-        if (!results || results.length === 0) {
-            console.warn('Aucune donnée trouvée pour le planning.');
-            return res.status(404).send('Aucune donnée trouvée pour le planning.');
-        }
-
+        console.log('Données du planning récupérées :', results);
         res.json(results);
     });
 });
