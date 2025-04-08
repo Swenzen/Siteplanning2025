@@ -97,21 +97,36 @@ router.post('/delete-nom', authenticateToken, (req, res) => {
 
 
 router.get('/data', authenticateToken, (req, res) => {
-    const siteIds = req.user.siteIds;
+    const siteId = req.query.site_id; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
+
+    console.log('SiteId reçu :', siteId);
+    console.log('SiteIds autorisés :', userSiteIds);
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(siteId)) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
 
     const query = `
-    SELECT t.nom_id, t.nom, s.site_name
-    FROM Tnom t
-    JOIN Tnom_Tsite nts ON t.nom_id = nts.nom_id
-    JOIN Tsite s ON nts.site_id = s.site_id
-    WHERE nts.site_id = ?
-`;
+        SELECT t.nom_id, t.nom, s.site_name
+        FROM Tnom t
+        JOIN Tnom_Tsite nts ON t.nom_id = nts.nom_id
+        JOIN Tsite s ON nts.site_id = s.site_id
+        WHERE nts.site_id = ?
+    `;
 
-    connection.query(query, [siteIds], (err, results) => {
+    console.log('Requête SQL exécutée :', query);
+    console.log('Paramètres SQL :', [siteId]);
+
+    connection.query(query, [siteId], (err, results) => {
         if (err) {
+            console.error('Erreur lors de la récupération des données :', err.message);
             return res.status(500).send('Erreur lors de la récupération des données');
         }
 
+        console.log('Données récupérées :', results);
         res.json(results);
     });
 });

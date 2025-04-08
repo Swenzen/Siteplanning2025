@@ -126,5 +126,80 @@ async function loadSiteOptions() {
     }
 }
 
+
+document.addEventListener("DOMContentLoaded", () => {
+    const siteSelector = document.getElementById("siteSelector");
+
+    // Charger le site sélectionné depuis sessionStorage
+    const savedSite = sessionStorage.getItem("selectedSite");
+    if (savedSite) {
+        siteSelector.value = savedSite; // Restaurer la sélection
+    }
+
+    // Écouter les changements dans le menu déroulant
+    siteSelector.addEventListener("change", (event) => {
+        const selectedSite = event.target.value;
+
+        // Enregistrer le site sélectionné dans sessionStorage
+        sessionStorage.setItem("selectedSite", selectedSite);
+
+        // Réactualiser la page
+        window.location.reload();
+    });
+});
+
+async function loadSiteOptions() {
+    const token = localStorage.getItem('token');
+    console.log('Token récupéré :', token);
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/site', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erreur lors de la récupération des sites : ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Sites récupérés :', data);
+
+        // Vérifiez si `data.site` est un tableau
+        if (!Array.isArray(data.site)) {
+            throw new Error('La réponse de /api/site ne contient pas un tableau de sites.');
+        }
+
+        const siteSelector = document.getElementById('siteSelector');
+        siteSelector.innerHTML = ''; // Vider les options existantes
+
+        data.site.forEach(site => {
+            const option = document.createElement('option');
+            option.value = site.site_id;
+            option.textContent = site.site_name;
+            siteSelector.appendChild(option);
+        });
+
+        // Restaurer la sélection depuis sessionStorage
+        const savedSite = sessionStorage.getItem("selectedSite");
+        if (savedSite) {
+            siteSelector.value = savedSite;
+        } else if (data.site.length > 0) {
+            // Si aucun site n'est enregistré, sélectionner le premier par défaut
+            siteSelector.value = data.site[0].site_id;
+            sessionStorage.setItem("selectedSite", data.site[0].site_id);
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des sites :', error);
+    }
+}
+
 // Appeler la fonction au chargement de la page
 document.addEventListener('DOMContentLoaded', loadSiteOptions);

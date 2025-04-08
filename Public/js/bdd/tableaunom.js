@@ -1,60 +1,67 @@
 let currentCell = null;
 let currentId = null;
 
-// Fonction pour afficher les données dans le tableau des noms *
 async function fetchData() {
-    const token = localStorage.getItem('token'); // Récupérer le jeton depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
+        return;
+    }
 
     try {
         const response = await fetch(`/api/data?site_id=${siteId}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
                 'Content-Type': 'application/json'
             }
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Données récupérées :', data);
-
-            const tableBody = document.querySelector("#databaseTable tbody");
-            tableBody.innerHTML = ''; // Vider le contenu du tableau
-
-            // Ajouter les données récupérées au tableau
-            data.forEach(rowData => {
-                const row = document.createElement("tr");
-
-                // Ajouter les colonnes pour chaque donnée
-                const nomCell = document.createElement("td");
-                nomCell.textContent = rowData.nom;
-                row.appendChild(nomCell);
-
-                const siteCell = document.createElement("td");
-                siteCell.textContent = rowData.site_name;
-                row.appendChild(siteCell);
-
-                // Ajouter une colonne pour les actions (bouton "Supprimer")
-                const actionCell = document.createElement("td");
-                const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Supprimer";
-                console.log('Données de la ligne :', rowData);
-                deleteButton.dataset.nomId = rowData.nom_id; // Stocker l'ID du nom dans le bouton
-deleteButton.classList.add("delete-button"); // Ajouter une classe pour le style
-                console.log('Bouton de suppression créé avec nom_id :', rowData.nom_id);
-                actionCell.appendChild(deleteButton);
-                row.appendChild(actionCell);
-
-                tableBody.appendChild(row);
-            });
-        } else {
-            console.error('Erreur lors de la récupération des données');
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des données');
         }
+
+        const data = await response.json();
+        console.log('Données récupérées :', data);
+
+        const tableBody = document.querySelector("#databaseTable tbody");
+        tableBody.innerHTML = ''; // Vider le contenu du tableau
+
+        // Ajouter les données récupérées au tableau
+        data.forEach(rowData => {
+            const row = document.createElement("tr");
+
+            // Ajouter les colonnes pour chaque donnée
+            const nomCell = document.createElement("td");
+            nomCell.textContent = rowData.nom;
+            row.appendChild(nomCell);
+
+            const siteCell = document.createElement("td");
+            siteCell.textContent = rowData.site_name;
+            row.appendChild(siteCell);
+
+            // Ajouter une colonne pour les actions (bouton "Supprimer")
+            const actionCell = document.createElement("td");
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Supprimer";
+            deleteButton.dataset.nomId = rowData.nom_id; // Stocker l'ID du nom dans le bouton
+            deleteButton.classList.add("delete-button"); // Ajouter une classe pour le style
+            actionCell.appendChild(deleteButton);
+            row.appendChild(actionCell);
+
+            tableBody.appendChild(row);
+        });
     } catch (error) {
         console.error('Erreur lors de la requête :', error);
     }
 }
+
+// Appeler la fonction pour récupérer les données lorsque la page est chargée
+document.addEventListener('DOMContentLoaded', () => {
+    fetchData(); // Charger les données pour le site sélectionné
+});
 
 // Fonction pour afficher la fenêtre modale
 function showModal() {
