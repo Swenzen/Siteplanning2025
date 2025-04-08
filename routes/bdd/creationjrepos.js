@@ -1,29 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const connection = require('../../db'); // Assurez-vous que le chemin est correct
+const authenticateToken = require('../../middleware/auth'); // Importer le middleware d'authentification
 
 //table ok ajout
 
-router.post('/create-repos-table', async (req, res) => {
+router.post('/create-repos-table', authenticateToken, async (req, res) => {
     const { nomRepos } = req.body;
-    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
-    const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
+    const siteId = req.body.site_id; // Récupérer le site_id depuis le corps de la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    console.log('Données reçues :', { nomRepos, siteId });
+    console.log('Données reçues pour /create-repos-table :', { nomRepos, siteId, userSiteIds });
 
     if (!nomRepos || !siteId) {
-        console.error('Nom du repos ou site_id manquant.');
         return res.status(400).send('Nom du repos ou site_id manquant.');
     }
 
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(siteId))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
+
     try {
-        // Vérifier si le repos existe déjà dans Trepos
+        // Vérifier si le repos existe déjà
         const checkReposQuery = `SELECT repos_id FROM Trepos WHERE repos = ?`;
         const [reposResult] = await connection.promise().query(checkReposQuery, [nomRepos]);
 
         let reposId;
         if (reposResult.length === 0) {
-            // Ajouter le repos dans Trepos
+            // Ajouter le repos
             const insertReposQuery = `INSERT INTO Trepos (repos) VALUES (?)`;
             const [insertResult] = await connection.promise().query(insertReposQuery, [nomRepos]);
             reposId = insertResult.insertId;
@@ -31,7 +37,7 @@ router.post('/create-repos-table', async (req, res) => {
             reposId = reposResult[0].repos_id;
         }
 
-        // Lier le repos au site dans Trepos_Tsite
+        // Lier le repos au site
         const linkReposQuery = `INSERT IGNORE INTO Trepos_Tsite (repos_id, site_id) VALUES (?, ?)`;
         await connection.promise().query(linkReposQuery, [reposId, siteId]);
 
@@ -43,24 +49,19 @@ router.post('/create-repos-table', async (req, res) => {
 });
 
 // Route pour récupérer les repos liés à un site
-router.get('/get-repos', async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
-    const siteId = req.headers['site-id']; // Récupérer le site_id depuis les en-têtes
+router.get('/get-repos', authenticateToken, async (req, res) => {
+    const siteId = req.query.site_id; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!token) {
-        console.error('Token manquant.');
-        return res.status(401).send('Authentification requise.');
-    }
+    console.log('Requête reçue pour /get-repos :', { siteId, userSiteIds });
 
-    if (!siteId) {
-        console.error('site_id manquant.');
-        return res.status(400).send('site_id manquant.');
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!siteId || !userSiteIds.includes(String(siteId))) {
+        console.error('Accès refusé : site_id non autorisé ou manquant');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     try {
-        console.log('Token reçu :', token);
-        console.log('site_id reçu :', siteId);
-
         const query = `
             SELECT r.repos_id, r.repos
             FROM Trepos r
@@ -77,20 +78,32 @@ router.get('/get-repos', async (req, res) => {
     }
 });
 
-// Route pour supprimer une table de repos
-router.post('/delete-repos-table', (req, res) => {
-    const { tableName } = req.body;
+router.post('/delete-repos-table', authenticateToken, async (req, res) => {
+    const { repos_id, site_id } = req.body; // Récupérer les données nécessaires
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    const query = `DROP TABLE ??`;
+    console.log('Données reçues pour /delete-repos-table :', { repos_id, site_id, userSiteIds });
 
-    connection.query(query, [tableName], (err, result) => {
-        if (err) {
-            console.error('Erreur lors de la suppression de la table de repos :', err.message);
-            res.status(500).send(`Erreur lors de la suppression de la table de repos : ${err.message}`);
-        } else {
-            res.send('Table de repos supprimée avec succès');
-        }
-    });
+    if (!repos_id || !site_id) {
+        return res.status(400).send('Repos_id ou site_id manquant.');
+    }
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
+
+    try {
+        // Supprimer la liaison entre le repos et le site
+        const deleteLinkQuery = `DELETE FROM Trepos_Tsite WHERE repos_id = ? AND site_id = ?`;
+        await connection.promise().query(deleteLinkQuery, [repos_id, site_id]);
+
+        res.send('Repos supprimé avec succès.');
+    } catch (error) {
+        console.error('Erreur lors de la suppression du repos :', error.message);
+        res.status(500).send('Erreur lors de la suppression du repos.');
+    }
 });
 
 // Route pour ajouter des données dans Tplanning_Trepos_Tsite
