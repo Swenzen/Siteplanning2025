@@ -44,18 +44,23 @@ router.get('/planning-data', authenticateToken, (req, res) => {
 });
 
 // Route pour insérer ou mettre à jour le planning
+
 router.post('/update-planning', authenticateToken, (req, res) => {
-    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom } = req.body;
-    const site_id = req.user.siteIds[0]; // Récupérer le site_id depuis le token JWT
+    const { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id } = req.body;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    console.log('Données reçues pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id });
+    console.log('Données reçues pour la mise à jour du planning :', { semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom, site_id, userSiteIds });
 
-    if (!site_id) {
-        console.error('Erreur : site_id est requis.');
-        return res.status(400).send('Erreur : site_id est requis.');
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
-    // Première requête : insérer ou mettre à jour dans Tplanning
+    if (!semaine || !annee || !jour_id || !horaire_debut || !horaire_fin || !competence_id || !nom) {
+        console.error('Données manquantes pour la mise à jour du planning.');
+        return res.status(400).send('Données manquantes pour la mise à jour du planning.');
+    }
+
     const insertPlanningQuery = `
         INSERT INTO Tplanning (semaine, annee, jour_id, horaire_id, competence_id, nom_id)
         VALUES (?, ?, ?, 
@@ -66,43 +71,34 @@ router.post('/update-planning', authenticateToken, (req, res) => {
         ON DUPLICATE KEY UPDATE
             horaire_id = VALUES(horaire_id),
             competence_id = VALUES(competence_id),
-            nom_id = VALUES(nom_id);
+            nom_id = VALUES(nom_id)
     `;
 
-    const planningParams = [
-        semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom
-    ];
+    const planningParams = [semaine, annee, jour_id, horaire_debut, horaire_fin, competence_id, nom];
 
-    // Deuxième requête : insérer ou mettre à jour dans Tplanning_Tsite
-    const insertPlanningTsiteQuery = `
-        INSERT INTO Tplanning_Tsite (planning_id, site_id)
-        SELECT p.planning_id, ?
-        FROM Tplanning p
-        WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND p.horaire_id = (SELECT horaire_id FROM Thoraire WHERE horaire_debut = ? AND horaire_fin = ? LIMIT 1)
-        ON DUPLICATE KEY UPDATE site_id = VALUES(site_id);
-    `;
-
-    const planningTsiteParams = [
-        site_id, semaine, annee, jour_id, horaire_debut, horaire_fin
-    ];
-
-    // Exécuter les deux requêtes séquentiellement
     connection.query(insertPlanningQuery, planningParams, (err, result) => {
         if (err) {
-            console.error('Erreur lors de l\'insertion ou de la mise à jour dans Tplanning :', err.message);
-            return res.status(500).send('Erreur lors de l\'insertion ou de la mise à jour dans Tplanning');
+            console.error('Erreur lors de la mise à jour du planning :', err.message);
+            return res.status(500).send('Erreur lors de la mise à jour du planning.');
         }
 
-        console.log('Résultat de la mise à jour dans Tplanning :', result);
+        console.log('Planning mis à jour avec succès :', result);
 
-        connection.query(insertPlanningTsiteQuery, planningTsiteParams, (err, result) => {
+        const insertPlanningSiteQuery = `
+            INSERT INTO Tplanning_Tsite (planning_id, site_id)
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE site_id = VALUES(site_id)
+        `;
+
+        const planningId = result.insertId;
+        connection.query(insertPlanningSiteQuery, [planningId, site_id], (err) => {
             if (err) {
-                console.error('Erreur lors de l\'insertion ou de la mise à jour dans Tplanning_Tsite :', err.message);
-                return res.status(500).send('Erreur lors de l\'insertion ou de la mise à jour dans Tplanning_Tsite');
+                console.error('Erreur lors de la mise à jour de Tplanning_Tsite :', err.message);
+                return res.status(500).send('Erreur lors de la mise à jour de Tplanning_Tsite.');
             }
 
-            console.log('Résultat de la mise à jour dans Tplanning_Tsite :', result);
-            res.send('Planning inséré ou mis à jour avec succès');
+            console.log('Tplanning_Tsite mis à jour avec succès.');
+            res.send('Planning mis à jour avec succès.');
         });
     });
 });

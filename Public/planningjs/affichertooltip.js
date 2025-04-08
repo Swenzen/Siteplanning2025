@@ -1,18 +1,15 @@
 // Fonction pour récupérer les noms disponibles pour une compétence donnée dans le tooltip
 async function fetchNomIds(competenceId, event) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
     if (!token) {
         console.error('Erreur : aucun token trouvé.');
         return;
     }
 
-    // Décoder le token pour récupérer le site_id
-    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Décoder le payload du token
-    const siteId = decodedToken.siteIds[0]; // Utiliser le premier site_id du token
-
     if (!siteId) {
-        console.error('Erreur : aucun site_id trouvé dans le token.');
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
         return;
     }
 
@@ -32,7 +29,8 @@ async function fetchNomIds(competenceId, event) {
         });
 
         if (!response.ok) {
-            throw new Error(`Erreur lors de la récupération des noms : ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la récupération des noms : ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
@@ -42,6 +40,7 @@ async function fetchNomIds(competenceId, event) {
         showTooltip(event, data);
     } catch (error) {
         console.error('Erreur lors de la récupération des noms :', error);
+        alert('Une erreur est survenue lors de la récupération des noms.');
     }
 }
 
@@ -50,26 +49,29 @@ function showTooltip(event, noms) {
     const tooltip = document.getElementById("tooltip");
     tooltip.innerHTML = noms.map(nom => `<div class="tooltip-date">${nom}</div>`).join('');
     tooltip.style.display = 'block';
-    tooltip.style.left = `${event.pageX + 10}px`; // Slight offset for better visibility
-    tooltip.style.top = `${event.pageY + 10}px`; // Slight offset for better visibility
+    tooltip.style.left = `${event.pageX + 10}px`; // Décalage pour une meilleure visibilité
+    tooltip.style.top = `${event.pageY + 10}px`; // Décalage pour une meilleure visibilité
 
     // Ajouter un gestionnaire de clics aux éléments de date dans le tooltip
     document.querySelectorAll('.tooltip-date').forEach(element => {
-        element.addEventListener('click', function() {
-            const div = document.createElement('div');
-            div.textContent = this.textContent;
-            currentCell.appendChild(div); // Ajouter le nouveau nom dans la cellule
-            const semaine = document.getElementById("weekNumber").value;
-            const annee = document.getElementById("yearNumber").value;
-            const jour_id = currentDay; // Utiliser l'ID du jour
-            const [horaire_debut, horaire_fin] = currentHorairesNom.split(' - '); // Séparer les horaires de début et de fin
-            updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fin, currentCompetenceId, this.textContent);
+        element.addEventListener('click', function () {
+            const nom = this.textContent; // Récupérer le nom sélectionné
+            console.log(`Nom sélectionné : ${nom}`);
             tooltip.style.display = 'none'; // Fermer le tooltip
+
+            // Appeler updatePlanning pour ajouter le nom dans la base de données
+            updatePlanning(
+                document.getElementById("weekNumber").value, // semaine
+                document.getElementById("yearNumber").value, // année
+                currentDay, // jour_id
+                currentHorairesNom.split(' - ')[0], // horaire_debut
+                currentHorairesNom.split(' - ')[1], // horaire_fin
+                currentCompetenceId, // competenceId
+                nom // nom
+            );
         });
     });
 }
-
-
 
 // Fonction pour afficher le tooltip vide et charger les noms disponibles
 function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId, horaireDebut, horaireFin) {
@@ -79,29 +81,22 @@ function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId,
     tooltip.style.left = `${event.pageX + 10}px`; // Décalage pour une meilleure visibilité
     tooltip.style.top = `${event.pageY + 10}px`;
 
-    // Récupérer le siteId depuis le localStorage
-    const siteId = localStorage.getItem('site_id');
-
     // Appeler fetchNomIds pour récupérer les noms disponibles
-    fetchNomIds(competenceId, siteId, event);
+    fetchNomIds(competenceId, event);
 }
-
 
 // Fonction pour mettre à jour le planning dans la base de données
 async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fin, competenceId, nom) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
     if (!token) {
         console.error('Erreur : aucun token trouvé.');
         return;
     }
 
-    // Décoder le token pour récupérer le site_id
-    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Décoder le payload du token
-    const siteId = decodedToken.siteIds ? decodedToken.siteIds[0] : null; // Utiliser le premier site_id du token
-
     if (!siteId) {
-        console.error('Erreur : aucun site_id trouvé dans le token.');
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
         return;
     }
 
@@ -118,7 +113,8 @@ async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fi
         });
 
         if (!response.ok) {
-            throw new Error(`Erreur lors de la mise à jour du planning : ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la mise à jour du planning : ${response.status} - ${errorText}`);
         }
 
         const result = await response.text();
@@ -128,5 +124,6 @@ async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fi
         fetchPlanningData();
     } catch (error) {
         console.error('Erreur lors de la mise à jour du planning :', error);
+        alert('Une erreur est survenue lors de la mise à jour du planning.');
     }
 }

@@ -6,11 +6,16 @@ const authenticateToken = require('../../middleware/auth'); // Middleware d'auth
 // Route pour récupérer les noms disponibles pour une compétence donnée
 router.get('/nom-ids', authenticateToken, (req, res) => {
     const { competence_id, semaine, annee, jour_id } = req.query;
+    const site_id = req.query.site_id; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    // Récupérer le site_id depuis le token JWT
-    const site_id = req.user.siteIds[0]; // Utiliser le premier site_id du token
+    console.log('Paramètres reçus :', { competence_id, site_id, semaine, annee, jour_id, userSiteIds });
 
-    console.log('Paramètres reçus :', { competence_id, site_id, semaine, annee, jour_id });
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
 
     const query = `
         SELECT DISTINCT n.nom
