@@ -1,7 +1,7 @@
 // Fonction pour afficher les horaires dans le tableau
 async function fetchHoraires() {
-    const token = localStorage.getItem('token');
-    const siteId = localStorage.getItem('site_id');
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
@@ -25,10 +25,11 @@ async function fetchHoraires() {
         console.log('Données récupérées :', data);
 
         const tableBody = document.querySelector("#horairesTable tbody");
-        tableBody.innerHTML = '';
+        tableBody.innerHTML = ''; // Vider le tableau avant d'ajouter les nouvelles données
 
         data.forEach(rowData => {
             const row = document.createElement("tr");
+
             const horaireDebutCell = document.createElement("td");
             horaireDebutCell.textContent = rowData.horaire_debut;
             row.appendChild(horaireDebutCell);
@@ -51,12 +52,11 @@ async function fetchHoraires() {
     }
 }
 
-// Fonction pour ajouter un horaire
 async function addHoraire() {
     const horaireDebut = prompt("Entrez l'horaire de début (HH:MM)");
     const horaireFin = prompt("Entrez l'horaire de fin (HH:MM)");
-    const token = localStorage.getItem('token');
-    const siteId = localStorage.getItem('site_id');
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
@@ -79,6 +79,7 @@ async function addHoraire() {
             });
 
             if (response.ok) {
+                console.log('Horaire ajouté avec succès');
                 fetchHoraires(); // Rafraîchir le tableau des horaires
                 fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
             } else {
@@ -90,12 +91,12 @@ async function addHoraire() {
     }
 }
 
-// Fonction pour supprimer un horaire
 async function deleteHoraire(horaire_id) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!token) {
-        console.error('Erreur : le token d\'authentification est introuvable.');
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
         return;
     }
 
@@ -107,17 +108,18 @@ async function deleteHoraire(horaire_id) {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ horaire_id })
+                body: JSON.stringify({ horaire_id, site_id: siteId })
             });
 
             if (response.ok) {
+                console.log('Horaire supprimé avec succès');
                 fetchHoraires(); // Rafraîchir le tableau des horaires
                 fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
             } else {
                 console.error('Erreur lors de la suppression de l\'horaire');
             }
         } catch (error) {
-            console.error('Erreur lors de la requête:', error);
+            console.error('Erreur lors de la requête :', error);
         }
     }
 }
