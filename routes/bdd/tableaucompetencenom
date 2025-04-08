@@ -5,10 +5,15 @@ const authenticateToken = require('../../middleware/auth');
 
 // Route pour récupérer les compétences des personnes par site (protégée)
 router.get('/competences-personnes', authenticateToken, (req, res) => {
-    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
+    const siteId = req.query.site_id; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!siteId) {
-        return res.status(400).send('Le site_id est introuvable dans le token');
+    console.log('Requête reçue pour /competences-personnes :', { siteId, userSiteIds });
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(siteId))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     const query = `
@@ -23,29 +28,24 @@ router.get('/competences-personnes', authenticateToken, (req, res) => {
     connection.query(query, [siteId, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des compétences des personnes :', err.message);
-            res.status(500).send('Erreur lors de la récupération des compétences des personnes');
-        } else {
-            if (!results || results.length === 0) {
-                console.error('Aucun nom trouvé pour ce site.');
-                return res.status(404).send('Aucun nom trouvé pour ce site.');
-            }
-
-            const groupedData = results.reduce((acc, row) => {
-                if (!acc[row.nom_id]) {
-                    acc[row.nom_id] = {
-                        nom_id: row.nom_id,
-                        nom: row.nom,
-                        competences: []
-                    };
-                }
-                if (row.competence_id) {
-                    acc[row.nom_id].competences.push(row.competence_id);
-                }
-                return acc;
-            }, {});
-
-            res.json(Object.values(groupedData));
+            return res.status(500).send('Erreur lors de la récupération des compétences des personnes');
         }
+
+        const groupedData = results.reduce((acc, row) => {
+            if (!acc[row.nom_id]) {
+                acc[row.nom_id] = {
+                    nom_id: row.nom_id,
+                    nom: row.nom,
+                    competences: []
+                };
+            }
+            if (row.competence_id) {
+                acc[row.nom_id].competences.push(row.competence_id);
+            }
+            return acc;
+        }, {});
+
+        res.json(Object.values(groupedData));
     });
 });
 
@@ -66,13 +66,20 @@ router.get('/competences', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour ajouter une compétence à une personne pour un site (protégée)
 router.post('/add-competence', authenticateToken, (req, res) => {
-    const { nom_id, competence_id } = req.body;
-    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
+    const { nom_id, competence_id, site_id } = req.body;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!nom_id || !competence_id || !siteId) {
+    console.log('Requête reçue pour /add-competence :', { nom_id, competence_id, site_id, userSiteIds });
+
+    if (!nom_id || !competence_id || !site_id) {
         return res.status(400).send('Les champs "nom_id", "competence_id" et "site_id" sont requis');
+    }
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
     const query = `
@@ -80,23 +87,31 @@ router.post('/add-competence', authenticateToken, (req, res) => {
         VALUES (?, ?, ?)
     `;
 
-    connection.query(query, [nom_id, competence_id, siteId], (err) => {
+    connection.query(query, [nom_id, competence_id, site_id], (err) => {
         if (err) {
             console.error('Erreur lors de l\'ajout de la compétence :', err.message);
-            res.status(500).send('Erreur lors de l\'ajout de la compétence');
-        } else {
-            res.send('Compétence ajoutée avec succès');
+            return res.status(500).send('Erreur lors de l\'ajout de la compétence');
         }
+
+        res.send('Compétence ajoutée avec succès');
     });
 });
 
 // Route pour supprimer une compétence d'une personne pour un site (protégée)
 router.post('/delete-competence2', authenticateToken, (req, res) => {
-    const { nom_id, competence_id } = req.body;
-    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
+    const { nom_id, competence_id, site_id } = req.body;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!nom_id || !competence_id || !siteId) {
+    console.log('Requête reçue pour /delete-competence2 :', { nom_id, competence_id, site_id, userSiteIds });
+
+    if (!nom_id || !competence_id || !site_id) {
         return res.status(400).send('Les champs "nom_id", "competence_id" et "site_id" sont requis');
+    }
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
     const query = `
@@ -104,13 +119,13 @@ router.post('/delete-competence2', authenticateToken, (req, res) => {
         WHERE nom_id = ? AND competence_id = ? AND site_id = ?
     `;
 
-    connection.query(query, [nom_id, competence_id, siteId], (err) => {
+    connection.query(query, [nom_id, competence_id, site_id], (err) => {
         if (err) {
             console.error('Erreur lors de la suppression de la compétence :', err.message);
-            res.status(500).send('Erreur lors de la suppression de la compétence');
-        } else {
-            res.send('Compétence supprimée avec succès');
+            return res.status(500).send('Erreur lors de la suppression de la compétence');
         }
+
+        res.send('Compétence supprimée avec succès');
     });
 });
 

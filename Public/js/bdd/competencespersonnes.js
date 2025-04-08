@@ -1,20 +1,27 @@
 // Fonction pour afficher les compétences des personnes dans le tableau
+// Fonction pour afficher les compétences des personnes dans le tableau
 async function fetchCompetencesPersonnes() {
-    const siteId = localStorage.getItem('site_id');
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!siteId || !token) {
-        console.error('Erreur : site_id ou token manquant.');
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
         return;
     }
 
     try {
         const [competencesResponse, personnesResponse] = await Promise.all([
-            fetch(`/api/competences`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            fetch(`/api/competences?site_id=${siteId}`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             }),
-            fetch(`/api/competences-personnes`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            fetch(`/api/competences-personnes?site_id=${siteId}`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             })
         ]);
 
@@ -61,12 +68,13 @@ async function fetchCompetencesPersonnes() {
 }
 
 // Fonction pour ajouter ou supprimer une compétence pour une personne
+// Fonction pour ajouter ou supprimer une compétence pour une personne
 async function toggleCompetence(nom_id, competence_id, cell) {
-    const siteId = localStorage.getItem('site_id');
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!siteId || !token) {
-        console.error('Erreur : site_id ou token manquant.');
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
         return;
     }
 
@@ -78,13 +86,14 @@ async function toggleCompetence(nom_id, competence_id, cell) {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nom_id, competence_id })
+                body: JSON.stringify({ nom_id, competence_id, site_id: siteId })
             });
 
             if (response.ok) {
                 cell.textContent = '';
             } else {
-                console.error('Erreur lors de la suppression de la compétence');
+                const error = await response.text();
+                console.error('Erreur lors de la suppression de la compétence :', error);
             }
         } else {
             const response = await fetch('/api/add-competence', {
@@ -93,13 +102,14 @@ async function toggleCompetence(nom_id, competence_id, cell) {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nom_id, competence_id })
+                body: JSON.stringify({ nom_id, competence_id, site_id: siteId })
             });
 
             if (response.ok) {
                 cell.textContent = '✔';
             } else {
-                console.error('Erreur lors de l\'ajout de la compétence');
+                const error = await response.text();
+                console.error('Erreur lors de l\'ajout de la compétence :', error);
             }
         }
     } catch (error) {
