@@ -1,14 +1,22 @@
 // Fonction pour récupérer les noms disponibles pour les vacances
+// Fonction pour récupérer les noms disponibles pour les vacances
 async function fetchNomIdsVacances(event) {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
         return;
     }
+
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
+        return;
+    }
+
+    console.log('Données envoyées pour fetchNomIdsVacances :', { semaine, annee, siteId });
 
     try {
         const response = await fetch(`/api/nom-ids-vacances?semaine=${semaine}&annee=${annee}&site_id=${siteId}`, {
@@ -20,7 +28,8 @@ async function fetchNomIdsVacances(event) {
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des noms disponibles pour les vacances');
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la récupération des noms disponibles pour les vacances : ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
@@ -56,10 +65,15 @@ function showTooltipVacances(event, noms) {
 // Fonction pour ajouter un nom aux vacances
 async function addVacances(semaine, annee, nom) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
+        return;
+    }
+
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
         return;
     }
 
@@ -76,7 +90,8 @@ async function addVacances(semaine, annee, nom) {
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de l\'ajout dans Tvacances');
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de l'ajout dans Tvacances : ${response.status} - ${errorText}`);
         }
 
         const result = await response.text();
@@ -86,13 +101,14 @@ async function addVacances(semaine, annee, nom) {
         fetchVacancesData();
     } catch (error) {
         console.error('Erreur lors de l\'ajout dans Tvacances :', error);
+        alert('Une erreur est survenue lors de l\'ajout dans Tvacances.');
     }
 }
 
 // Fonction pour supprimer un nom des vacances
 async function removeVacances(semaine, annee, nom) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');

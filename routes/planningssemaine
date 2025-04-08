@@ -148,33 +148,50 @@ router.post('/remove-planning', authenticateToken, (req, res) => {
         res.send('Planning supprimé avec succès.');
     });
 });
-// Route pour récupérer les noms disponibles pour les vacances
+
+
 router.get('/nom-ids-vacances', authenticateToken, (req, res) => {
-    const { semaine, annee } = req.query;
-    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token utilisateur
+    const { semaine, annee, site_id } = req.query;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
+
+    console.log('Requête reçue pour /nom-ids-vacances :', { semaine, annee, site_id, userSiteIds });
+
+    // Vérifier que le site_id est fourni et que l'utilisateur y a accès
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé ou manquant.');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
+
+    if (!semaine || !annee) {
+        console.error('Erreur : Les paramètres "semaine" et "annee" sont requis.');
+        return res.status(400).send('Erreur : Les paramètres "semaine" et "annee" sont requis.');
+    }
 
     const query = `
         SELECT n.nom
         FROM Tnom n
         JOIN Tnom_Tsite nts ON n.nom_id = nts.nom_id
-        WHERE nts.site_id = ? -- Vérifier que le nom est associé au site
+        WHERE nts.site_id = ?
         AND n.nom_id NOT IN (
             SELECT v.nom_id
             FROM Tvacances v
-            JOIN Tvacances_Tsite vt ON v.vacances_id = vt.vacances_id
-            WHERE v.semaine = ? AND v.annee = ? AND vt.site_id = ?
+            WHERE v.semaine = ? AND v.annee = ?
         )
     `;
 
-    connection.query(query, [siteId, semaine, annee, siteId], (err, results) => {
+    connection.query(query, [site_id, semaine, annee], (err, results) => {
         if (err) {
-            console.error('Erreur lors de la récupération des noms :', err.message);
-            res.status(500).send('Erreur lors de la récupération des noms');
-        } else {
-            res.json(results.map(row => row.nom));
+            console.error('Erreur lors de la récupération des noms disponibles pour les vacances :', err.message);
+            return res.status(500).send('Erreur lors de la récupération des noms disponibles pour les vacances.');
         }
+
+        console.log('Noms disponibles récupérés :', results);
+        res.json(results.map(row => row.nom));
     });
 });
+
+
+
 // Route pour ajouter une entrée dans Tvacances
 router.post('/add-vacances', authenticateToken, (req, res) => {
     const { semaine, annee, nom, site_id } = req.body;
@@ -257,9 +274,24 @@ router.get('/vacances-data', authenticateToken, (req, res) => {
     });
 });
 
+
 // Route pour supprimer une entrée dans Tvacances
 router.post('/remove-vacances', authenticateToken, (req, res) => {
     const { semaine, annee, nom, site_id } = req.body;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
+
+    console.log('Requête reçue pour /remove-vacances :', { semaine, annee, nom, site_id, userSiteIds });
+
+    // Vérifier que le site_id est fourni et que l'utilisateur y a accès
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé ou manquant.');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
+
+    if (!semaine || !annee || !nom) {
+        console.error('Erreur : Les champs "semaine", "annee" et "nom" sont requis.');
+        return res.status(400).send('Erreur : Les champs "semaine", "annee" et "nom" sont requis.');
+    }
 
     const query = `
         DELETE v, vt
@@ -272,10 +304,16 @@ router.post('/remove-vacances', authenticateToken, (req, res) => {
     connection.query(query, [semaine, annee, nom, site_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression dans Tvacances :', err.message);
-            res.status(500).send(`Erreur lors de la suppression dans Tvacances : ${err.message}`);
-        } else {
-            res.send('Vacances supprimées avec succès');
+            return res.status(500).send(`Erreur lors de la suppression dans Tvacances : ${err.message}`);
         }
+
+        if (result.affectedRows === 0) {
+            console.warn('Aucune entrée trouvée à supprimer.');
+            return res.status(404).send('Aucune entrée trouvée à supprimer.');
+        }
+
+        console.log('Vacances supprimées avec succès.');
+        res.send('Vacances supprimées avec succès.');
     });
 });
 
