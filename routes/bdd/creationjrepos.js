@@ -138,13 +138,13 @@ router.post('/add-repos-data', authenticateToken, async (req, res) => {
 
         // Étape 2 : Insérer la liaison dans Tplanning_TRepos_Tsite
         const linkQuery = `
-            INSERT INTO Tplanning_TRepos_Tsite (planning_id, repos_id, site_id)
+            INSERT INTO Tplanning_Trepos_Tsite (planning_id, repos_id, site_id)
             VALUES (?, ?, ?)
             ON DUPLICATE KEY UPDATE planning_id = VALUES(planning_id)
         `;
         await connection.promise().query(linkQuery, [planningId, tableName, site_id]);
 
-        console.log('Liaison ajoutée avec succès dans Tplanning_TRepos_Tsite.');
+        console.log('Liaison ajoutée avec succès dans Tplanning_Trepos_Tsite.');
         res.send('Repos ajouté au planning avec succès.');
     } catch (error) {
         console.error('Erreur lors de l\'ajout au planning :', error.message);
@@ -212,7 +212,7 @@ router.get('/repos-data', authenticateToken, async (req, res) => {
                 tn.nom_id, 
                 tp.jour_id, -- Correction ici
                 tr.repos
-            FROM Tplanning_TRepos_Tsite tpt
+            FROM Tplanning_Trepos_Tsite tpt
             LEFT JOIN Tplanning tp ON tpt.planning_id = tp.planning_id
             LEFT JOIN Tnom tn ON tp.nom_id = tn.nom_id
             LEFT JOIN Trepos tr ON tpt.repos_id = tr.repos_id
@@ -247,7 +247,7 @@ router.post('/remove-repos-data', authenticateToken, async (req, res) => {
 
     try {
         const query = `
-            DELETE FROM Tplanning_TRepos_Tsite
+            DELETE FROM Tplanning_Trepos_Tsite
             WHERE planning_id = (
                 SELECT planning_id
                 FROM Tplanning
