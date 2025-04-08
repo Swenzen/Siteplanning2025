@@ -233,22 +233,41 @@ router.get('/repos-data', authenticateToken, async (req, res) => {
     }
 });
 
-// Route pour supprimer une valeur dans Tplanning_Trepos_Tsite
-router.post('/remove-repos-data', async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1]; // Récupérer le token
-    const { reposId, siteId } = req.body; // Récupérer les données nécessaires
+router.post('/remove-repos-data', authenticateToken, async (req, res) => {
+    const { tableName, semaine, annee, jourId, nomId, site_id } = req.body;
+    const userSiteIds = req.user.siteIds;
 
-    if (!reposId || !siteId) {
-        return res.status(400).send('Données manquantes (reposId ou siteId).');
+    console.log('Requête reçue pour /remove-repos-data :', { tableName, semaine, annee, jourId, nomId, site_id, userSiteIds });
+
+    // Vérifier que le site_id est autorisé
+    if (!site_id || !userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé.');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     try {
-        const query = `DELETE FROM Trepos_Tsite WHERE repos_id = ? AND site_id = ?`;
-        await connection.promise().query(query, [reposId, siteId]);
-        res.send('Repos supprimé avec succès.');
+        const query = `
+            DELETE FROM Tplanning_TRepos_Tsite
+            WHERE planning_id = (
+                SELECT planning_id
+                FROM Tplanning
+                WHERE semaine = ? AND annee = ? AND jour_id = ? AND nom_id = ?
+            )
+            AND site_id = ?
+            AND repos_id = ?
+        `;
+        const [result] = await connection.promise().query(query, [semaine, annee, jourId, nomId, site_id, tableName]);
+
+        if (result.affectedRows === 0) {
+            console.warn('Aucune donnée supprimée pour /remove-repos-data.');
+            return res.status(404).send('Aucune donnée supprimée.');
+        }
+
+        console.log('Données supprimées avec succès pour /remove-repos-data.');
+        res.send('Données supprimées avec succès.');
     } catch (error) {
-        console.error('Erreur lors de la suppression du repos :', error.message);
-        res.status(500).send('Erreur lors de la suppression du repos.');
+        console.error('Erreur lors de la suppression des données :', error.message);
+        res.status(500).send('Erreur lors de la suppression des données.');
     }
 });
 

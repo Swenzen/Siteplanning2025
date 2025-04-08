@@ -115,8 +115,14 @@ async function createAdditionalTable() {
                     div.dataset.nom = data.nom;
                     div.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
-                        console.log('Clic droit détecté sur:', div.dataset.nom, 'nom_id:', div.dataset.nomId);
-                        removeReposData(data.repos_id, data.jour_id, div.dataset.nom_id);
+                        const semaine = document.getElementById("weekNumber").value;
+                        const annee = document.getElementById("yearNumber").value;
+                        const jourId = data.jour_id;
+                        const nomId = div.dataset.nomId;
+
+                        console.log('Valeurs récupérées :', { semaine, annee, jourId, nomId });
+
+                        removeReposData(data.repos_id, semaine, annee, jourId, nomId);
                     });
                     cell.appendChild(div);
                 }
@@ -151,20 +157,48 @@ async function fetchNomIdAndRemoveReposData(tableName, semaine, annee, jourId, n
     }
 }
 
-// Fonction pour supprimer les données dans la table Tjrepos_*
+// Fonction pour supprimer les données dans la table Trepos_*
 async function removeReposData(tableName, semaine, annee, jourId, nomId) {
-    console.log('Données envoyées pour la suppression dans', tableName, ':', { semaine, annee, jourId, nomId });
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+
+    // Vérifications de base
+    if (!token) {
+        console.error('Erreur : aucun token trouvé.');
+        return;
+    }
+
+    if (!siteId) {
+        console.error('Erreur : aucun site_id trouvé dans le sessionStorage.');
+        return;
+    }
+
+    // Validation stricte des paramètres
+    if (!tableName || isNaN(tableName)) {
+        console.error('Erreur : tableName est invalide.', tableName);
+        return;
+    }
+
+    if (!semaine || !annee || !jourId || !nomId) {
+        console.error('Erreur : paramètres manquants pour la suppression.', { semaine, annee, jourId, nomId });
+        return;
+    }
+
+    console.log('Données envoyées pour la suppression dans', tableName, ':', { tableName, semaine, annee, jourId, nomId, siteId });
+
     try {
         const response = await fetch('/api/remove-repos-data', {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ tableName, semaine, annee, jourId, nomId })
+            body: JSON.stringify({ tableName, semaine, annee, jourId, nomId, site_id: siteId })
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de la suppression dans ' + tableName);
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la suppression dans ${tableName} : ${response.status} - ${errorText}`);
         }
 
         const result = await response.text();
