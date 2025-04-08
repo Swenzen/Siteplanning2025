@@ -5,14 +5,16 @@ const authenticateToken = require('../../middleware/auth');
 
 // Route pour récupérer les horaires par compétence et site (protégée)
 router.get('/horaires-competences', authenticateToken, (req, res) => {
-    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
+    const siteId = req.query.site_id; // Récupérer le site_id depuis la requête
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!siteId) {
-        console.error('Erreur : site_id introuvable dans le token');
-        return res.status(400).send('Le site_id est introuvable dans le token');
+    console.log('Requête reçue pour /horaires-competences :', { siteId, userSiteIds });
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(siteId))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
-
-    console.log('Site ID utilisé :', siteId);
 
     const query = `
         SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, c.competence_id
@@ -30,11 +32,6 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
         }
 
         console.log('Résultats de la requête :', results);
-
-        if (!results || results.length === 0) {
-            console.error('Aucun horaire trouvé pour ce site.');
-            return res.status(404).send('Aucun horaire trouvé pour ce site.');
-        }
 
         const groupedData = results.reduce((acc, row) => {
             if (!acc[row.horaire_id]) {
@@ -55,13 +52,20 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
     });
 });
 
-// Route pour ajouter une compétence à un horaire pour un site (protégée)
 router.post('/add-horaire-competence', authenticateToken, (req, res) => {
-    const { horaire_id, competence_id } = req.body;
-    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
+    const { horaire_id, competence_id, site_id } = req.body;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!horaire_id || !competence_id || !siteId) {
+    console.log('Requête reçue pour /add-horaire-competence :', { horaire_id, competence_id, site_id, userSiteIds });
+
+    if (!horaire_id || !competence_id || !site_id) {
         return res.status(400).send('Les champs "horaire_id", "competence_id" et "site_id" sont requis');
+    }
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
     const query = `
@@ -69,23 +73,30 @@ router.post('/add-horaire-competence', authenticateToken, (req, res) => {
         VALUES (?, ?, ?)
     `;
 
-    connection.query(query, [horaire_id, competence_id, siteId], (err) => {
+    connection.query(query, [horaire_id, competence_id, site_id], (err) => {
         if (err) {
-            console.error('Erreur lors de l\'ajout de la compétence à l\'horaire pour le site :', err.message);
-            res.status(500).send('Erreur lors de l\'ajout de la compétence à l\'horaire pour le site');
-        } else {
-            res.send('Compétence ajoutée à l\'horaire pour le site avec succès');
+            console.error('Erreur lors de l\'ajout de la compétence à l\'horaire :', err.message);
+            return res.status(500).send('Erreur lors de l\'ajout de la compétence à l\'horaire');
         }
+
+        res.send('Compétence ajoutée à l\'horaire avec succès');
     });
 });
 
-// Route pour supprimer une compétence d'un horaire pour un site (protégée)
 router.post('/delete-horaire-competence', authenticateToken, (req, res) => {
-    const { horaire_id, competence_id } = req.body;
-    const siteId = req.user.siteIds[0]; // Récupérer le site_id depuis le token
+    const { horaire_id, competence_id, site_id } = req.body;
+    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    if (!horaire_id || !competence_id || !siteId) {
+    console.log('Requête reçue pour /delete-horaire-competence :', { horaire_id, competence_id, site_id, userSiteIds });
+
+    if (!horaire_id || !competence_id || !site_id) {
         return res.status(400).send('Les champs "horaire_id", "competence_id" et "site_id" sont requis');
+    }
+
+    // Vérifier que le site_id est dans la liste des sites autorisés
+    if (!userSiteIds.includes(String(site_id))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
     const query = `
@@ -93,13 +104,13 @@ router.post('/delete-horaire-competence', authenticateToken, (req, res) => {
         WHERE horaire_id = ? AND competence_id = ? AND site_id = ?
     `;
 
-    connection.query(query, [horaire_id, competence_id, siteId], (err) => {
+    connection.query(query, [horaire_id, competence_id, site_id], (err) => {
         if (err) {
-            console.error('Erreur lors de la suppression de la compétence de l\'horaire pour le site :', err.message);
-            res.status(500).send('Erreur lors de la suppression de la compétence de l\'horaire pour le site');
-        } else {
-            res.send('Compétence supprimée de l\'horaire pour le site avec succès');
+            console.error('Erreur lors de la suppression de la compétence de l\'horaire :', err.message);
+            return res.status(500).send('Erreur lors de la suppression de la compétence de l\'horaire');
         }
+
+        res.send('Compétence supprimée de l\'horaire avec succès');
     });
 });
 

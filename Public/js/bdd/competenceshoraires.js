@@ -1,27 +1,25 @@
 async function fetchHorairesCompetences() {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!token) {
-        console.error('Erreur : aucun token trouvé.');
-        return;
-    }
-
-    // Décoder le token pour récupérer le site_id
-    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Décoder le payload du token
-    const siteId = decodedToken.siteIds ? decodedToken.siteIds[0] : null; // Utiliser le premier site_id du token
-
-    if (!siteId) {
-        console.error('Erreur : aucun site_id trouvé dans le token.');
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
         return;
     }
 
     try {
         const [competencesResponse, horairesResponse] = await Promise.all([
-            fetch(`/api/competences`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            fetch(`/api/competences?site_id=${siteId}`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             }),
-            fetch(`/api/horaires-competences`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            fetch(`/api/horaires-competences?site_id=${siteId}`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             })
         ]);
 
@@ -75,13 +73,13 @@ async function fetchHorairesCompetences() {
     }
 }
 
-// Fonction pour ajouter ou supprimer une compétence pour un horaire
-async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
-    const siteId = localStorage.getItem('site_id');
-    const token = localStorage.getItem('token');
 
-    if (!siteId || !token) {
-        console.error('Erreur : site_id ou token manquant.');
+async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
         return;
     }
 
@@ -93,13 +91,14 @@ async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ horaire_id, competence_id })
+                body: JSON.stringify({ horaire_id, competence_id, site_id: siteId })
             });
 
             if (response.ok) {
                 cell.textContent = '';
             } else {
-                console.error('Erreur lors de la suppression de la compétence de l\'horaire');
+                const error = await response.text();
+                console.error('Erreur lors de la suppression de la compétence de l\'horaire :', error);
             }
         } else {
             const response = await fetch('/api/add-horaire-competence', {
@@ -108,13 +107,14 @@ async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ horaire_id, competence_id })
+                body: JSON.stringify({ horaire_id, competence_id, site_id: siteId })
             });
 
             if (response.ok) {
                 cell.textContent = '✔';
             } else {
-                console.error('Erreur lors de l\'ajout de la compétence à l\'horaire');
+                const error = await response.text();
+                console.error('Erreur lors de l\'ajout de la compétence à l\'horaire :', error);
             }
         }
     } catch (error) {
