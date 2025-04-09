@@ -271,12 +271,12 @@ router.post('/remove-repos-data', authenticateToken, async (req, res) => {
 
         // Supprimer les données liées dans `Tplanning_TRepos_Tsite`
         const deleteReposQuery = `
-            DELETE FROM Tplanning_TRepos_Tsite
+            DELETE FROM Tplanning_Trepos_Tsite
             WHERE planning_id = ? AND site_id = ? AND repos_id = ?
         `;
         await connection.promise().query(deleteReposQuery, [planningId, site_id, tableName]);
 
-        console.log('Données supprimées dans Tplanning_TRepos_Tsite.');
+        console.log('Données supprimées dans Tplanning_Trepos_Tsite.');
 
         // Supprimer les données liées dans `Tplanning_Tsite`
         const deletePlanningSiteQuery = `

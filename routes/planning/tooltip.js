@@ -36,7 +36,7 @@ router.get('/nom-ids', authenticateToken, (req, res) => {
         AND n.nom_id NOT IN (
             SELECT p.nom_id
             FROM Tplanning p
-            JOIN Tplanning_TRepos_Tsite tpt ON p.planning_id = tpt.planning_id
+            JOIN Tplanning_Trepos_Tsite tpt ON p.planning_id = tpt.planning_id
             JOIN Trepos_Tsite trs ON tpt.repos_id = trs.repos_id
             WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND trs.site_id = ?
         )
