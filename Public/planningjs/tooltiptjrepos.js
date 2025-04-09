@@ -1,4 +1,4 @@
-// Fonction pour récupérer les nom_id disponibles pour les repos
+// Fonction pour récupérer les nom_id disponibles pour les repos (ds tooltip)
 async function fetchNomIdsRepos(event, tableName, jourId) {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
@@ -32,7 +32,7 @@ async function fetchNomIdsRepos(event, tableName, jourId) {
         }
 
         const data = await response.json();
-        console.log('Nom_id récupérés :', data);
+        console.log('Nom_id récupérés (tooltip )  :', data);
         showTooltipRepos(event, data, tableName, jourId);
     } catch (error) {
         console.error('Erreur lors de la récupération des nom_id :', error);

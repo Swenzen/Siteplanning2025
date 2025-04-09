@@ -34,18 +34,36 @@ router.get('/nom-ids', authenticateToken, (req, res) => {
             WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND pts.site_id = ?
         )
         AND n.nom_id NOT IN (
+            SELECT p.nom_id
+            FROM Tplanning p
+            JOIN Tplanning_TRepos_Tsite tpt ON p.planning_id = tpt.planning_id
+            JOIN Trepos_Tsite trs ON tpt.repos_id = trs.repos_id
+            WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND trs.site_id = ?
+        )
+        AND n.nom_id NOT IN (
             SELECT v.nom_id
             FROM Tvacances v
-            WHERE v.semaine = ? AND v.annee = ?
+            JOIN Tvacances_Tsite vt ON v.vacances_id = vt.vacances_id
+            WHERE v.semaine = ? AND v.annee = ? AND vt.site_id = ?
         )
     `;
 
     console.log('Requête SQL générée :', query);
-    console.log('Paramètres SQL :', [competence_id, site_id, site_id, site_id, semaine, annee, jour_id, site_id, semaine, annee]);
+    console.log('Paramètres SQL :', [
+        competence_id, site_id, site_id, site_id,
+        semaine, annee, jour_id, site_id,
+        semaine, annee, jour_id, site_id,
+        semaine, annee, site_id
+    ]);
 
     connection.query(
         query,
-        [competence_id, site_id, site_id, site_id, semaine, annee, jour_id, site_id, semaine, annee],
+        [
+            competence_id, site_id, site_id, site_id,
+            semaine, annee, jour_id, site_id,
+            semaine, annee, jour_id, site_id,
+            semaine, annee, site_id
+        ],
         (err, results) => {
             if (err) {
                 console.error('Erreur lors de l\'exécution de la requête SQL :', err.message);

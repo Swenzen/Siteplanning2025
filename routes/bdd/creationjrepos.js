@@ -176,9 +176,15 @@ router.get('/nom-ids-repos', authenticateToken, (req, res) => {
             JOIN Tplanning_Tsite pts ON p.planning_id = pts.planning_id
             WHERE p.semaine = ? AND p.annee = ? AND p.jour_id = ? AND pts.site_id = ?
         )
+        AND n.nom_id NOT IN (
+            SELECT v.nom_id
+            FROM Tvacances v
+            JOIN Tvacances_Tsite vt ON v.vacances_id = vt.vacances_id
+            WHERE v.semaine = ? AND v.annee = ? AND vt.site_id = ?
+        )
     `;
 
-    connection.query(query, [site_id, semaine, annee, jourId, site_id], (err, results) => {
+    connection.query(query, [site_id, semaine, annee, jourId, site_id, semaine, annee, site_id], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des nom_id :', err.message);
             return res.status(500).send('Erreur lors de la récupération des nom_id.');
