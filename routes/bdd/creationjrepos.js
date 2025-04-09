@@ -252,24 +252,50 @@ router.post('/remove-repos-data', authenticateToken, async (req, res) => {
     }
 
     try {
-        const query = `
-            DELETE FROM Tplanning_Trepos_Tsite
-            WHERE planning_id = (
-                SELECT planning_id
-                FROM Tplanning
-                WHERE semaine = ? AND annee = ? AND jour_id = ? AND nom_id = ?
-            )
-            AND site_id = ?
-            AND repos_id = ?
+        // Récupérer le `planning_id` correspondant
+        const getPlanningIdQuery = `
+            SELECT planning_id
+            FROM Tplanning
+            WHERE semaine = ? AND annee = ? AND jour_id = ? AND nom_id = ?
         `;
-        const [result] = await connection.promise().query(query, [semaine, annee, jourId, nomId, site_id, tableName]);
+        const [planningResult] = await connection.promise().query(getPlanningIdQuery, [semaine, annee, jourId, nomId]);
 
-        if (result.affectedRows === 0) {
-            console.warn('Aucune donnée supprimée pour /remove-repos-data.');
-            return res.status(404).send('Aucune donnée supprimée.');
+        if (planningResult.length === 0) {
+            console.warn('Aucun planning_id trouvé pour les critères spécifiés.');
+            return res.status(404).send('Aucun planning trouvé.');
         }
 
-        console.log('Données supprimées avec succès pour /remove-repos-data.');
+        const planningId = planningResult[0].planning_id;
+
+        console.log('Planning_id récupéré :', planningId);
+
+        // Supprimer les données liées dans `Tplanning_TRepos_Tsite`
+        const deleteReposQuery = `
+            DELETE FROM Tplanning_TRepos_Tsite
+            WHERE planning_id = ? AND site_id = ? AND repos_id = ?
+        `;
+        await connection.promise().query(deleteReposQuery, [planningId, site_id, tableName]);
+
+        console.log('Données supprimées dans Tplanning_TRepos_Tsite.');
+
+        // Supprimer les données liées dans `Tplanning_Tsite`
+        const deletePlanningSiteQuery = `
+            DELETE FROM Tplanning_Tsite
+            WHERE planning_id = ?
+        `;
+        await connection.promise().query(deletePlanningSiteQuery, [planningId]);
+
+        console.log('Données supprimées dans Tplanning_Tsite.');
+
+        // Supprimer le planning lui-même dans `Tplanning`
+        const deletePlanningQuery = `
+            DELETE FROM Tplanning
+            WHERE planning_id = ?
+        `;
+        await connection.promise().query(deletePlanningQuery, [planningId]);
+
+        console.log('Planning supprimé dans Tplanning.');
+
         res.send('Données supprimées avec succès.');
     } catch (error) {
         console.error('Erreur lors de la suppression des données :', error.message);
