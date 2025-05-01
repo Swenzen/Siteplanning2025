@@ -48,21 +48,38 @@ async function fetchNomIds(competenceId, event) {
 function showTooltip(event, noms) {
     const tooltip = document.getElementById("tooltip");
 
-    // Améliorer le style du tooltip avec un en-tête séparé pour la croix
+    // Construire le tableau avec une colonne pour les noms et 7 colonnes pour les jours de la semaine
     tooltip.innerHTML = `
         <div style="position: relative; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #eee; text-align: right;">
             <div class="tooltip-close" style="position: static; cursor: pointer; display: inline-block; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 18px; font-weight: bold;">&times;</div>
         </div>
-        ${noms.map(nom => `<div class="tooltip-date">${nom}</div>`).join('')}
+        <table style="border-collapse: collapse; width: 100%; text-align: center;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Noms</th>
+                    ${['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+                        .map(day => `<th style="border: 1px solid #ddd; padding: 5px;">${day}</th>`)
+                        .join('')}
+                </tr>
+            </thead>
+            <tbody>
+                ${noms.map(nom => `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 5px; cursor: pointer;" class="tooltip-date">${nom}</td>
+                        ${Array.from({ length: 7 }).map(() => `<td style="border: 1px solid #ddd; padding: 5px;">-</td>`).join('')}
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
     `;
 
     tooltip.style.display = 'block';
-    tooltip.style.width = '200px'; // Largeur fixe pour une meilleure présentation
+    tooltip.style.width = '600px'; // Ajuster la largeur pour inclure toutes les colonnes
     tooltip.style.padding = '10px';
-    
-    // Positionner le tooltip de manière à ce que la croix soit accessible
-    tooltip.style.left = `${event.pageX - tooltip.offsetWidth + 25}px`;
-    tooltip.style.top = `${event.pageY - 15}px`;
+
+    // Positionner le tooltip
+    tooltip.style.left = `${event.pageX - tooltip.offsetWidth / 2}px`;
+    tooltip.style.top = `${event.pageY + 15}px`;
 
     // Ajouter un gestionnaire de clics pour fermer le tooltip avec la croix
     tooltip.querySelector('.tooltip-close').addEventListener('click', function (e) {
@@ -72,14 +89,12 @@ function showTooltip(event, noms) {
 
     // Ajouter également un gestionnaire de clic sur le document pour fermer le tooltip quand on clique ailleurs
     document.addEventListener('click', function closeTooltip(e) {
-        // Si le clic est sur la croix ou à l'intérieur du tooltip, ne pas fermer
         if (e.target.closest('.tooltip-close') || (e.target !== tooltip && tooltip.contains(e.target))) return;
-        
         tooltip.style.display = 'none';
-        document.removeEventListener('click', closeTooltip); // Retirer le gestionnaire après fermeture
-    }, { once: true }); // Exécuter une seule fois
+        document.removeEventListener('click', closeTooltip);
+    }, { once: true });
 
-    // Ajouter un gestionnaire de clics aux éléments de date dans le tooltip
+    // Ajouter un gestionnaire de clics aux éléments de la colonne "Noms"
     document.querySelectorAll('.tooltip-date').forEach(element => {
         element.addEventListener('click', function () {
             const nom = this.textContent; // Récupérer le nom sélectionné
