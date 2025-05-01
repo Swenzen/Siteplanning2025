@@ -75,6 +75,38 @@ function formatTime(time) {
     return `${hours}h${minutes}`;
 }
 
+function adjustTooltipPosition(tooltip, event) {
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let left = event.pageX - tooltip.offsetWidth / 2;
+    let top = event.pageY + 15;
+
+    // Ajuster si le tooltip dépasse à droite
+    if (left + tooltipRect.width > viewportWidth) {
+        left = viewportWidth - tooltipRect.width - 10; // Décalage de 10px pour éviter le bord
+    }
+
+    // Ajuster si le tooltip dépasse à gauche
+    if (left < 0) {
+        left = 10; // Décalage de 10px pour éviter le bord
+    }
+
+    // Ajuster si le tooltip dépasse en bas
+    if (top + tooltipRect.height > viewportHeight) {
+        top = viewportHeight - tooltipRect.height - 10; // Décalage de 10px pour éviter le bord
+    }
+
+    // Ajuster si le tooltip dépasse en haut
+    if (top < 0) {
+        top = 10; // Décalage de 10px pour éviter le bord
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+}
+
 async function showTooltip(event, noms) {
     const tooltip = document.getElementById("tooltip");
     const semaine = document.getElementById("weekNumber").value;
@@ -126,9 +158,8 @@ async function showTooltip(event, noms) {
     tooltip.style.width = '600px'; // Ajuster la largeur pour inclure toutes les colonnes
     tooltip.style.padding = '10px';
 
-    // Positionner le tooltip
-    tooltip.style.left = `${event.pageX - tooltip.offsetWidth / 2}px`;
-    tooltip.style.top = `${event.pageY + 15}px`;
+    // Ajuster dynamiquement la position du tooltip
+    adjustTooltipPosition(tooltip, event);
 
     // Ajouter un gestionnaire de clics pour fermer le tooltip avec la croix
     tooltip.querySelector('.tooltip-close').addEventListener('click', function (e) {
