@@ -69,12 +69,19 @@ async function fetchNomDetails(competenceId, siteId, semaine, annee, noms) {
     }
 }
 
+function formatTime(time) {
+    // Convertir le format "08:30:00" en "08h30"
+    const [hours, minutes] = time.split(':');
+    return `${hours}h${minutes}`;
+}
+
 async function showTooltip(event, noms) {
     const tooltip = document.getElementById("tooltip");
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const siteId = sessionStorage.getItem('selectedSite');
     const competenceId = currentCompetenceId;
+    const clickedDay = currentDay; // Jour cliqué (1 = lundi, 2 = mardi, etc.)
 
     // Récupérer les détails des noms pour les autres jours de la semaine
     const nomDetails = await fetchNomDetails(competenceId, siteId, semaine, annee, noms);
@@ -89,7 +96,11 @@ async function showTooltip(event, noms) {
                 <tr>
                     <th style="border: 1px solid #ddd; padding: 5px;">Noms</th>
                     ${['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-                        .map(day => `<th style="border: 1px solid #ddd; padding: 5px;">${day}</th>`)
+                        .map((day, index) => `
+                            <th style="border: 1px solid #ddd; padding: 5px; ${index + 1 === parseInt(clickedDay) ? 'background-color: #ffeb3b;' : ''}">
+                                ${day}
+                            </th>
+                        `)
                         .join('')}
                 </tr>
             </thead>
@@ -100,8 +111,8 @@ async function showTooltip(event, noms) {
                         ${Array.from({ length: 7 }).map((_, dayIndex) => {
                             const dayDetails = nomDetails[nom]?.[dayIndex + 1]; // Récupérer les détails pour le jour (1 = lundi, 2 = mardi, etc.)
                             return `
-                                <td style="border: 1px solid #ddd; padding: 5px;">
-                                    ${dayDetails ? `${dayDetails.horaire_debut} - ${dayDetails.horaire_fin}<br>${dayDetails.competence}` : '-'}
+                                <td style="border: 1px solid #ddd; padding: 5px; ${dayIndex + 1 === parseInt(clickedDay) ? 'background-color: #ffeb3b;' : ''}">
+                                    ${dayDetails ? `${formatTime(dayDetails.horaire_debut)}-${formatTime(dayDetails.horaire_fin)}<br>${dayDetails.competence}` : '-'}
                                 </td>
                             `;
                         }).join('')}
