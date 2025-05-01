@@ -112,11 +112,11 @@ async function showTooltip(event, noms) {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const siteId = sessionStorage.getItem('selectedSite');
-    const competenceId = currentCompetenceId; // Compétence cliquée
+    const competenceName = currentCompetenceName; // Nom de la compétence cliquée
     const clickedDay = currentDay; // Jour cliqué (1 = lundi, 2 = mardi, etc.)
 
     // Récupérer les détails des noms pour les autres jours de la semaine
-    const nomDetails = await fetchNomDetails(competenceId, siteId, semaine, annee, noms);
+    const nomDetails = await fetchNomDetails(currentCompetenceId, siteId, semaine, annee, noms);
 
     // Construire le tableau avec une colonne pour les noms et 7 colonnes pour les jours de la semaine
     tooltip.innerHTML = `
@@ -142,7 +142,7 @@ async function showTooltip(event, noms) {
                         <td style="border: 1px solid #ddd; padding: 5px; cursor: pointer;" class="tooltip-date">${nom}</td>
                         ${Array.from({ length: 7 }).map((_, dayIndex) => {
                             const dayDetails = nomDetails[nom]?.[dayIndex + 1]; // Récupérer les détails pour le jour (1 = lundi, 2 = mardi, etc.)
-                            const isSameCompetence = dayDetails && dayDetails.competence === 'Scanner'; // Vérifier si la compétence est "Scanner"
+                            const isSameCompetence = dayDetails && dayDetails.competence === competenceName; // Comparer le nom de la compétence
                             return `
                                 <td style="border: 1px solid #ddd; padding: 5px; 
                                     ${dayIndex + 1 === parseInt(clickedDay) ? 'background-color: #ffeb3b;' : ''}

@@ -245,6 +245,7 @@ function displayPlanningData(planningData, fermeturesData, commentsData, semaine
                             currentDay = day;
                             currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
                             currentCompetenceId = rowData.competence_id;
+                            currentCompetenceName = rowData.competence; // Définir le nom de la compétence cliquée
 
                             // Appeler fetchNomIds pour afficher le tooltip ou effectuer une autre action
                             fetchNomIds(rowData.competence_id, event);
@@ -262,6 +263,7 @@ function displayPlanningData(planningData, fermeturesData, commentsData, semaine
                 currentDay = day;
                 currentHorairesNom = `${rowData.horaire_debut} - ${rowData.horaire_fin}`;
                 currentCompetenceId = rowData.competence_id;
+                currentCompetenceName = rowData.competence; // Définir le nom de la compétence cliquée
 
                 // Afficher un tooltip vide ou effectuer une autre action
                 showEmptyTooltip(event, null, null, day, semaine, annee, rowData.competence_id, rowData.horaire_debut, rowData.horaire_fin);
