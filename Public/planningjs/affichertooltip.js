@@ -112,7 +112,7 @@ async function showTooltip(event, noms) {
     const semaine = document.getElementById("weekNumber").value;
     const annee = document.getElementById("yearNumber").value;
     const siteId = sessionStorage.getItem('selectedSite');
-    const competenceId = currentCompetenceId;
+    const competenceId = currentCompetenceId; // Compétence cliquée
     const clickedDay = currentDay; // Jour cliqué (1 = lundi, 2 = mardi, etc.)
 
     // Récupérer les détails des noms pour les autres jours de la semaine
@@ -142,8 +142,11 @@ async function showTooltip(event, noms) {
                         <td style="border: 1px solid #ddd; padding: 5px; cursor: pointer;" class="tooltip-date">${nom}</td>
                         ${Array.from({ length: 7 }).map((_, dayIndex) => {
                             const dayDetails = nomDetails[nom]?.[dayIndex + 1]; // Récupérer les détails pour le jour (1 = lundi, 2 = mardi, etc.)
+                            const isSameCompetence = dayDetails && dayDetails.competence === 'Scanner'; // Vérifier si la compétence est "Scanner"
                             return `
-                                <td style="border: 1px solid #ddd; padding: 5px; ${dayIndex + 1 === parseInt(clickedDay) ? 'background-color: #ffeb3b;' : ''}">
+                                <td style="border: 1px solid #ddd; padding: 5px; 
+                                    ${dayIndex + 1 === parseInt(clickedDay) ? 'background-color: #ffeb3b;' : ''}
+                                    ${isSameCompetence ? 'background-color: #4caf50; color: white;' : ''}">
                                     ${dayDetails ? `${formatTime(dayDetails.horaire_debut)}-${formatTime(dayDetails.horaire_fin)}<br>${dayDetails.competence}` : '-'}
                                 </td>
                             `;
