@@ -44,9 +44,40 @@ async function fetchNomIds(competenceId, event) {
     }
 }
 
-// Fonction pour afficher le tooltip avec les noms
-function showTooltip(event, noms) {
+async function fetchNomDetails(competenceId, siteId, semaine, annee, noms) {
+    try {
+        const response = await fetch(`/api/nom-details`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ competence_id: competenceId, site_id: siteId, semaine, annee, noms })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la récupération des détails des noms : ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('Détails des noms récupérés :', data);
+        return data; // Retourne les détails des noms
+    } catch (error) {
+        console.error('Erreur lors de la récupération des détails des noms :', error);
+        return {};
+    }
+}
+
+async function showTooltip(event, noms) {
     const tooltip = document.getElementById("tooltip");
+    const semaine = document.getElementById("weekNumber").value;
+    const annee = document.getElementById("yearNumber").value;
+    const siteId = sessionStorage.getItem('selectedSite');
+    const competenceId = currentCompetenceId;
+
+    // Récupérer les détails des noms pour les autres jours de la semaine
+    const nomDetails = await fetchNomDetails(competenceId, siteId, semaine, annee, noms);
 
     // Construire le tableau avec une colonne pour les noms et 7 colonnes pour les jours de la semaine
     tooltip.innerHTML = `
@@ -66,7 +97,14 @@ function showTooltip(event, noms) {
                 ${noms.map(nom => `
                     <tr>
                         <td style="border: 1px solid #ddd; padding: 5px; cursor: pointer;" class="tooltip-date">${nom}</td>
-                        ${Array.from({ length: 7 }).map(() => `<td style="border: 1px solid #ddd; padding: 5px;">-</td>`).join('')}
+                        ${Array.from({ length: 7 }).map((_, dayIndex) => {
+                            const dayDetails = nomDetails[nom]?.[dayIndex + 1]; // Récupérer les détails pour le jour (1 = lundi, 2 = mardi, etc.)
+                            return `
+                                <td style="border: 1px solid #ddd; padding: 5px;">
+                                    ${dayDetails ? `${dayDetails.horaire_debut} - ${dayDetails.horaire_fin}<br>${dayDetails.competence}` : '-'}
+                                </td>
+                            `;
+                        }).join('')}
                     </tr>
                 `).join('')}
             </tbody>

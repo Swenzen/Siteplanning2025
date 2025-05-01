@@ -62,6 +62,7 @@ const ordreRoutes = require('./routes/planning/ordre');
 const tooltipRoutes = require('./routes/planning/tooltip');
 const creationjreposRoutes = require('./routes/bdd/creationjrepos');
 const retoursiteRoutes = require('./routes/retoursite');
+const planningsRoutes = require('./routes/bdd/plannings');
 
 // Utiliser les routes
 app.use('/api', competencesRoutes);
@@ -74,6 +75,7 @@ app.use('/api', ordreRoutes);
 app.use('/api', tooltipRoutes);
 app.use('/api', creationjreposRoutes);
 app.use('/api', retoursiteRoutes);
+app.use('/api', planningsRoutes);
 
 
 // Route par défaut pour servir "index2.html"
