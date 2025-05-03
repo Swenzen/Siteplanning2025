@@ -190,6 +190,58 @@ router.get('/max-display-order', (req, res) => {
     });
 });
 
+router.get('/competence-days', authenticateToken, (req, res) => {
+    const siteId = req.query.site_id;
 
+    if (!siteId) {
+        return res.status(400).send('Le site_id est requis.');
+    }
+
+    const query = `
+        SELECT c.competence_id, c.competence, GROUP_CONCAT(cj.jour_id) AS jours
+        FROM Tcompetence c
+        JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
+        LEFT JOIN Tcompetence_jour cj ON c.competence_id = cj.competence_id
+        WHERE ct.site_id = ?
+        GROUP BY c.competence_id, c.competence
+    `;
+
+    connection.query(query, [siteId], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des jours par compétence :', err.message);
+            return res.status(500).send('Erreur lors de la récupération des jours par compétence.');
+        }
+
+        const formattedResults = results.map(row => ({
+            competence_id: row.competence_id,
+            competence: row.competence,
+            jours: row.jours ? row.jours.split(',').map(Number) : []
+        }));
+
+        res.json(formattedResults);
+    });
+});
+
+
+router.post('/toggle-competence-day', authenticateToken, (req, res) => {
+    const { competence_id, jour_id, is_checked, site_id } = req.body;
+
+    if (!competence_id || !jour_id || site_id === undefined) {
+        return res.status(400).send('Les champs competence_id, jour_id et site_id sont requis.');
+    }
+
+    const query = is_checked
+        ? `INSERT INTO Tcompetence_jour (competence_id, jour_id) VALUES (?, ?)`
+        : `DELETE FROM Tcompetence_jour WHERE competence_id = ? AND jour_id = ?`;
+
+    connection.query(query, [competence_id, jour_id], (err) => {
+        if (err) {
+            console.error('Erreur lors de la mise à jour des jours par compétence :', err.message);
+            return res.status(500).send('Erreur lors de la mise à jour des jours par compétence.');
+        }
+
+        res.send('Jour mis à jour avec succès.');
+    });
+});
 
 module.exports = router;

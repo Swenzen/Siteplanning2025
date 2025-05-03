@@ -241,11 +241,7 @@ async function deleteCompetence(competenceId) {
     }
 }
 
-// Gestionnaire d'événements pour ajouter une compétence
-document.getElementById("addCompetenceButton").addEventListener("click", addCompetence);
 
-// Appeler la fonction pour récupérer les compétences lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', fetchCompetences);
 
 function makeDateEditable(cell, competenceId, dateType) {
     const originalValue = cell.textContent;
@@ -304,3 +300,104 @@ function makeDateEditable(cell, competenceId, dateType) {
     input.focus();
 }
 
+
+
+
+async function fetchCompetenceDays() {
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    if (!siteId || !token) {
+        console.error("Erreur : le site ou le token est manquant.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/competence-days?site_id=${siteId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.error("Erreur lors de la récupération des jours par compétence.");
+            return;
+        }
+
+        const data = await response.json();
+        console.log("Données des jours par compétence :", data);
+
+        const tableBody = document.querySelector("#competenceDaysTable tbody");
+        tableBody.innerHTML = '';
+
+        data.forEach(({ competence_id, competence, jours }) => {
+            const row = document.createElement("tr");
+
+            // Colonne Compétence
+            const competenceCell = document.createElement("td");
+            competenceCell.textContent = competence;
+            row.appendChild(competenceCell);
+
+            // Colonnes pour les jours
+            for (let jourId = 1; jourId <= 7; jourId++) {
+                const dayCell = document.createElement("td");
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = jours.includes(jourId); // Cocher si le jour est associé
+                checkbox.addEventListener("change", () => toggleCompetenceDay(competence_id, jourId, checkbox.checked));
+                dayCell.appendChild(checkbox);
+                row.appendChild(dayCell);
+            }
+
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des jours par compétence :", error);
+    }
+}
+
+async function toggleCompetenceDay(competenceId, jourId, isChecked) {
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    if (!siteId || !token) {
+        console.error("Erreur : le site ou le token est manquant.");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/toggle-competence-day', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                competence_id: competenceId,
+                jour_id: jourId,
+                is_checked: isChecked,
+                site_id: siteId
+            })
+        });
+
+        if (!response.ok) {
+            console.error("Erreur lors de la mise à jour des jours par compétence.");
+        } else {
+            console.log(`Jour ${jourId} pour la compétence ${competenceId} mis à jour : ${isChecked}`);
+        }
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour des jours par compétence :", error);
+    }
+}
+
+
+
+// Gestionnaire d'événements pour ajouter une compétence
+document.getElementById("addCompetenceButton").addEventListener("click", addCompetence);
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchCompetences(); // Charger les compétences
+    fetchCompetenceDays(); // Charger les jours par compétence
+});

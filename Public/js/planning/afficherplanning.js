@@ -154,13 +154,7 @@ function displayCompetencesWithDates(competences, startDate, endDate) {
                 ? competence.jours_indisponibles.split(",").map(Number)
                 : [];
 
-            console.log("Jour actuel :", dayOfWeek);
-            console.log("Jours indisponibles :", joursIndisponibles);
-            console.log("Date actuelle :", currentDate);
-            console.log("Date début :", dateDebut);
-            console.log("Date fin :", dateFin);
-            console.log("Indisponibilité début :", indisponibiliteDebut);
-            console.log("Indisponibilité fin :", indisponibiliteFin);
+            
 
             if (
                 currentDate >= dateDebut &&
