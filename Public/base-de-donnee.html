@@ -55,41 +55,45 @@
             </div>
 
             <!-- Nouveau tableau pour gérer les jours par compétence -->
-            <div class="form-container">
-                <h3>Gérer les jours par compétence</h3>
-                <table id="competenceDaysTable">
-                    <thead>
-                        <tr>
-                            <th>Compétence</th>
-                            <th>Lundi</th>
-                            <th>Mardi</th>
-                            <th>Mercredi</th>
-                            <th>Jeudi</th>
-                            <th>Vendredi</th>
-                            <th>Samedi</th>
-                            <th>Dimanche</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes seront ajoutées dynamiquement -->
-                    </tbody>
-                </table>
+            <div class="section-container">
+                <h3 style="text-align: center;">Gérer les jours par compétence</h3>
+                <div class="form-container">
+                    <table id="competenceDaysTable">
+                        <thead>
+                            <tr>
+                                <th>Compétence</th>
+                                <th>Lundi</th>
+                                <th>Mardi</th>
+                                <th>Mercredi</th>
+                                <th>Jeudi</th>
+                                <th>Vendredi</th>
+                                <th>Samedi</th>
+                                <th>Dimanche</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les lignes seront ajoutées dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Nouveau tableau pour gérer les indisponibilités par compétence -->
-            <div class="form-container">
-                <h3>Gérer les indisponibilités par compétence</h3>
-                <table id="competenceIndisponibilitesTable">
-                    <thead>
-                        <tr>
-                            <th>Compétence</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes seront ajoutées dynamiquement -->
-                    </tbody>
-                </table>
+            <div class="section-container">
+                <h3 style="text-align: center;">Gérer les indisponibilités par compétence</h3>
+                <div class="form-container">
+                    <table id="competenceIndisponibilitesTable">
+                        <thead>
+                            <tr>
+                                <th>Compétence</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les lignes seront ajoutées dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -113,38 +117,6 @@
             </div>
         </div>
 
-        <!-- Conteneur pour les horaires par compétence -->
-        <div class="section-container">
-            <h2>Horaires par compétence</h2>
-            <table id="horairescompetenceTable">
-                <thead>
-                    <tr>
-                        <th>Horaires</th>
-                        <!-- Les compétences seront ajoutées ici dynamiquement -->
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Les lignes seront ajoutées ici dynamiquement -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Conteneur pour les compétences des personnes -->
-        <div class="section-container">
-            <h2>Compétences des personnes</h2>
-            <table id="competencesPersonnesTable">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <!-- Les compétences seront ajoutées ici dynamiquement -->
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Les lignes seront ajoutées ici dynamiquement -->
-                </tbody>
-            </table>
-        </div>
-
         <!-- Conteneur pour les jours repos -->
         <div class="section-container">
             <h2>Jours repos</h2>
@@ -163,39 +135,9 @@
                 <button id="ajouterjoursrepos">Ajouter un jour de repos</button>
             </div>
         </div>
-        
-        <div id="reposContainer">
-            <!-- Les repos seront ajoutés ici dynamiquement -->
-        </div>
-        
-        <table id="reposTable">
-            <thead>
-                <tr>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Les lignes seront ajoutées ici dynamiquement -->
-            </tbody>
-        </table>
-        
     </div>
     
-    <div id="main-column">
-        <!-- Affichage du site -->
-        <div id="site-info">
-        </div>
-
-        <!-- Menu -->
-        
-
-        <!-- Informations utilisateur -->
-        <div id="user-info" style="display: none;">
-            <p>Connecté en tant que : <span id="username-display"></span></p>
-            <button id="logoutButton">Se déconnecter</button>
-        </div>
-    </div>
-    
-    <!-- Fenêtre modale -->
+    <!-- Fenêtre modale pour modifier les noms -->
     <div id="myModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -205,41 +147,39 @@
         </div>
     </div>
     
-<!-- Fenêtre modale pour modifier les dates -->
-<div id="dateModal" class="date-modal">
-    <div class="date-modal-content">
-        <span class="date-close">&times;</span>
-        <h2>Modifier les dates</h2>
-        <label for="dateDebutInput">Date de début :</label>
-        <input type="date" id="dateDebutInput">
-        <label for="dateFinInput">Date de fin :</label>
-        <input type="date" id="dateFinInput">
-        <button id="saveDatesButton">Sauvegarder</button>
+    <!-- Fenêtre modale pour modifier les dates -->
+    <div id="dateModal" class="date-modal">
+        <div class="date-modal-content">
+            <span class="date-close">&times;</span>
+            <h2>Modifier les dates</h2>
+            <label for="dateDebutInput">Date de début :</label>
+            <input type="date" id="dateDebutInput">
+            <label for="dateFinInput">Date de fin :</label>
+            <input type="date" id="dateFinInput">
+            <button id="saveDatesButton">Sauvegarder</button>
+        </div>
     </div>
-</div>
 
-<!<!-- Fenêtre modale pour afficher et gérer les indisponibilités -->
-<div id="indisponibilitesModal" class="indisponibilites-modal">
-    <div class="indisponibilites-modal-content">
-        <span class="indisponibilites-close">&times;</span>
-        <h3>Gérer les indisponibilités</h3>
-        <table id="indisponibilitesTable">
-            <thead>
-                <tr>
-                    <th>Date de début</th>
-                    <th>Date de fin</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Les lignes seront ajoutées dynamiquement -->
-            </tbody>
-        </table>
-        <button id="addIndisponibiliteButton">Ajouter une indisponibilité</button>
+    <!-- Fenêtre modale pour afficher et gérer les indisponibilités -->
+    <div id="indisponibilitesModal" class="indisponibilites-modal">
+        <div class="indisponibilites-modal-content">
+            <span class="indisponibilites-close">&times;</span>
+            <h3>Gérer les indisponibilités</h3>
+            <table id="indisponibilitesTable">
+                <thead>
+                    <tr>
+                        <th>Date de début</th>
+                        <th>Date de fin</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées dynamiquement -->
+                </tbody>
+            </table>
+            <button id="addIndisponibiliteButton">Ajouter une indisponibilité</button>
+        </div>
     </div>
-</div>
-    
-
 
     <!-- Inclure les fichiers JavaScript -->
     <script src="js/bdd/horaires.js"></script>
@@ -248,6 +188,5 @@
     <script src="js/bdd/competenceshoraires.js"></script>
     <script src="js/bdd/tableaureposrttforma.js"></script>
     <script src="js/bdd/tableaunom.js"></script>
-
 </body>
 </html>
