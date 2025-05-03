@@ -17,14 +17,13 @@ router.get('/competences', authenticateToken, (req, res) => {
     }
 
     const query = `
-        SELECT c.competence_id, c.competence, c.date_debut, c.date_fin
+        SELECT c.competence_id, c.competence, cd.date_debut, cd.date_fin
         FROM Tcompetence c
         JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
+        LEFT JOIN Tcompetence_disponibilite cd ON c.competence_id = cd.competence_id
         WHERE ct.site_id = ?
+        ORDER BY c.competence_id, cd.date_debut
     `;
-
-    console.log('Requête SQL exécutée :', query);
-    console.log('Paramètres SQL :', [siteId]);
 
     connection.query(query, [siteId], (err, results) => {
         if (err) {
@@ -47,21 +46,20 @@ router.post('/update-competence-dates', authenticateToken, (req, res) => {
     }
 
     const query = `
-        UPDATE Tcompetence
-        SET date_debut = ?, date_fin = ?
-        WHERE competence_id = ?
+        INSERT INTO Tcompetence_disponibilite (competence_id, date_debut, date_fin)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE date_debut = VALUES(date_debut), date_fin = VALUES(date_fin)
     `;
 
-    connection.query(query, [date_debut, date_fin, competence_id], (err, results) => {
+    connection.query(query, [competence_id, date_debut, date_fin], (err, results) => {
         if (err) {
-            console.error('Erreur lors de la mise à jour des dates :', err.message);
-            return res.status(500).send('Erreur lors de la mise à jour des dates.');
+            console.error('Erreur lors de la mise à jour des périodes :', err.message);
+            return res.status(500).send('Erreur lors de la mise à jour des périodes.');
         }
 
-        res.send('Dates mises à jour avec succès.');
+        res.send('Périodes mises à jour avec succès.');
     });
 });
-
 router.post('/add-competence2', authenticateToken, (req, res) => {
     const { competence, displayOrder } = req.body;
     const siteId = req.body.site_id; // Récupérer le site_id depuis la requête

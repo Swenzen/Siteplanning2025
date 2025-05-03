@@ -64,6 +64,7 @@ const creationjreposRoutes = require('./routes/bdd/creationjrepos');
 const retoursiteRoutes = require('./routes/retoursite');
 const planningsRoutes = require('./routes/bdd/plannings');
 const parametrageRoutes = require('./routes/parametrage/liaisonsite');
+const planningRoutes = require('./routes/planning/planning');
 
 // Utiliser les routes
 app.use('/api', competencesRoutes);
@@ -78,6 +79,7 @@ app.use('/api', creationjreposRoutes);
 app.use('/api', retoursiteRoutes);
 app.use('/api', planningsRoutes);
 app.use('/api', parametrageRoutes);
+app.use('/planning', planningRoutes);
 
 // Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {

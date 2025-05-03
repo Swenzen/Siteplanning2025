@@ -11,8 +11,6 @@ CREATE TABLE Tnom (
 CREATE TABLE Tcompetence (
     competence_id INT AUTO_INCREMENT PRIMARY KEY,
     competence VARCHAR(255) NOT NULL,
-    date_debut DATE NULL,
-    date_fin DATE NULL
 );
 
 -- Créer la table Tcompetence_nom
@@ -228,6 +226,16 @@ CREATE TABLE Tsite_access (
     access_code VARCHAR(10) NOT NULL UNIQUE,
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
+
+CREATE TABLE Tcompetence_disponibilite (
+    disponibilite_id INT AUTO_INCREMENT PRIMARY KEY, -- Identifiant unique pour chaque période
+    competence_id INT NOT NULL,                     -- Référence à la compétence
+    date_debut DATE NOT NULL,                       -- Date de début de la période
+    date_fin DATE NOT NULL,                         -- Date de fin de la période
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE
+);
+
+
 
 -- Insérer des valeurs dans Tnom
 INSERT INTO Tnom (nom_id, nom) VALUES

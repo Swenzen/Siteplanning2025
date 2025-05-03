@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="header.js" defer></script> <!-- Charger le menu dynamique -->
+</head>
+<body>
+               
+
+        <!-- Menu -->
+        
+
+        <!-- Informations utilisateur -->
+        <div id="user-info" style="display: none;">
+            <p>Connecté en tant que : <span id="username-display"></span></p>
+            <button id="logoutButton">Se déconnecter</button>
+        </div>
+    </div>
+
+    <div id="content">
+        <h1>Planning</h1>
+        
+        <!-- Champs pour le numéro de la semaine et l'année -->
+        <div id="weekYearSelector">
+            <label for="weekNumber">Numéro de la semaine :</label>
+            <input type="number" id="weekNumber" min="1" max="52" value="1">
+            <label for="yearNumber">Année :</label>
+            <input type="number" id="yearNumber" value="2025">
+            <button id="loadWeekButton">Charger la semaine</button>
+        </div>
+
+        <!-- Sélection du site -->
+        <label for="siteSelector">Sélectionnez un site :</label>
+        <select id="siteSelector"></select>
+
+        <div id="dateSelector">
+            <label for="startDate">Date de début :</label>
+            <input type="date" id="startDate">
+            <label for="endDate">Date de fin :</label>
+            <input type="date" id="endDate">
+            <button id="filterButton">Filtrer</button>
+        </div>
+        
+        <!-- Tableau pour afficher le planning -->
+        <table id="planningTable">
+            <thead>
+                <tr>
+                    <th>Compétence</th>
+                    <th>Horaires</th>
+                    <th>Lundi</th>
+                    <th>Mardi</th>
+                    <th>Mercredi</th>
+                    <th>Jeudi</th>
+                    <th>Vendredi</th>
+                    <th>Samedi</th>
+                    <th>Dimanche</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les lignes seront ajoutées ici dynamiquement -->
+            </tbody>
+        </table>
+
+        <!-- Conteneur pour le nouveau tableau -->
+        <div id="additionalTableContainer"></div>
+
+        <!-- Conteneur pour le tableau des compétences -->
+        <div id="competenceTableContainer"></div>
+    </div>
+    
+    <div id="tooltip"></div>
+    
+    <!-- Inclure les fichiers JavaScript -->
+    <script src="js/planning/clicdroit.js"></script>
+    <script src="planningjs/tableaurtpformvac.js"></script>
+    <script src="planningjs/afficherplanning.js"></script>
+    <script src="planningjs/affichertooltip.js"></script>
+    <script src="planningjs/tooltipvac.js"></script>
+    <script src="planningjs/ordrecompetence.js"></script>
+    <script src="planningjs/tooltiptjrepos.js"></script>
+    <script src="planningjs/weekYearStorage.js"></script>
+
+    <script>
+        // Ajouter un gestionnaire de clics au bouton pour charger la semaine
+        document.getElementById("loadWeekButton").addEventListener("click", fetchPlanningData);
+
+        // Appeler la fonction pour récupérer les données lorsque la page est chargée
+        document.addEventListener('DOMContentLoaded', fetchPlanningData);
+
+        
+    </script>
+</body>
+</html>

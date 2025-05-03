@@ -17,6 +17,60 @@ const dayMapping = {
     '7': 'dimanche'
 };
 
+
+document.getElementById("filterButton").addEventListener("click", async () => {
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    if (!startDate || !endDate) {
+        alert("Veuillez sélectionner une date de début et une date de fin.");
+        return;
+    }
+
+    console.log("Dates sélectionnées :", { startDate, endDate });
+
+    // Appeler une fonction pour récupérer et afficher les données filtrées
+    await fetchFilteredPlanningData(startDate, endDate);
+});
+
+async function fetchFilteredPlanningData(startDate, endDate) {
+    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
+    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+
+    if (!token || !siteId) {
+        console.error("Erreur : le token ou le site_id est manquant.");
+        alert("Erreur : vous devez être authentifié et avoir sélectionné un site.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/planning-data?start_date=${startDate}&end_date=${endDate}&site_id=${siteId}`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Erreur lors de la récupération des données filtrées :", errorText);
+            alert("Erreur lors de la récupération des données filtrées.");
+            return;
+        }
+
+        const planningData = await response.json();
+        console.log("Données filtrées récupérées :", planningData);
+
+        // Appeler une fonction pour afficher les données dans le tableau
+        displayPlanningData(planningData);
+    } catch (error) {
+        console.error("Erreur lors de la récupération des données filtrées :", error);
+        alert("Une erreur est survenue lors de la récupération des données filtrées.");
+    }
+}
+
+
 // Fonction pour récupérer les données du planning
 async function fetchPlanningData() {
     const semaine = document.getElementById("weekNumber").value;
