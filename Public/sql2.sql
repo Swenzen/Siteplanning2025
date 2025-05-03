@@ -1,5 +1,3 @@
-
-
 -- Utiliser la base de données railway
 USE railway;
 
@@ -221,6 +219,14 @@ CREATE TABLE Tplanning_Trepos_Tsite (
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
 
+-- Créer une table pour gérer les codes d'accès des sites
+CREATE TABLE Tsite_access (
+    access_id INT AUTO_INCREMENT PRIMARY KEY,
+    site_id INT NOT NULL,
+    access_code VARCHAR(10) NOT NULL UNIQUE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);
+
 -- Insérer des valeurs dans Tnom
 INSERT INTO Tnom (nom_id, nom) VALUES
 (1, 'Pierre'),
@@ -345,3 +351,13 @@ INSERT INTO Tplanning_Tsite (planning_id, site_id) VALUES
 (3, 2),
 (4, 3),
 (5, 1);
+
+-- Insérer des codes d'accès pour les sites existants
+INSERT INTO Tsite_access (site_id, access_code) VALUES
+(1, 'AMIENS123'),
+(2, 'PARIS456'),
+(3, 'LILLE789');
+
+-- Exemple d'insertion d'un nouveau site avec un code d'accès
+INSERT INTO Tsite (site_name) VALUES ('Marseille');
+INSERT INTO Tsite_access (site_id, access_code) VALUES (LAST_INSERT_ID(), 'MARSEILLE321');
