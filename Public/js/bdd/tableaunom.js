@@ -2,8 +2,8 @@ let currentCell = null;
 let currentId = null;
 
 async function fetchData() {
-    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+    const token = localStorage.getItem('token');
+    const siteId = sessionStorage.getItem('selectedSite');
 
     if (!token || !siteId) {
         console.error('Erreur : le token ou le site_id est introuvable.');
@@ -11,50 +11,52 @@ async function fetchData() {
     }
 
     try {
-        const response = await fetch(`/api/data?site_id=${siteId}`, {
+        const response = await fetch(`/api/noms?site_id=${siteId}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
 
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des données');
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la récupération des données : ${errorText}`);
         }
 
         const data = await response.json();
-        console.log('Données récupérées :', data);
+        console.log('Données reçues :', data);
 
+        // Insérer les données dans le tableau HTML
         const tableBody = document.querySelector("#databaseTable tbody");
-        tableBody.innerHTML = ''; // Vider le contenu du tableau
+        tableBody.innerHTML = ''; // Vider le tableau avant de le remplir
 
-        // Ajouter les données récupérées au tableau
-        data.forEach(rowData => {
-            const row = document.createElement("tr");
+        data.forEach(({ nom_id, nom, date_debut, date_fin }) => {
+            const row = document.createElement('tr');
 
-            // Ajouter les colonnes pour chaque donnée
-            const nomCell = document.createElement("td");
-            nomCell.textContent = rowData.nom;
+            const nomCell = document.createElement('td');
+            nomCell.textContent = nom;
             row.appendChild(nomCell);
 
-            const siteCell = document.createElement("td");
-            siteCell.textContent = rowData.site_name;
-            row.appendChild(siteCell);
+            const dateDebutCell = document.createElement('td');
+            dateDebutCell.textContent = formatDate(date_debut); // Reformater la date
+            row.appendChild(dateDebutCell);
 
-            // Ajouter une colonne pour les actions (bouton "Supprimer")
-            const actionCell = document.createElement("td");
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Supprimer";
-            deleteButton.dataset.nomId = rowData.nom_id; // Stocker l'ID du nom dans le bouton
-            deleteButton.classList.add("delete-button"); // Ajouter une classe pour le style
-            actionCell.appendChild(deleteButton);
-            row.appendChild(actionCell);
+            const dateFinCell = document.createElement('td');
+            dateFinCell.textContent = formatDate(date_fin); // Reformater la date
+            row.appendChild(dateFinCell);
+
+            const actionsCell = document.createElement('td');
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Supprimer';
+            deleteButton.dataset.nomId = nom_id; // Ajouter l'ID du nom au bouton
+            actionsCell.appendChild(deleteButton);
+            row.appendChild(actionsCell);
 
             tableBody.appendChild(row);
         });
     } catch (error) {
-        console.error('Erreur lors de la requête :', error);
+        console.error('Erreur lors de la récupération des données :', error);
     }
 }
 

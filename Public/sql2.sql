@@ -1,10 +1,11 @@
 -- Utiliser la base de données railway
 USE railway;
 
--- Créer la table Tnom
 CREATE TABLE Tnom (
-    nom_id INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(255) NOT NULL
+    nom_id INT AUTO_INCREMENT PRIMARY KEY, -- Identifiant unique pour chaque nom
+    nom VARCHAR(255) NOT NULL,             -- Nom de la personne
+    date_debut DATE NOT NULL,              -- Date de début
+    date_fin DATE NOT NULL                 -- Date de fin
 );
 
 CREATE TABLE Tcompetence (
@@ -244,12 +245,11 @@ CREATE TABLE Tcompetence_jour (
     FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id) ON DELETE CASCADE
 );
 
--- Insérer des valeurs dans Tnom
-INSERT INTO Tnom (nom_id, nom) VALUES
-(1, 'Pierre'),
-(2, 'Max'),
-(3, 'Sophie'),
-(4, 'Julie');
+INSERT INTO Tnom (nom_id, nom, date_debut, date_fin) VALUES
+(1, 'Pierre', '2025-01-01', '2025-12-31'),
+(2, 'Max', '2025-02-01', '2025-11-30'),
+(3, 'Sophie', '2025-03-01', '2025-10-31'),
+(4, 'Julie', '2025-04-01', '2025-09-30');
 
 -- Insérer des valeurs dans Tcompetence
 INSERT INTO Tcompetence (competence_id, competence, date_debut, date_fin) VALUES
