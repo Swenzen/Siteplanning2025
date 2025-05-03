@@ -392,12 +392,367 @@ async function toggleCompetenceDay(competenceId, jourId, isChecked) {
     }
 }
 
+async function fetchCompetenceIndisponibilitesTable() {
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
 
+    if (!siteId || !token) {
+        console.error("Erreur : le site ou le token est manquant.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/competences?site_id=${siteId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.error("Erreur lors de la récupération des compétences.");
+            return;
+        }
+
+        const data = await response.json();
+        console.log("Données des compétences reçues :", data);
+
+        const tableBody = document.querySelector("#competenceIndisponibilitesTable tbody");
+        tableBody.innerHTML = ''; // Vider le tableau avant de le remplir
+
+        // Regrouper les compétences pour éviter les doublons
+        const groupedCompetences = data.reduce((acc, row) => {
+            if (!acc[row.competence_id]) {
+                acc[row.competence_id] = row; // Ajouter la compétence si elle n'existe pas encore
+            }
+            return acc;
+        }, {});
+
+        // Afficher chaque compétence une seule fois
+        Object.values(groupedCompetences).forEach(({ competence_id, competence }) => {
+            const row = document.createElement("tr");
+
+            // Colonne Compétence
+            const competenceCell = document.createElement("td");
+            competenceCell.textContent = competence;
+            row.appendChild(competenceCell);
+
+            // Colonne Actions
+            const actionsCell = document.createElement("td");
+            const manageButton = document.createElement("button");
+            manageButton.textContent = "Gérer les indisponibilités";
+            manageButton.addEventListener("click", () => openIndisponibilitesModal(competence_id, competence));
+            actionsCell.appendChild(manageButton);
+            row.appendChild(actionsCell);
+
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des compétences :", error);
+    }
+}
+
+
+function openIndisponibilitesModal(competenceId, competenceName) {
+    console.log("Appel de openIndisponibilitesModal avec :", {
+        competenceId,
+        competenceName,
+    });
+
+    // Définir la compétence sélectionnée
+    selectedCompetenceId = competenceId;
+
+    const modal = document.getElementById("indisponibilitesModal");
+    const tableBody = document.querySelector("#indisponibilitesTable tbody");
+
+    if (!tableBody) {
+        console.error("Le tableau 'indisponibilitesTable' ou son tbody n'existe pas !");
+        return;
+    }
+
+    console.log("Ouverture de la modale pour les indisponibilités :", {
+        competence_id: competenceId,
+        competence_name: competenceName,
+    });
+
+    // Réinitialiser le tableau
+    tableBody.innerHTML = `<tr><td colspan="3">Chargement...</td></tr>`;
+
+    // Charger les indisponibilités depuis l'API
+    fetchIndisponibilites(competenceId).then((indisponibilites) => {
+        tableBody.innerHTML = ""; // Vider le tableau
+
+        indisponibilites.forEach(({ date_debut, date_fin }) => {
+            const row = document.createElement("tr");
+
+            const dateDebutCell = document.createElement("td");
+            dateDebutCell.textContent = formatDate(date_debut);
+            row.appendChild(dateDebutCell);
+
+            const dateFinCell = document.createElement("td");
+            dateFinCell.textContent = formatDate(date_fin);
+            row.appendChild(dateFinCell);
+
+            const actionsCell = document.createElement("td");
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Supprimer";
+            deleteButton.addEventListener("click", () => deleteIndisponibilite(competenceId, date_debut, date_fin));
+            actionsCell.appendChild(deleteButton);
+            row.appendChild(actionsCell);
+
+            tableBody.appendChild(row);
+        });
+
+        console.log("Indisponibilités chargées :", indisponibilites);
+    });
+
+    // Afficher la modale
+    modal.style.display = "block";
+
+    // Fermer la modale
+    document.querySelector(".indisponibilites-close").addEventListener("click", () => {
+        modal.style.display = "none";
+        console.log("Modale fermée.");
+    });
+}
+
+
+async function fetchIndisponibilites(competenceId) {
+    const siteId = sessionStorage.getItem("selectedSite");
+    const token = localStorage.getItem("token");
+
+    try {
+        const response = await fetch(`/api/competence-disponibilites?competence_id=${competenceId}&site_id=${siteId}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            console.error("Erreur lors de la récupération des indisponibilités.");
+            return [];
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Erreur lors de la récupération des indisponibilités :", error);
+        return [];
+    }
+}
+
+
+function generateCalendar(indisponibilites) {
+    const calendarContainer = document.getElementById("calendarContainer");
+    calendarContainer.innerHTML = ""; // Réinitialiser le calendrier
+
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    // Créer un tableau pour le calendrier
+    const table = document.createElement("table");
+    table.classList.add("calendar");
+
+    // Ajouter les en-têtes des jours de la semaine
+    const daysOfWeek = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+    const headerRow = document.createElement("tr");
+    daysOfWeek.forEach((day) => {
+        const th = document.createElement("th");
+        th.textContent = day;
+        headerRow.appendChild(th);
+    });
+    table.appendChild(headerRow);
+
+    // Générer les jours du mois
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay(); // Jour de la semaine du 1er jour du mois
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate(); // Nombre de jours dans le mois
+
+    let date = 1;
+    for (let i = 0; i < 6; i++) {
+        const row = document.createElement("tr");
+
+        for (let j = 0; j < 7; j++) {
+            const cell = document.createElement("td");
+
+            if (i === 0 && j < (firstDay === 0 ? 6 : firstDay - 1)) {
+                // Cellules vides avant le début du mois
+                cell.textContent = "";
+            } else if (date > daysInMonth) {
+                // Cellules vides après la fin du mois
+                cell.textContent = "";
+            } else {
+                // Ajouter la date
+                cell.textContent = date;
+
+                // Vérifier si la date est une indisponibilité
+                const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+                const isIndisponible = indisponibilites.some(
+                    (ind) => ind.date_debut <= formattedDate && ind.date_fin >= formattedDate
+                );
+
+                if (isIndisponible) {
+                    cell.classList.add("indisponible");
+                }
+
+                date++;
+            }
+
+            row.appendChild(cell);
+        }
+
+        table.appendChild(row);
+    }
+
+    calendarContainer.appendChild(table);
+}
+
+document.getElementById("addIndisponibiliteButton").addEventListener("click", async () => {
+    const dateDebut = prompt("Entrez la date de début (YYYY-MM-DD) :");
+    const dateFin = prompt("Entrez la date de fin (YYYY-MM-DD) :");
+
+    if (!dateDebut || !dateFin) {
+        alert("Les deux dates sont obligatoires.");
+        console.error("Erreur : Les dates saisies sont invalides ou manquantes.");
+        return;
+    }
+
+    const competenceId = selectedCompetenceId; // Variable globale pour suivre la compétence sélectionnée
+    const siteId = sessionStorage.getItem("selectedSite");
+    const token = localStorage.getItem("token");
+
+    console.log("Données pour l'ajout d'une indisponibilité :", {
+        competence_id: competenceId,
+        date_debut: dateDebut,
+        date_fin: dateFin,
+        site_id: siteId,
+    });
+
+    if (!competenceId || !siteId || !token) {
+        alert("Erreur : Les informations nécessaires sont manquantes.");
+        console.error("Erreur : competenceId, siteId ou token manquant.", {
+            competenceId,
+            siteId,
+            token,
+        });
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/add-indisponibilite", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                competence_id: competenceId,
+                date_debut: dateDebut,
+                date_fin: dateFin,
+                site_id: siteId,
+            }),
+        });
+
+        if (response.ok) {
+            alert("Indisponibilité ajoutée avec succès.");
+            console.log("Indisponibilité ajoutée avec succès.");
+            openIndisponibilitesModal(competenceId); // Recharger la modale
+        } else {
+            const errorText = await response.text();
+            alert("Erreur lors de l'ajout de l'indisponibilité.");
+            console.error("Erreur lors de l'ajout de l'indisponibilité :", errorText);
+        }
+    } catch (error) {
+        console.error("Erreur lors de l'ajout de l'indisponibilité :", error);
+    }
+});
+
+function adjustDate(date, offset) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + offset); // Décale la date de +1 ou -1 jour
+    return d.toISOString().split('T')[0]; // Retourne au format YYYY-MM-DD
+}
+
+async function deleteIndisponibilite(competenceId, dateDebut, dateFin) {
+    const siteId = sessionStorage.getItem("selectedSite");
+    const token = localStorage.getItem("token");
+
+    // Ajuster les dates pour correspondre à la base de données
+    const adjustedDateDebut = adjustDate(dateDebut, 1); // Décale de +1 jour
+    const adjustedDateFin = adjustDate(dateFin, 1);
+
+    console.log("Données pour la suppression d'une indisponibilité :", {
+        competence_id: competenceId,
+        date_debut: adjustedDateDebut,
+        date_fin: adjustedDateFin,
+        site_id: siteId,
+    });
+
+    if (!competenceId || !adjustedDateDebut || !adjustedDateFin || !siteId || !token) {
+        alert("Erreur : Les informations nécessaires sont manquantes.");
+        console.error("Erreur : competenceId, dateDebut, dateFin, siteId ou token manquant.", {
+            competenceId,
+            dateDebut: adjustedDateDebut,
+            dateFin: adjustedDateFin,
+            siteId,
+            token,
+        });
+        return;
+    }
+
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette indisponibilité ?")) {
+        console.log("Suppression annulée par l'utilisateur.");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/remove-indisponibilite", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                competence_id: competenceId,
+                date_debut: adjustedDateDebut,
+                date_fin: adjustedDateFin,
+                site_id: siteId,
+            }),
+        });
+
+        if (response.ok) {
+            alert("Indisponibilité supprimée avec succès.");
+            console.log("Indisponibilité supprimée avec succès.");
+            openIndisponibilitesModal(competenceId); // Recharger la modale
+        } else {
+            const errorText = await response.text();
+            alert("Erreur lors de la suppression de l'indisponibilité.");
+            console.error("Erreur lors de la suppression de l'indisponibilité :", errorText);
+        }
+    } catch (error) {
+        console.error("Erreur lors de la suppression de l'indisponibilité :", error);
+    }
+}
 
 // Gestionnaire d'événements pour ajouter une compétence
 document.getElementById("addCompetenceButton").addEventListener("click", addCompetence);
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("Chargement des compétences pour 'Gérer les indisponibilités'.");
     fetchCompetences(); // Charger les compétences
     fetchCompetenceDays(); // Charger les jours par compétence
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("Chargement des compétences pour 'Gérer les indisponibilités'.");
+    fetchCompetenceIndisponibilitesTable(); // Charger les compétences pour le tableau
+});
+
+const tableBody = document.querySelector("#competenceIndisponibilitesTable tbody");
+if (!tableBody) {
+    console.error("Le tableau 'Gérer les indisponibilités par compétence' n'existe pas dans le DOM !");
+} else {
+    console.log("Le tableau 'Gérer les indisponibilités par compétence' a été trouvé.");
+}

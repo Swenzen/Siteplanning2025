@@ -244,4 +244,94 @@ router.post('/toggle-competence-day', authenticateToken, (req, res) => {
     });
 });
 
+
+router.get('/competence-disponibilites', authenticateToken, (req, res) => {
+    const { competence_id, site_id } = req.query;
+
+    const query = `
+        SELECT date_debut, date_fin
+        FROM Tcompetence_disponibilite
+        WHERE competence_id = ? AND EXISTS (
+            SELECT 1 FROM Tcompetence_Tsite WHERE competence_id = ? AND site_id = ?
+        )
+    `;
+
+    connection.query(query, [competence_id, competence_id, site_id], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des indisponibilités :', err.message);
+            return res.status(500).send('Erreur lors de la récupération des indisponibilités.');
+        }
+
+        res.json(results);
+    });
+});
+
+router.post('/add-indisponibilite', authenticateToken, (req, res) => {
+    const { competence_id, date_debut, date_fin, site_id } = req.body;
+
+    const query = `
+        INSERT INTO Tcompetence_disponibilite (competence_id, date_debut, date_fin)
+        SELECT ?, ?, ?
+        WHERE EXISTS (
+            SELECT 1 FROM Tcompetence_Tsite WHERE competence_id = ? AND site_id = ?
+        )
+    `;
+
+    connection.query(query, [competence_id, date_debut, date_fin, competence_id, site_id], (err) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout de l\'indisponibilité :', err.message);
+            return res.status(500).send('Erreur lors de l\'ajout de l\'indisponibilité.');
+        }
+
+        res.send('Indisponibilité ajoutée avec succès.');
+    });
+});
+
+router.post('/remove-indisponibilite', authenticateToken, (req, res) => {
+    const { competence_id, date_debut, date_fin, site_id } = req.body;
+
+    console.log("Requête reçue pour /remove-indisponibilite :", {
+        competence_id,
+        date_debut,
+        date_fin,
+        site_id,
+    });
+
+    // Vérifier si tous les paramètres nécessaires sont présents
+    if (!competence_id || !date_debut || !date_fin || !site_id) {
+        console.error("Paramètres manquants :", { competence_id, date_debut, date_fin, site_id });
+        return res.status(400).send("Les champs competence_id, date_debut, date_fin et site_id sont requis.");
+    }
+
+    const query = `
+        DELETE FROM Tcompetence_disponibilite
+        WHERE competence_id = ? AND date_debut = ? AND date_fin = ? AND EXISTS (
+            SELECT 1 
+            FROM Tcompetence_Tsite 
+            WHERE competence_id = ? AND site_id = ?
+        )
+    `;
+
+    connection.query(query, [competence_id, date_debut, date_fin, competence_id, site_id], (err, results) => {
+        if (err) {
+            console.error("Erreur lors de la suppression de l'indisponibilité :", err.message);
+            return res.status(500).send("Erreur lors de la suppression de l'indisponibilité.");
+        }
+
+        console.log("Résultats de la requête DELETE :", results);
+
+        if (results.affectedRows === 0) {
+            console.warn("Aucune ligne supprimée. Vérifiez les paramètres :", {
+                competence_id,
+                date_debut,
+                date_fin,
+                site_id,
+            });
+            return res.status(404).send("Aucune indisponibilité trouvée pour ces paramètres.");
+        }
+
+        res.send("Indisponibilité supprimée avec succès.");
+    });
+});
+
 module.exports = router;

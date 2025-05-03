@@ -6,6 +6,9 @@
     <title>Base de Donnée</title>
     <link rel="stylesheet" href="style.css">
     <script src="header.js" defer></script>
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/main.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.css" rel="stylesheet">
 </head>
 <body>
     <div id="content">
@@ -65,6 +68,22 @@
                             <th>Vendredi</th>
                             <th>Samedi</th>
                             <th>Dimanche</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Les lignes seront ajoutées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Nouveau tableau pour gérer les indisponibilités par compétence -->
+            <div class="form-container">
+                <h3>Gérer les indisponibilités par compétence</h3>
+                <table id="competenceIndisponibilitesTable">
+                    <thead>
+                        <tr>
+                            <th>Compétence</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -198,7 +217,30 @@
         <button id="saveDatesButton">Sauvegarder</button>
     </div>
 </div>
+
+<!<!-- Fenêtre modale pour afficher et gérer les indisponibilités -->
+<div id="indisponibilitesModal" class="indisponibilites-modal">
+    <div class="indisponibilites-modal-content">
+        <span class="indisponibilites-close">&times;</span>
+        <h3>Gérer les indisponibilités</h3>
+        <table id="indisponibilitesTable">
+            <thead>
+                <tr>
+                    <th>Date de début</th>
+                    <th>Date de fin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les lignes seront ajoutées dynamiquement -->
+            </tbody>
+        </table>
+        <button id="addIndisponibiliteButton">Ajouter une indisponibilité</button>
+    </div>
+</div>
     
+
+
     <!-- Inclure les fichiers JavaScript -->
     <script src="js/bdd/horaires.js"></script>
     <script src="js/bdd/competencespersonnes.js"></script>
@@ -206,6 +248,6 @@
     <script src="js/bdd/competenceshoraires.js"></script>
     <script src="js/bdd/tableaureposrttforma.js"></script>
     <script src="js/bdd/tableaunom.js"></script>
-    
+
 </body>
 </html>
