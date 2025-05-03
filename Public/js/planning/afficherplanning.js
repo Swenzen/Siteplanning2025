@@ -134,10 +134,12 @@ function displayCompetencesWithDates(competences, startDate, endDate) {
         dateHeaders.forEach((date) => {
             const dateCell = document.createElement("td");
 
+            const currentDate = new Date(date);
+            const dayOfWeek = currentDate.getDay(); // 0 = dimanche, 1 = lundi, etc.
+
             // Vérifier si la date est dans l'intervalle de la compétence
             const dateDebut = new Date(competence.date_debut);
             const dateFin = new Date(competence.date_fin);
-            const currentDate = new Date(date);
 
             // Vérifier si la date est dans une plage d'indisponibilité
             const indisponibiliteDebut = competence.indisponibilite_debut
@@ -147,10 +149,24 @@ function displayCompetencesWithDates(competences, startDate, endDate) {
                 ? new Date(competence.indisponibilite_fin)
                 : null;
 
+            // Vérifier si le jour est indisponible
+            const joursIndisponibles = competence.jours_indisponibles
+                ? competence.jours_indisponibles.split(",").map(Number)
+                : [];
+
+            console.log("Jour actuel :", dayOfWeek);
+            console.log("Jours indisponibles :", joursIndisponibles);
+            console.log("Date actuelle :", currentDate);
+            console.log("Date début :", dateDebut);
+            console.log("Date fin :", dateFin);
+            console.log("Indisponibilité début :", indisponibiliteDebut);
+            console.log("Indisponibilité fin :", indisponibiliteFin);
+
             if (
                 currentDate >= dateDebut &&
                 currentDate <= dateFin &&
-                !(indisponibiliteDebut && indisponibiliteFin && currentDate >= indisponibiliteDebut && currentDate <= indisponibiliteFin)
+                !(indisponibiliteDebut && indisponibiliteFin && currentDate >= indisponibiliteDebut && currentDate <= indisponibiliteFin) &&
+                (!joursIndisponibles.length || !joursIndisponibles.includes((dayOfWeek === 0 ? 7 : dayOfWeek))) // Correction ici
             ) {
                 dateCell.textContent = "✔"; // Disponible
             } else {

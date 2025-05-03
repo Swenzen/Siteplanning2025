@@ -236,7 +236,13 @@ CREATE TABLE Tcompetence_disponibilite (
     FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE
 );
 
-
+CREATE TABLE Tcompetence_jour (
+    competence_jour_id INT AUTO_INCREMENT PRIMARY KEY,
+    competence_id INT NOT NULL, -- Référence à la compétence
+    jour_id INT NOT NULL,       -- Référence au jour (lundi, mardi, etc.)
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
+    FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id) ON DELETE CASCADE
+);
 
 -- Insérer des valeurs dans Tnom
 INSERT INTO Tnom (nom_id, nom) VALUES
@@ -370,3 +376,9 @@ INSERT INTO Tuser (user_id, username, password, email) VALUES
 -- Associer l'utilisateur au site dans Tuser_Tsite
 INSERT INTO Tuser_Tsite (user_id, site_id) VALUES
 (1, 1);
+
+
+INSERT INTO Tcompetence_jour (competence_id, jour_id) VALUES
+(1, 7), -- Scanner indisponible le dimanche
+(2, 6), -- IRM indisponible le samedi
+(2, 7); -- IRM indisponible le dimanche

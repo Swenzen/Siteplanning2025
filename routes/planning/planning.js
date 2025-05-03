@@ -11,20 +11,24 @@ router.get('/datecompetence', authenticateToken, (req, res) => {
     }
 
     const query = `
-    SELECT c.competence_id, c.competence, 
-           c.date_debut, 
-           c.date_fin,
-           cd.date_debut AS indisponibilite_debut,
-           cd.date_fin AS indisponibilite_fin
-    FROM Tcompetence c
-    JOIN Tcompetence_Tsite cs ON c.competence_id = cs.competence_id
-    LEFT JOIN Tcompetence_disponibilite cd ON c.competence_id = cd.competence_id
-    WHERE cs.site_id = ?
-      AND c.date_debut <= ?
-      AND c.date_fin >= ?
-`;
+        SELECT c.competence_id, c.competence, 
+       c.date_debut, 
+       c.date_fin,
+       MIN(cd.date_debut) AS indisponibilite_debut,
+       MAX(cd.date_fin) AS indisponibilite_fin,
+       GROUP_CONCAT(DISTINCT cj.jour_id) AS jours_indisponibles
+FROM Tcompetence c
+JOIN Tcompetence_Tsite cs ON c.competence_id = cs.competence_id
+LEFT JOIN Tcompetence_disponibilite cd ON c.competence_id = cd.competence_id
+LEFT JOIN Tcompetence_jour cj ON c.competence_id = cj.competence_id
+WHERE cs.site_id = ?
+  AND c.date_debut <= ?
+  AND c.date_fin >= ?
+  AND (cd.date_debut IS NULL OR cd.date_fin IS NULL OR NOT (cd.date_debut <= ? AND cd.date_fin >= ?))
+GROUP BY c.competence_id, c.competence, c.date_debut, c.date_fin;
+    `;
 
-    const queryParams = [site_id, end_date, start_date];
+    const queryParams = [site_id, end_date, start_date, start_date, end_date, new Date(start_date).getDay()];
 
     connection.query(query, queryParams, (err, results) => {
         if (err) {
