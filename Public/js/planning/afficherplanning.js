@@ -40,7 +40,6 @@ applyDateFilterButton.addEventListener("click", async () => {
     displayCompetencesWithDates(competences, startDate, endDate);
 });
 
-// Fonction pour récupérer les compétences depuis la route backend
 async function fetchCompetences(siteId, startDate, endDate) {
     const token = localStorage.getItem("token");
 
@@ -136,7 +135,23 @@ function displayCompetencesWithDates(competences, startDate, endDate) {
             const dateCell = document.createElement("td");
 
             // Vérifier si la date est dans l'intervalle de la compétence
-            if (competence.date_debut <= date && competence.date_fin >= date) {
+            const dateDebut = new Date(competence.date_debut);
+            const dateFin = new Date(competence.date_fin);
+            const currentDate = new Date(date);
+
+            // Vérifier si la date est dans une plage d'indisponibilité
+            const indisponibiliteDebut = competence.indisponibilite_debut
+                ? new Date(competence.indisponibilite_debut)
+                : null;
+            const indisponibiliteFin = competence.indisponibilite_fin
+                ? new Date(competence.indisponibilite_fin)
+                : null;
+
+            if (
+                currentDate >= dateDebut &&
+                currentDate <= dateFin &&
+                !(indisponibiliteDebut && indisponibiliteFin && currentDate >= indisponibiliteDebut && currentDate <= indisponibiliteFin)
+            ) {
                 dateCell.textContent = "✔"; // Disponible
             } else {
                 dateCell.textContent = "✘"; // Non disponible

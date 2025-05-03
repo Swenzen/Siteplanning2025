@@ -262,17 +262,27 @@ function makeDateEditable(cell, competenceId, dateType) {
                 const siteId = sessionStorage.getItem('selectedSite');
                 const token = localStorage.getItem('token');
 
+                // Récupérer les valeurs actuelles de date_debut et date_fin
+                const row = cell.parentElement;
+                const dateDebut = row.querySelector('td:nth-child(2)').textContent.split('/').reverse().join('-');
+                const dateFin = row.querySelector('td:nth-child(3)').textContent.split('/').reverse().join('-');
+
+                const updatedDates = {
+                    competence_id: competenceId,
+                    site_id: siteId,
+                    date_debut: dateType === "date_debut" ? newValue : dateDebut,
+                    date_fin: dateType === "date_fin" ? newValue : dateFin
+                };
+
+                console.log('Données envoyées :', updatedDates);
+
                 const response = await fetch('/api/update-competence-dates', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        competence_id: competenceId,
-                        [dateType]: newValue,
-                        site_id: siteId
-                    })
+                    body: JSON.stringify(updatedDates)
                 });
 
                 if (response.ok) {

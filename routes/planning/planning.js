@@ -11,13 +11,17 @@ router.get('/datecompetence', authenticateToken, (req, res) => {
     }
 
     const query = `
-    SELECT DISTINCT c.competence_id, c.competence, cd.date_debut, cd.date_fin
+    SELECT c.competence_id, c.competence, 
+           c.date_debut, 
+           c.date_fin,
+           cd.date_debut AS indisponibilite_debut,
+           cd.date_fin AS indisponibilite_fin
     FROM Tcompetence c
     JOIN Tcompetence_Tsite cs ON c.competence_id = cs.competence_id
-    JOIN Tcompetence_disponibilite cd ON c.competence_id = cd.competence_id
+    LEFT JOIN Tcompetence_disponibilite cd ON c.competence_id = cd.competence_id
     WHERE cs.site_id = ?
-    AND cd.date_debut <= ?
-    AND cd.date_fin >= ?
+      AND c.date_debut <= ?
+      AND c.date_fin >= ?
 `;
 
     const queryParams = [site_id, end_date, start_date];
@@ -31,4 +35,8 @@ router.get('/datecompetence', authenticateToken, (req, res) => {
         res.json(results);
     });
 });
+
+
+
+
 module.exports = router;
