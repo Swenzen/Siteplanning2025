@@ -1,67 +1,114 @@
 // Fonction pour afficher les compétences dans le tableau *
+let selectedCompetenceId = null;
+
 async function fetchCompetences() {
     try {
-        console.time('fetchCompetences');
-
-        // Récupérer le site_id depuis le sessionStorage
         const siteId = sessionStorage.getItem('selectedSite');
-        if (!siteId) {
-            console.error('Erreur : le site_id est introuvable.');
-            alert('Erreur : le site n\'est pas chargé.');
-            return;
-        }
-
-        // Récupérer le token depuis le localStorage
         const token = localStorage.getItem('token');
-        if (!token) {
-            console.error('Erreur : le token d\'authentification est introuvable.');
-            alert('Erreur : vous n\'êtes pas authentifié.');
-            return;
-        }
 
-        // Effectuer une requête pour récupérer les compétences liées au site
         const response = await fetch(`/api/competences?site_id=${siteId}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // Ajouter le jeton dans l'en-tête
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
 
         if (response.ok) {
             const data = await response.json();
-
             const tableBody = document.querySelector("#competencesTable tbody");
-            tableBody.innerHTML = ''; // Vider le contenu du tableau
+            tableBody.innerHTML = '';
 
-            // Ajouter les données récupérées au tableau
             data.forEach(rowData => {
                 const row = document.createElement("tr");
-
+            
                 const competenceCell = document.createElement("td");
                 competenceCell.textContent = rowData.competence;
                 row.appendChild(competenceCell);
-
+            
+                const dateDebutCell = document.createElement("td");
+                dateDebutCell.textContent = formatDate(rowData.date_debut);
+                dateDebutCell.addEventListener("click", () => openDateModal(rowData.competence_id, rowData.date_debut, rowData.date_fin));
+                row.appendChild(dateDebutCell);
+            
+                const dateFinCell = document.createElement("td");
+                dateFinCell.textContent = formatDate(rowData.date_fin);
+                dateFinCell.addEventListener("click", () => openDateModal(rowData.competence_id, rowData.date_debut, rowData.date_fin));
+                row.appendChild(dateFinCell);
+            
                 const actionCell = document.createElement("td");
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "Supprimer";
-                deleteButton.dataset.competenceId = rowData.competence_id;
+                deleteButton.addEventListener("click", () => deleteCompetence(rowData.competence_id));
                 actionCell.appendChild(deleteButton);
                 row.appendChild(actionCell);
-
+            
                 tableBody.appendChild(row);
             });
-
-            console.timeEnd('fetchCompetences');
-        } else if (response.status === 401) {
-            console.error('Erreur 401 : Non autorisé. Vérifiez votre authentification.');
-            alert('Erreur : Vous n\'êtes pas autorisé à accéder à cette ressource.');
-        } else {
-            console.error('Erreur lors de la récupération des compétences :', response.status);
         }
     } catch (error) {
         console.error('Erreur lors de la récupération des compétences :', error);
     }
+}
+
+function openDateModal(competenceId, dateDebut, dateFin) {
+    selectedCompetenceId = competenceId;
+
+    const modal = document.getElementById("dateModal");
+    const dateDebutInput = document.getElementById("dateDebutInput");
+    const dateFinInput = document.getElementById("dateFinInput");
+
+    dateDebutInput.value = dateDebut || '';
+    dateFinInput.value = dateFin || '';
+
+    modal.style.display = "block";
+}
+
+document.getElementById("saveDatesButton").addEventListener("click", async () => {
+    const dateDebut = document.getElementById("dateDebutInput").value;
+    const dateFin = document.getElementById("dateFinInput").value;
+
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await fetch('/api/update-competence-dates', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                competence_id: selectedCompetenceId,
+                date_debut: dateDebut,
+                date_fin: dateFin,
+                site_id: siteId
+            })
+        });
+
+        if (response.ok) {
+            alert('Dates mises à jour avec succès.');
+            fetchCompetences();
+        } else {
+            alert('Erreur lors de la mise à jour des dates.');
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour des dates :', error);
+    }
+
+    document.getElementById("dateModal").style.display = "none";
+});
+
+document.querySelector(".date-close").addEventListener("click", () => {
+    document.getElementById("dateModal").style.display = "none";
+});
+function formatDate(dateString) {
+    if (!dateString) return 'Non définie';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Les mois commencent à 0
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
 }
 
 async function addCompetence() {

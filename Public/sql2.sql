@@ -7,10 +7,12 @@ CREATE TABLE Tnom (
     nom VARCHAR(255) NOT NULL
 );
 
--- Créer la table Tcompetence
+-- Créer la table Tcompetence avec des colonnes pour les dates
 CREATE TABLE Tcompetence (
     competence_id INT AUTO_INCREMENT PRIMARY KEY,
-    competence VARCHAR(255) NOT NULL
+    competence VARCHAR(255) NOT NULL,
+    date_debut DATE NULL,
+    date_fin DATE NULL
 );
 
 -- Créer la table Tcompetence_nom

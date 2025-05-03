@@ -38,6 +38,8 @@
                 <thead>
                     <tr>
                         <th>Compétence</th>
+                        <th>Date de début</th>
+                        <th>Date de fin</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -161,6 +163,19 @@
             <button id="saveName">Sauvegarder</button>
         </div>
     </div>
+    
+<!-- Fenêtre modale pour modifier les dates -->
+<div id="dateModal" class="date-modal">
+    <div class="date-modal-content">
+        <span class="date-close">&times;</span>
+        <h2>Modifier les dates</h2>
+        <label for="dateDebutInput">Date de début :</label>
+        <input type="date" id="dateDebutInput">
+        <label for="dateFinInput">Date de fin :</label>
+        <input type="date" id="dateFinInput">
+        <button id="saveDatesButton">Sauvegarder</button>
+    </div>
+</div>
     
     <!-- Inclure les fichiers JavaScript -->
     <script src="js/bdd/horaires.js"></script>

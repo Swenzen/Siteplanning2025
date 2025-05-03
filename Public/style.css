@@ -384,6 +384,46 @@ header #user-section #logoutButton:hover {
     cursor: pointer;
 }
 
+/* ========================= */
+/* MODAL POUR LES DATES      */
+/* ========================= */
+.date-modal {
+    display: none; /* Caché par défaut */
+    position: fixed; /* Reste en place */
+    z-index: 2000; /* Plus élevé pour être au-dessus des autres éléments */
+    left: 0;
+    top: 0;
+    width: 100%; /* Largeur complète */
+    height: 100%; /* Hauteur complète */
+    overflow: auto; /* Permet le défilement si nécessaire */
+    background-color: rgba(0, 0, 0, 0.4); /* Fond noir avec opacité */
+}
+
+.date-modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* Centré verticalement et horizontalement */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Largeur ajustable */
+    border-radius: 10px; /* Coins arrondis */
+}
+
+.date-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.date-close:hover,
+.date-close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
 
 /* ========================= */
 /* SECTION AUTHENTIFICATION  */

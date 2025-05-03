@@ -17,7 +17,7 @@ router.get('/competences', authenticateToken, (req, res) => {
     }
 
     const query = `
-        SELECT c.competence_id, c.competence
+        SELECT c.competence_id, c.competence, c.date_debut, c.date_fin
         FROM Tcompetence c
         JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
         WHERE ct.site_id = ?
@@ -37,6 +37,30 @@ router.get('/competences', authenticateToken, (req, res) => {
     });
 });
 
+
+router.post('/update-competence-dates', authenticateToken, (req, res) => {
+    const { competence_id, date_debut, date_fin, site_id } = req.body;
+    const userSiteIds = req.user.siteIds;
+
+    if (!userSiteIds.includes(String(site_id))) {
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
+
+    const query = `
+        UPDATE Tcompetence
+        SET date_debut = ?, date_fin = ?
+        WHERE competence_id = ?
+    `;
+
+    connection.query(query, [date_debut, date_fin, competence_id], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la mise à jour des dates :', err.message);
+            return res.status(500).send('Erreur lors de la mise à jour des dates.');
+        }
+
+        res.send('Dates mises à jour avec succès.');
+    });
+});
 
 router.post('/add-competence2', authenticateToken, (req, res) => {
     const { competence, displayOrder } = req.body;
