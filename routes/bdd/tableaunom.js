@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const connection = require('../db'); // Importer la connexion à la base de données
-const authenticateToken = require('../middleware/auth'); // Importer le middleware d'authentification
+const connection = require('../../db');
+const authenticateToken = require('../../middleware/auth');
 
 // Route pour mettre à jour le nom (protégée)
 router.post('/update-name', authenticateToken, (req, res) => {
