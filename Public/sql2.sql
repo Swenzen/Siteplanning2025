@@ -7,10 +7,11 @@ CREATE TABLE Tnom (
     nom VARCHAR(255) NOT NULL
 );
 
--- Créer la table Tcompetence avec des colonnes pour les dates
 CREATE TABLE Tcompetence (
     competence_id INT AUTO_INCREMENT PRIMARY KEY,
     competence VARCHAR(255) NOT NULL,
+    date_debut DATE NOT NULL DEFAULT '2025-01-01', -- Date de début par défaut
+    date_fin DATE NOT NULL DEFAULT '3000-01-01'    -- Date de fin par défaut
 );
 
 -- Créer la table Tcompetence_nom
@@ -245,11 +246,11 @@ INSERT INTO Tnom (nom_id, nom) VALUES
 (4, 'Julie');
 
 -- Insérer des valeurs dans Tcompetence
-INSERT INTO Tcompetence (competence_id, competence) VALUES
-(1, 'Scanner'),
-(2, 'IRM'),
-(3, 'Radiologie'),
-(4, 'Densitométrie');
+INSERT INTO Tcompetence (competence_id, competence, date_debut, date_fin) VALUES
+(1, 'Scanner', '2025-01-01', '2025-12-31'),
+(2, 'IRM', '2025-05-01', '2025-10-31'),
+(3, 'Radiologie', '2025-02-01', '2025-08-31'),
+(4, 'Densitométrie', '2025-03-01', '2025-09-30');
 
 -- Insérer des valeurs dans Thoraire
 INSERT INTO Thoraire (horaire_id, horaire_debut, horaire_fin) VALUES
@@ -362,12 +363,10 @@ INSERT INTO Tplanning_Tsite (planning_id, site_id) VALUES
 (4, 3),
 (5, 1);
 
--- Insérer des codes d'accès pour les sites existants
-INSERT INTO Tsite_access (site_id, access_code) VALUES
-(1, 'AMIENS123'),
-(2, 'PARIS456'),
-(3, 'LILLE789');
+-- Insérer un utilisateur dans Tuser
+INSERT INTO Tuser (user_id, username, password, email) VALUES
+(1, 'p', '$2b$10$.UCnbJHFjrO.T65vUY4XEuui2TaahiYvu/9qs4/koL8axV2ka.D9S', 'p@gfg.p');
 
--- Exemple d'insertion d'un nouveau site avec un code d'accès
-INSERT INTO Tsite (site_name) VALUES ('Marseille');
-INSERT INTO Tsite_access (site_id, access_code) VALUES (LAST_INSERT_ID(), 'MARSEILLE321');
+-- Associer l'utilisateur au site dans Tuser_Tsite
+INSERT INTO Tuser_Tsite (user_id, site_id) VALUES
+(1, 1);

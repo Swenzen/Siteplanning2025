@@ -16,33 +16,56 @@ async function fetchCompetences() {
 
         if (response.ok) {
             const data = await response.json();
+            console.log('Données reçues de l\'API :', data);
+
             const tableBody = document.querySelector("#competencesTable tbody");
             tableBody.innerHTML = '';
 
-            data.forEach(rowData => {
+            const groupedData = data.reduce((acc, row) => {
+                if (!acc[row.competence_id]) {
+                    acc[row.competence_id] = {
+                        competence_id: row.competence_id, // Ajout explicite de competence_id
+                        competence: row.competence,
+                        date_debut: row.date_debut,
+                        date_fin: row.date_fin,
+                        indisponibilites: []
+                    };
+                }
+                if (row.indisponibilite_debut && row.indisponibilite_fin) {
+                    acc[row.competence_id].indisponibilites.push({
+                        date_debut: row.indisponibilite_debut,
+                        date_fin: row.indisponibilite_fin
+                    });
+                }
+                return acc;
+            }, {});
+
+            console.log('groupedData:', groupedData);
+
+            Object.values(groupedData).forEach(({ competence_id, competence, date_debut, date_fin }) => {
                 const row = document.createElement("tr");
-            
+
                 const competenceCell = document.createElement("td");
-                competenceCell.textContent = rowData.competence;
+                competenceCell.textContent = competence;
                 row.appendChild(competenceCell);
-            
+
                 const dateDebutCell = document.createElement("td");
-                dateDebutCell.textContent = formatDate(rowData.date_debut);
-                dateDebutCell.addEventListener("click", () => openDateModal(rowData.competence_id, rowData.date_debut, rowData.date_fin));
+                dateDebutCell.textContent = formatDate(date_debut);
+                dateDebutCell.addEventListener("click", () => makeDateEditable(dateDebutCell, competence_id, "date_debut"));
                 row.appendChild(dateDebutCell);
-            
+
                 const dateFinCell = document.createElement("td");
-                dateFinCell.textContent = formatDate(rowData.date_fin);
-                dateFinCell.addEventListener("click", () => openDateModal(rowData.competence_id, rowData.date_debut, rowData.date_fin));
+                dateFinCell.textContent = formatDate(date_fin);
+                dateFinCell.addEventListener("click", () => makeDateEditable(dateFinCell, competence_id, "date_fin"));
                 row.appendChild(dateFinCell);
-            
-                const actionCell = document.createElement("td");
+
+                const actionsCell = document.createElement("td");
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "Supprimer";
-                deleteButton.addEventListener("click", () => deleteCompetence(rowData.competence_id));
-                actionCell.appendChild(deleteButton);
-                row.appendChild(actionCell);
-            
+                deleteButton.addEventListener("click", () => deleteCompetence(competence_id));
+                actionsCell.appendChild(deleteButton);
+                row.appendChild(actionsCell);
+
                 tableBody.appendChild(row);
             });
         }
@@ -115,20 +138,14 @@ async function addCompetence() {
     const competence = prompt("Entrez la compétence");
     if (competence) {
         try {
-            console.time('addCompetence');
-
-            // Récupérer le site_id depuis le sessionStorage
             const siteId = sessionStorage.getItem('selectedSite');
             if (!siteId) {
-                console.error('Erreur : le site_id est introuvable.');
                 alert('Erreur : le site n\'est pas chargé.');
                 return;
             }
 
-            // Récupérer le token depuis le localStorage
             const token = localStorage.getItem('token');
             if (!token) {
-                console.error('Erreur : le token d\'authentification est introuvable.');
                 alert('Erreur : vous n\'êtes pas authentifié.');
                 return;
             }
@@ -143,8 +160,6 @@ async function addCompetence() {
             });
 
             if (!responseOrder.ok) {
-                const error = await responseOrder.text();
-                console.error('Erreur lors de la récupération du display_order maximum :', error);
                 alert('Erreur lors de la récupération du display_order maximum.');
                 return;
             }
@@ -152,7 +167,7 @@ async function addCompetence() {
             const maxOrderData = await responseOrder.json();
             const maxDisplayOrder = maxOrderData.maxDisplayOrder || 0;
 
-            // Envoyer la requête pour ajouter la compétence avec la liaison au site
+            // Envoyer la requête pour ajouter la compétence
             const response = await fetch('/api/add-competence2', {
                 method: 'POST',
                 headers: {
@@ -167,28 +182,38 @@ async function addCompetence() {
             });
 
             if (response.ok) {
-                console.log('Compétence ajoutée avec succès');
+                alert('Compétence ajoutée avec succès.');
                 fetchCompetences(); // Rafraîchir la liste des compétences
-                fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
-                fetchCompetencesPersonnes(); // Rafraîchir le tableau des compétences des personnes
             } else {
                 const error = await response.text();
                 console.error('Erreur lors de l\'ajout de la compétence :', error);
+                alert('Erreur lors de l\'ajout de la compétence.');
             }
-            console.timeEnd('addCompetence');
         } catch (error) {
             console.error('Erreur lors de la requête :', error);
+            alert('Erreur lors de l\'ajout de la compétence.');
         }
     }
 }
 
 async function deleteCompetence(competenceId) {
-    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+    const token = localStorage.getItem('token');
+    const siteId = sessionStorage.getItem('selectedSite');
+
+    console.log('competenceId:', competenceId);
+    console.log('siteId:', siteId);
 
     if (!siteId) {
-        console.error('Erreur : le site_id est introuvable.');
         alert('Erreur : le site n\'est pas chargé.');
+        return;
+    }
+
+    if (!competenceId) {
+        alert('Erreur : l\'ID de la compétence est manquant.');
+        return;
+    }
+
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette compétence ?')) {
         return;
     }
 
@@ -196,23 +221,23 @@ async function deleteCompetence(competenceId) {
         const response = await fetch('/api/delete-competence', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`, // Ajouter le token dans l'en-tête
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ competence_id: competenceId, site_id: siteId })
         });
 
         if (response.ok) {
-            console.log('Compétence supprimée avec succès');
+            alert('Compétence supprimée avec succès.');
             fetchCompetences(); // Rafraîchir la liste des compétences
-            fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
-            fetchCompetencesPersonnes(); // Rafraîchir le tableau des compétences des personnes
         } else {
             const error = await response.text();
             console.error('Erreur lors de la suppression de la compétence :', error);
+            alert('Erreur lors de la suppression de la compétence.');
         }
     } catch (error) {
         console.error('Erreur lors de la requête :', error);
+        alert('Erreur lors de la suppression de la compétence.');
     }
 }
 
@@ -221,3 +246,51 @@ document.getElementById("addCompetenceButton").addEventListener("click", addComp
 
 // Appeler la fonction pour récupérer les compétences lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', fetchCompetences);
+
+function makeDateEditable(cell, competenceId, dateType) {
+    const originalValue = cell.textContent;
+    const input = document.createElement("input");
+    input.type = "date";
+    input.value = originalValue.split('/').reverse().join('-'); // Convertir au format YYYY-MM-DD
+    cell.textContent = '';
+    cell.appendChild(input);
+
+    input.addEventListener("blur", async () => {
+        const newValue = input.value;
+        if (newValue) {
+            try {
+                const siteId = sessionStorage.getItem('selectedSite');
+                const token = localStorage.getItem('token');
+
+                const response = await fetch('/api/update-competence-dates', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        competence_id: competenceId,
+                        [dateType]: newValue,
+                        site_id: siteId
+                    })
+                });
+
+                if (response.ok) {
+                    cell.textContent = formatDate(newValue);
+                    alert('Date mise à jour avec succès.');
+                } else {
+                    alert('Erreur lors de la mise à jour de la date.');
+                    cell.textContent = originalValue; // Restaurer la valeur d'origine en cas d'erreur
+                }
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour de la date :', error);
+                cell.textContent = originalValue; // Restaurer la valeur d'origine en cas d'erreur
+            }
+        } else {
+            cell.textContent = originalValue; // Restaurer la valeur d'origine si aucune nouvelle valeur n'est saisie
+        }
+    });
+
+    input.focus();
+}
+

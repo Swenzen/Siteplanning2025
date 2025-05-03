@@ -8,16 +8,12 @@ router.get('/competences', authenticateToken, (req, res) => {
     const siteId = req.query.site_id; // Récupérer le site_id depuis la requête
     const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    console.log('Requête reçue pour /competences :', { siteId, userSiteIds });
-
-    // Vérifier que le site_id est dans la liste des sites autorisés
     if (!userSiteIds.includes(String(siteId))) {
-        console.error('Accès refusé : site_id non autorisé');
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     const query = `
-        SELECT c.competence_id, c.competence, cd.date_debut, cd.date_fin
+        SELECT c.competence_id, c.competence, c.date_debut, c.date_fin, cd.date_debut AS indisponibilite_debut, cd.date_fin AS indisponibilite_fin
         FROM Tcompetence c
         JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
         LEFT JOIN Tcompetence_disponibilite cd ON c.competence_id = cd.competence_id
@@ -31,35 +27,70 @@ router.get('/competences', authenticateToken, (req, res) => {
             return res.status(500).send('Erreur lors de la récupération des compétences');
         }
 
-        console.log('Compétences récupérées :', results);
         res.json(results);
     });
 });
 
 
 router.post('/update-competence-dates', authenticateToken, (req, res) => {
-    const { competence_id, date_debut, date_fin, site_id } = req.body;
+    const { competence_id, date_debut, date_fin, indisponibilites, site_id } = req.body;
     const userSiteIds = req.user.siteIds;
 
     if (!userSiteIds.includes(String(site_id))) {
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
-    const query = `
-        INSERT INTO Tcompetence_disponibilite (competence_id, date_debut, date_fin)
-        VALUES (?, ?, ?)
-        ON DUPLICATE KEY UPDATE date_debut = VALUES(date_debut), date_fin = VALUES(date_fin)
+    // Mettre à jour les dates de début et de fin de la compétence
+    const updateCompetenceQuery = `
+        UPDATE Tcompetence
+        SET date_debut = ?, date_fin = ?
+        WHERE competence_id = ?
     `;
 
-    connection.query(query, [competence_id, date_debut, date_fin], (err, results) => {
+    connection.query(updateCompetenceQuery, [date_debut, date_fin, competence_id], (err) => {
         if (err) {
-            console.error('Erreur lors de la mise à jour des périodes :', err.message);
-            return res.status(500).send('Erreur lors de la mise à jour des périodes.');
+            console.error('Erreur lors de la mise à jour des dates de la compétence :', err.message);
+            return res.status(500).send('Erreur lors de la mise à jour des dates de la compétence.');
         }
 
-        res.send('Périodes mises à jour avec succès.');
+        // Supprimer les indisponibilités existantes pour cette compétence
+        const deleteIndisponibilitesQuery = `
+            DELETE FROM Tcompetence_disponibilite
+            WHERE competence_id = ?
+        `;
+
+        connection.query(deleteIndisponibilitesQuery, [competence_id], (err) => {
+            if (err) {
+                console.error('Erreur lors de la suppression des indisponibilités :', err.message);
+                return res.status(500).send('Erreur lors de la suppression des indisponibilités.');
+            }
+
+            // Insérer les nouvelles indisponibilités
+            if (indisponibilites && indisponibilites.length > 0) {
+                const insertIndisponibilitesQuery = `
+                    INSERT INTO Tcompetence_disponibilite (competence_id, date_debut, date_fin)
+                    VALUES ?
+                `;
+
+                const values = indisponibilites.map(ind => [competence_id, ind.date_debut, ind.date_fin]);
+
+                connection.query(insertIndisponibilitesQuery, [values], (err) => {
+                    if (err) {
+                        console.error('Erreur lors de l\'insertion des indisponibilités :', err.message);
+                        return res.status(500).send('Erreur lors de l\'insertion des indisponibilités.');
+                    }
+
+                    res.send('Dates et indisponibilités mises à jour avec succès.');
+                });
+            } else {
+                res.send('Dates mises à jour avec succès (aucune indisponibilité ajoutée).');
+            }
+        });
     });
 });
+
+
+
 router.post('/add-competence2', authenticateToken, (req, res) => {
     const { competence, displayOrder } = req.body;
     const siteId = req.body.site_id; // Récupérer le site_id depuis la requête
@@ -111,18 +142,17 @@ router.post('/add-competence2', authenticateToken, (req, res) => {
 });
 
 router.post('/delete-competence', authenticateToken, (req, res) => {
-    const { competence_id, site_id } = req.body; // Récupérer le site_id depuis la requête
-    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
+    const { competence_id, site_id } = req.body;
 
-    console.log('Données utilisateur (req.user) :', req.user);
+    console.log('Requête reçue pour /delete-competence :', req.body);
+
+    const userSiteIds = req.user.siteIds;
 
     if (!competence_id || !site_id) {
         return res.status(400).send('Les champs "competence_id" et "site_id" sont requis');
     }
 
-    // Vérifier que le site_id est dans la liste des sites autorisés
     if (!userSiteIds.includes(String(site_id))) {
-        console.error('Accès refusé : site_id non autorisé');
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
     }
 
@@ -133,16 +163,11 @@ router.post('/delete-competence', authenticateToken, (req, res) => {
         WHERE c.competence_id = ? AND ct.site_id = ?
     `;
 
-    console.log('Requête SQL exécutée :', deleteQuery);
-    console.log('Paramètres SQL :', [competence_id, site_id]);
-
     connection.query(deleteQuery, [competence_id, site_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression de la compétence :', err.message);
             return res.status(500).send('Erreur lors de la suppression de la compétence');
         }
-
-        console.log('Résultat de la suppression :', result);
 
         if (result.affectedRows === 0) {
             return res.status(404).send('Aucune compétence trouvée pour ce site');
