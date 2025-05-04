@@ -223,4 +223,82 @@ router.post('/delete-horaire-competence-jour', authenticateToken, (req, res) => 
     });
 });
 
+router.get('/horaire-competence-dates', authenticateToken, (req, res) => {
+    const siteId = req.query.site_id;
+
+    if (!siteId) {
+        return res.status(400).send('Le site_id est requis.');
+    }
+
+    const query = `
+        SELECT h.horaire_id, 
+               h.horaire_debut, 
+               h.horaire_fin, 
+               c.competence_id, 
+               c.competence, 
+               DATE_FORMAT(hct.date_debut, '%Y-%m-%d') AS date_debut, 
+               DATE_FORMAT(hct.date_fin, '%Y-%m-%d') AS date_fin
+        FROM Thoraire h
+        JOIN Thoraire_Tsite ht ON h.horaire_id = ht.horaire_id
+        JOIN Thoraire_competence_Tsite hct ON h.horaire_id = hct.horaire_id AND hct.site_id = ht.site_id
+        JOIN Tcompetence c ON hct.competence_id = c.competence_id
+        WHERE ht.site_id = ?
+        ORDER BY h.horaire_id, c.competence_id;
+    `;
+
+    connection.query(query, [siteId], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des données :', err.message);
+            return res.status(500).send('Erreur lors de la récupération des données.');
+        }
+
+        const groupedData = results.reduce((acc, row) => {
+            if (!acc[row.horaire_id]) {
+                acc[row.horaire_id] = {
+                    horaire_id: row.horaire_id,
+                    horaire_debut: row.horaire_debut,
+                    horaire_fin: row.horaire_fin,
+                    competences: {}
+                };
+            }
+
+            if (!acc[row.horaire_id].competences[row.competence_id]) {
+                acc[row.horaire_id].competences[row.competence_id] = {
+                    competence_id: row.competence_id,
+                    competence: row.competence,
+                    date_debut: row.date_debut,
+                    date_fin: row.date_fin
+                };
+            }
+
+            return acc;
+        }, {});
+
+        res.json(Object.values(groupedData));
+    });
+});
+
+router.post('/update-horaire-competence-dates', authenticateToken, (req, res) => {
+    const { horaire_id, competence_id, date_debut, date_fin, site_id } = req.body;
+
+    if (!horaire_id || !competence_id || !date_debut || !date_fin || !site_id) {
+        return res.status(400).send('Tous les champs sont requis.');
+    }
+
+    const query = `
+        UPDATE Thoraire_competence_Tsite
+        SET date_debut = ?, date_fin = ?
+        WHERE horaire_id = ? AND competence_id = ? AND site_id = ?
+    `;
+
+    connection.query(query, [date_debut, date_fin, horaire_id, competence_id, site_id], (err) => {
+        if (err) {
+            console.error('Erreur lors de la mise à jour des dates :', err.message);
+            return res.status(500).send('Erreur lors de la mise à jour des dates.');
+        }
+
+        res.send('Dates mises à jour avec succès.');
+    });
+});
+
 module.exports = router;

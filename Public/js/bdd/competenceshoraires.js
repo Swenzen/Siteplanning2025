@@ -265,7 +265,182 @@ async function toggleHoraireCompetenceDay(horaireId, competenceId, jourId, isChe
     }
 }
 
+async function fetchHoraireCompetenceDates() {
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    if (!siteId || !token) {
+        console.error('Erreur : le site ou le token est manquant.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/horaire-competence-dates?site_id=${siteId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erreur lors de la récupération des données :', errorText);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Données récupérées :', data);
+
+        const tableHead = document.querySelector("#horaireCompetenceDatesTable thead tr");
+        const tableBody = document.querySelector("#horaireCompetenceDatesTable tbody");
+
+        // Réinitialiser l'en-tête et le corps du tableau
+        tableHead.innerHTML = '<th>Horaires</th>';
+        tableBody.innerHTML = '';
+
+        // Ajouter les colonnes pour les compétences
+        const allCompetences = new Set();
+        data.forEach(horaire => {
+            Object.values(horaire.competences).forEach(competence => {
+                allCompetences.add(competence.competence);
+            });
+        });
+
+        allCompetences.forEach(competence => {
+            const th = document.createElement("th");
+            th.textContent = competence; // Afficher le nom de la compétence
+            tableHead.appendChild(th);
+        });
+
+        // Ajouter les lignes pour les horaires
+        data.forEach(horaire => {
+            const row = document.createElement("tr");
+
+            // Colonne des horaires
+            const horaireCell = document.createElement("td");
+            horaireCell.textContent = `${horaire.horaire_debut} - ${horaire.horaire_fin}`;
+            row.appendChild(horaireCell);
+
+            // Colonnes des compétences
+            allCompetences.forEach(competenceName => {
+                const cell = document.createElement("td");
+
+                const competence = Object.values(horaire.competences).find(c => c.competence === competenceName);
+
+                if (competence) {
+                    // Sous-tableau pour afficher les dates de début et de fin
+                    const subTable = document.createElement("table");
+                    subTable.classList.add("sub-table");
+
+                    // Ajouter l'en-tête des dates
+                    const subTableHead = document.createElement("thead");
+                    const subTableHeaderRow = document.createElement("tr");
+                    const dateHeaders = ['Date de début', 'Date de fin'];
+                    dateHeaders.forEach(header => {
+                        const headerCell = document.createElement("th");
+                        headerCell.textContent = header;
+                        subTableHeaderRow.appendChild(headerCell);
+                    });
+                    subTableHead.appendChild(subTableHeaderRow);
+                    subTable.appendChild(subTableHead);
+
+                    // Ajouter les valeurs des dates
+                    const subTableBody = document.createElement("tbody");
+                    const subTableRow = document.createElement("tr");
+
+                    // Date de début
+                    const dateDebutCell = document.createElement("td");
+                    dateDebutCell.textContent = formatDate(competence.date_debut); // Formatage de la date
+                    dateDebutCell.addEventListener("click", () => openDateModal(horaire.horaire_id, competence.competence_id, competence.date_debut, competence.date_fin, "date_debut"));
+                    subTableRow.appendChild(dateDebutCell);
+
+                    // Date de fin
+                    const dateFinCell = document.createElement("td");
+                    dateFinCell.textContent = formatDate(competence.date_fin); // Formatage de la date
+                    dateFinCell.addEventListener("click", () => openDateModal(horaire.horaire_id, competence.competence_id, competence.date_debut, competence.date_fin, "date_fin"));
+                    subTableRow.appendChild(dateFinCell);
+
+                    subTableBody.appendChild(subTableRow);
+                    subTable.appendChild(subTableBody);
+
+                    cell.appendChild(subTable);
+                }
+
+                row.appendChild(cell);
+            });
+
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des données :', error);
+    }
+}
+
+function openDateModal(horaireId, competenceId, dateDebut, dateFin, dateType) {
+    const modal = document.getElementById("dateModal");
+    const dateDebutInput = document.getElementById("dateDebutInput");
+    const dateFinInput = document.getElementById("dateFinInput");
+
+    // Pré-remplir les champs avec les dates actuelles
+    dateDebutInput.value = dateDebut ? dateDebut.split('T')[0] : ''; // Format YYYY-MM-DD
+    dateFinInput.value = dateFin ? dateFin.split('T')[0] : ''; // Format YYYY-MM-DD
+
+    // Sauvegarder les modifications
+    document.getElementById("saveDatesButton").onclick = async () => {
+        const newDateDebut = dateDebutInput.value;
+        const newDateFin = dateFinInput.value;
+
+        const siteId = sessionStorage.getItem('selectedSite');
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch('/api/update-horaire-competence-dates', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    horaire_id: horaireId,
+                    competence_id: competenceId,
+                    date_debut: newDateDebut,
+                    date_fin: newDateFin,
+                    site_id: siteId
+                })
+            });
+
+            if (response.ok) {
+                alert('Dates mises à jour avec succès.');
+                fetchHoraireCompetenceDates(); // Rafraîchir le tableau
+            } else {
+                alert('Erreur lors de la mise à jour des dates.');
+            }
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour des dates :', error);
+        }
+
+        modal.style.display = "none";
+    };
+
+    modal.style.display = "block";
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'Non définie';
+
+    // Extraire uniquement la partie date (YYYY-MM-DD) et la formater en JJ/MM/AAAA
+    const [year, month, day] = dateString.split('-'); // Pas de conversion en objet Date
+    return `${day}/${month}/${year}`;
+}
+
+// Fermer le modal
+document.querySelector(".date-close").addEventListener("click", () => {
+    document.getElementById("dateModal").style.display = "none";
+});
+
 
 // Appeler la fonction pour récupérer les horaires par compétence lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', fetchHorairesCompetences);
 document.addEventListener('DOMContentLoaded', fetchHoraireCompetenceDays);
+document.addEventListener('DOMContentLoaded', fetchHoraireCompetenceDates);
