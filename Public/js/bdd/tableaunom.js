@@ -60,6 +60,173 @@ async function fetchData() {
     }
 }
 
+
+function openNomDateModal(nomId, dateDebut, dateFin) {
+    currentId = nomId;
+
+    const modal = document.getElementById("dateModal");
+    const dateDebutInput = document.getElementById("dateDebutInput");
+    const dateFinInput = document.getElementById("dateFinInput");
+
+    dateDebutInput.value = dateDebut || '';
+    dateFinInput.value = dateFin || '';
+
+    modal.style.display = "block";
+}
+
+document.getElementById("saveDatesButton").addEventListener("click", async () => {
+    const dateDebut = document.getElementById("dateDebutInput").value;
+    const dateFin = document.getElementById("dateFinInput").value;
+
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await fetch('/api/update-nom-dates', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nom_id: currentId,
+                date_debut: dateDebut,
+                date_fin: dateFin,
+                site_id: siteId
+            })
+        });
+
+        if (response.ok) {
+            alert('Dates mises à jour avec succès.');
+            fetchData(); // Recharger les données
+        } else {
+            alert('Erreur lors de la mise à jour des dates.');
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour des dates :', error);
+    }
+
+    document.getElementById("dateModal").style.display = "none";
+});
+
+
+async function addNom() {
+    const nom = prompt("Entrez le nom :");
+    const dateDebut = prompt("Entrez la date de début (YYYY-MM-DD) :");
+    const dateFin = prompt("Entrez la date de fin (YYYY-MM-DD) :");
+
+    if (!nom || !dateDebut || !dateFin) {
+        alert('Tous les champs sont obligatoires.');
+        return;
+    }
+
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await fetch('/api/add-nom', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nom, date_debut: dateDebut, date_fin: dateFin, site_id: siteId })
+        });
+
+        if (response.ok) {
+            alert('Nom ajouté avec succès.');
+            fetchData(); // Recharger les données
+        } else {
+            alert('Erreur lors de l\'ajout du nom.');
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout du nom :', error);
+    }
+}
+
+
+async function deleteNom(nomId) {
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce nom ?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/delete-nom', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nom_id: nomId, site_id: siteId })
+        });
+
+        if (response.ok) {
+            alert('Nom supprimé avec succès.');
+            fetchData(); // Recharger les données
+        } else {
+            alert('Erreur lors de la suppression du nom.');
+        }
+    } catch (error) {
+        console.error('Erreur lors de la suppression du nom :', error);
+    }
+}
+
+
+function makeDateEditable(cell, nomId, dateType) {
+    const originalValue = cell.textContent;
+    const input = document.createElement("input");
+    input.type = "date";
+    input.value = originalValue.split('/').reverse().join('-'); // Convertir au format YYYY-MM-DD
+    cell.textContent = '';
+    cell.appendChild(input);
+
+    input.addEventListener("blur", async () => {
+        const newValue = input.value;
+        if (newValue) {
+            try {
+                const siteId = sessionStorage.getItem('selectedSite');
+                const token = localStorage.getItem('token');
+
+                const updatedDates = {
+                    nom_id: nomId,
+                    site_id: siteId,
+                    date_debut: dateType === "date_debut" ? newValue : cell.parentElement.querySelector('td:nth-child(2)').textContent.split('/').reverse().join('-'),
+                    date_fin: dateType === "date_fin" ? newValue : cell.parentElement.querySelector('td:nth-child(3)').textContent.split('/').reverse().join('-')
+                };
+
+                const response = await fetch('/api/update-nom-dates', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedDates)
+                });
+
+                if (response.ok) {
+                    cell.textContent = formatDate(newValue);
+                    alert('Date mise à jour avec succès.');
+                } else {
+                    alert('Erreur lors de la mise à jour de la date.');
+                    cell.textContent = originalValue;
+                }
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour de la date :', error);
+                cell.textContent = originalValue;
+            }
+        } else {
+            cell.textContent = originalValue;
+        }
+    });
+
+    input.focus();
+}
+
+
+
 // Appeler la fonction pour récupérer les données lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', () => {
     fetchData(); // Charger les données pour le site sélectionné
@@ -112,79 +279,9 @@ async function saveName() {
     }
 }
 
-async function addNom() {
-    const token = localStorage.getItem('token');
-    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
-    const nom = document.getElementById('nomInput').value;
 
-    if (!nom) {
-        alert('Veuillez entrer un nom.');
-        return;
-    }
 
-    if (!siteId) {
-        console.error('Erreur : le site_id est introuvable.');
-        alert('Erreur : le site n\'est pas chargé.');
-        return;
-    }
 
-    console.log('Données envoyées :', { nom, site_id: siteId });
-
-    try {
-        const response = await fetch('/api/add-nom', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ nom, site_id: siteId })
-        });
-
-        if (response.ok) {
-            alert('Nom ajouté avec succès.');
-            fetchData(); // Recharger les données après l'ajout
-        } else {
-            const error = await response.text();
-            console.error('Erreur lors de l\'ajout du nom :', error);
-            alert('Erreur lors de l\'ajout du nom.');
-        }
-    } catch (error) {
-        console.error('Erreur lors de l\'ajout du nom :', error);
-    }
-}
-
-async function deleteName(nom_id) {
-    const token = localStorage.getItem('token');
-    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
-
-    if (!siteId) {
-        console.error('Erreur : le site_id est introuvable.');
-        alert('Erreur : le site n\'est pas chargé.');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/delete-nom', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ nom_id, site_id: siteId })
-        });
-
-        if (response.ok) {
-            alert('Nom supprimé avec succès.');
-            fetchData(); // Recharger les données après la suppression
-        } else {
-            const error = await response.text();
-            console.error('Erreur lors de la suppression du nom :', error);
-            alert('Erreur lors de la suppression du nom.');
-        }
-    } catch (error) {
-        console.error('Erreur lors de la suppression du nom :', error);
-    }
-}
 
 // Utiliser la délégation d'événements pour gérer les clics sur les boutons de suppression
 document.querySelector("#databaseTable tbody").addEventListener("click", (event) => {
@@ -206,8 +303,26 @@ document.querySelector(".close").addEventListener("click", closeModal);
 // Gestionnaire d'événements pour sauvegarder le nouveau nom
 document.getElementById("saveName").addEventListener("click", saveName);
 
-// Gestionnaire d'événements pour ajouter un nom
 document.getElementById("addNameButton").addEventListener("click", addNom);
+
+document.querySelector("#databaseTable tbody").addEventListener("click", (event) => {
+    if (event.target.tagName === "BUTTON" && event.target.textContent === "Supprimer") {
+        const nomId = event.target.dataset.nomId;
+        deleteNom(nomId);
+    }
+});
+
+document.querySelector("#databaseTable tbody").addEventListener("click", (event) => {
+    const cell = event.target;
+    const row = cell.parentElement;
+    const nomId = row.querySelector("button").dataset.nomId;
+
+    if (cell.cellIndex === 1) { // Colonne "Date de début"
+        makeDateEditable(cell, nomId, "date_debut");
+    } else if (cell.cellIndex === 2) { // Colonne "Date de fin"
+        makeDateEditable(cell, nomId, "date_fin");
+    }
+});
 
 // Appeler la fonction pour récupérer les données lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', fetchData);

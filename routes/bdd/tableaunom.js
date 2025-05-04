@@ -3,45 +3,40 @@ const router = express.Router();
 const connection = require('../../db');
 const authenticateToken = require('../../middleware/auth');
 
-router.post('/update-name', authenticateToken, (req, res) => {
-    const { nom_id, nom, date_debut, date_fin } = req.body;
 
-    if (!nom_id || !nom || !date_debut || !date_fin) {
-        return res.status(400).send('Les champs nom_id, nom, date_debut et date_fin sont requis.');
+router.post('/update-nom-dates', authenticateToken, (req, res) => {
+    const { nom_id, date_debut, date_fin, site_id } = req.body;
+    const userSiteIds = req.user.siteIds;
+
+    if (!userSiteIds.includes(String(site_id))) {
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     const query = `
         UPDATE Tnom
-        SET nom = ?, date_debut = ?, date_fin = ?
-        WHERE nom_id = ?
+        SET date_debut = ?, date_fin = ?
+        WHERE nom_id = ? AND EXISTS (
+            SELECT 1 FROM Tnom_Tsite WHERE nom_id = ? AND site_id = ?
+        )
     `;
 
-    connection.query(query, [nom, date_debut, date_fin, nom_id], (err, result) => {
+    connection.query(query, [date_debut, date_fin, nom_id, nom_id, site_id], (err) => {
         if (err) {
-            console.error('Erreur lors de la mise à jour du nom :', err.message);
-            return res.status(500).send('Erreur lors de la mise à jour du nom.');
+            console.error('Erreur lors de la mise à jour des dates du nom :', err.message);
+            return res.status(500).send('Erreur lors de la mise à jour des dates du nom.');
         }
 
-        res.send('Nom mis à jour avec succès.');
+        res.send('Dates mises à jour avec succès.');
     });
 });
 
 
-
 router.post('/add-nom', authenticateToken, (req, res) => {
-    const { nom, date_debut, date_fin, site_id } = req.body; // Inclure les dates et le site_id
-    const userSiteIds = req.user.siteIds; // Récupérer les sites autorisés depuis le token
+    const { nom, date_debut, date_fin, site_id } = req.body;
+    const userSiteIds = req.user.siteIds;
 
-    console.log('Requête reçue :', { nom, date_debut, date_fin, site_id, userSiteIds });
-
-    if (!nom || !date_debut || !date_fin || !site_id) {
-        return res.status(400).send('Données manquantes (nom, date_debut, date_fin ou site_id)');
-    }
-
-    // Vérifier que le site_id est dans la liste des sites autorisés
     if (!userSiteIds.includes(String(site_id))) {
-        console.error('Accès refusé : L\'utilisateur n\'a pas accès à ce site');
-        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     const insertNomQuery = `
@@ -52,7 +47,7 @@ router.post('/add-nom', authenticateToken, (req, res) => {
     connection.query(insertNomQuery, [nom, date_debut, date_fin], (err, nomResult) => {
         if (err) {
             console.error('Erreur lors de l\'ajout du nom :', err.message);
-            return res.status(500).send('Erreur lors de l\'ajout du nom');
+            return res.status(500).send('Erreur lors de l\'ajout du nom.');
         }
 
         const nomId = nomResult.insertId;
@@ -64,50 +59,39 @@ router.post('/add-nom', authenticateToken, (req, res) => {
         connection.query(insertNomSiteQuery, [nomId, site_id], (err) => {
             if (err) {
                 console.error('Erreur lors de l\'association du nom au site :', err.message);
-                return res.status(500).send('Erreur lors de l\'association du nom au site');
+                return res.status(500).send('Erreur lors de l\'association du nom au site.');
             }
 
-            console.log('Nom ajouté avec succès :', { nomId, site_id });
-            res.status(201).send('Nom ajouté avec succès');
+            res.status(201).send('Nom ajouté avec succès.');
         });
     });
 });
-
 router.post('/delete-nom', authenticateToken, (req, res) => {
-    const { nom_id, site_id } = req.body; // Récupérer le site_id depuis la requête
-    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
+    const { nom_id, site_id } = req.body;
+    const userSiteIds = req.user.siteIds;
 
-    console.log('Requête reçue pour /delete-nom :', { nom_id, site_id, userSiteIds });
-
-    if (!nom_id || !site_id) {
-        console.error('Erreur : Les champs "nom_id" et "site_id" sont requis');
-        return res.status(400).send('Les champs "nom_id" et "site_id" sont requis');
-    }
-
-    // Vérifier que le site_id est dans la liste des sites autorisés
     if (!userSiteIds.includes(String(site_id))) {
-        console.error('Accès refusé : site_id non autorisé');
-        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     const deleteNomQuery = `
         DELETE FROM Tnom
-        WHERE nom_id = ?
+        WHERE nom_id = ? AND EXISTS (
+            SELECT 1 FROM Tnom_Tsite WHERE nom_id = ? AND site_id = ?
+        )
     `;
 
-    connection.query(deleteNomQuery, [nom_id], (err, result) => {
+    connection.query(deleteNomQuery, [nom_id, nom_id, site_id], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression du nom :', err.message);
-            return res.status(500).send('Erreur lors de la suppression du nom');
+            return res.status(500).send('Erreur lors de la suppression du nom.');
         }
 
         if (result.affectedRows === 0) {
-            console.error('Aucun nom trouvé pour nom_id :', nom_id);
-            return res.status(404).send('Aucun nom trouvé pour ce nom_id');
+            return res.status(404).send('Aucun nom trouvé pour ce site.');
         }
 
-        console.log(`Nom supprimé avec succès pour nom_id: ${nom_id}`);
-        res.send('Nom supprimé avec succès');
+        res.send('Nom supprimé avec succès.');
     });
 });
 
