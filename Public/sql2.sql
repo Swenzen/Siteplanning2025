@@ -149,14 +149,17 @@ CREATE TABLE Thoraire_Tsite (
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
 
+-- Créer la table Thoraire_competence_Tsite
 CREATE TABLE Thoraire_competence_Tsite (
-    horaire_id INT NOT NULL,
-    competence_id INT NOT NULL,
-    site_id INT NOT NULL,
-    PRIMARY KEY (horaire_id, competence_id, site_id),
-    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id) ON DELETE CASCADE,
-    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
-    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+    horaire_id INT NOT NULL,               -- ID de l'horaire
+    competence_id INT NOT NULL,           -- ID de la compétence
+    site_id INT NOT NULL,                 -- ID du site
+    date_debut DATE NOT NULL,             -- Date de début de l'association
+    date_fin DATE NOT NULL,               -- Date de fin de l'association
+    PRIMARY KEY (horaire_id, competence_id, site_id), -- Clé primaire
+    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id) ON DELETE CASCADE, -- Clé étrangère vers Thoraire
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE, -- Clé étrangère vers Tcompetence
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE -- Clé étrangère vers Tsite
 );
 
 CREATE TABLE Tcompetence_nom_Tsite (
@@ -359,12 +362,13 @@ INSERT INTO Thoraire_Tsite (horaire_id, site_id) VALUES
 (3, 2),
 (4, 3);
 
--- Insérer des valeurs dans Thoraire_competence_Tsite
-INSERT INTO Thoraire_competence_Tsite (horaire_id, competence_id, site_id) VALUES
-(1, 1, 1),
-(2, 2, 1),
-(3, 3, 2),
-(4, 4, 3);
+-- Insérer des données dans Thoraire_competence_Tsite
+INSERT INTO Thoraire_competence_Tsite (horaire_id, competence_id, site_id, date_debut, date_fin)
+VALUES
+(1, 1, 1, '2025-01-01', '2025-12-31'),
+(2, 2, 1, '2025-01-01', '2025-12-31'),
+(3, 3, 2, '2025-01-01', '2025-12-31'),
+(4, 4, 3, '2025-01-01', '2025-12-31');
 
 -- Insérer des valeurs dans Tcompetence_nom_Tsite
 INSERT INTO Tcompetence_nom_Tsite (nom_id, competence_id, site_id) VALUES
@@ -394,3 +398,4 @@ INSERT INTO Tcompetence_jour (competence_id, jour_id) VALUES
 (1, 7), -- Scanner indisponible le dimanche
 (2, 6), -- IRM indisponible le samedi
 (2, 7); -- IRM indisponible le dimanche
+
