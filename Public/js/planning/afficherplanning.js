@@ -119,18 +119,14 @@ function displayCompetencesWithDates(data, startDate, endDate) {
 
     thead.appendChild(headerRow);
 
+    // Fonction pour mapper les jours de JavaScript à ceux de la base de données
+    function mapDayToDatabase(day) {
+        return day === 0 ? 7 : day; // Si 0 (dimanche), renvoyer 7, sinon renvoyer le jour tel quel
+    }
+
     // Regrouper les données par competence_id et horaire_id
     const groupedData = {};
-    const uniqueData = Array.from(
-        new Map(
-            data.map((item) => [
-                `${item.competence_id}-${item.horaire_id}-${item.jour_id}`,
-                item,
-            ])
-        ).values()
-    );
-    
-    uniqueData.forEach((item) => {
+    data.forEach((item) => {
         const key = `${item.competence_id}-${item.horaire_id}`;
         if (!groupedData[key]) {
             groupedData[key] = {
@@ -141,52 +137,56 @@ function displayCompetencesWithDates(data, startDate, endDate) {
                 date_fin: item.date_fin,
                 indisponibilite_debut: item.indisponibilite_debut,
                 indisponibilite_fin: item.indisponibilite_fin,
-                jours: [],
+                jours: {}, // Stocker les jours autorisés par compétence et horaire
             };
         }
-        if (!groupedData[key].jours.includes(item.jour_id)) {
-            groupedData[key].jours.push(item.jour_id);
-        }
+
+        // Ajouter les jours autorisés pour chaque compétence et horaire
+        const mappedDayOfWeek = mapDayToDatabase(item.jour_id);
+        groupedData[key].jours[mappedDayOfWeek] = true;
     });
 
     // Ajouter les lignes pour chaque combinaison compétence-horaire
     Object.values(groupedData).forEach(({ competence, horaire_debut, horaire_fin, date_debut, date_fin, indisponibilite_debut, indisponibilite_fin, jours }) => {
         const row = document.createElement("tr");
-    
+
         // Colonne Compétence
         const competenceCell = document.createElement("td");
         competenceCell.textContent = competence;
         row.appendChild(competenceCell);
-    
+
         // Colonne Horaires
         const horairesCell = document.createElement("td");
         horairesCell.textContent = `${horaire_debut} - ${horaire_fin}`;
         row.appendChild(horairesCell);
-    
+
         // Colonnes dynamiques pour les dates
         dateHeaders.forEach(({ date, dayOfWeek }) => {
             const dateCell = document.createElement("td");
-    
+
+            // Mapper le jour de la semaine pour correspondre à la base de données
+            const mappedDayOfWeek = mapDayToDatabase(dayOfWeek);
+
             // Vérifier si la date est dans l'intervalle de la compétence
             const isWithinDateRange = date >= date_debut && date <= date_fin;
-    
+
             // Vérifier si la date est dans une plage d'indisponibilité
             const isWithinIndispoRange =
                 indisponibilite_debut && indisponibilite_fin && date >= indisponibilite_debut && date <= indisponibilite_fin;
-    
+
             // Vérifier si le jour est autorisé
-            const isDayAllowed = jours.includes(dayOfWeek);
-    
+            const isDayAllowed = jours[mappedDayOfWeek];
+
             if (isWithinDateRange && !isWithinIndispoRange && isDayAllowed) {
                 dateCell.textContent = "✔"; // Disponible
             } else {
                 dateCell.textContent = "✘"; // Non disponible
                 dateCell.style.backgroundColor = "#d3d3d3"; // Griser la cellule
             }
-    
+
             row.appendChild(dateCell);
         });
-    
+
         tbody.appendChild(row);
     });
 }

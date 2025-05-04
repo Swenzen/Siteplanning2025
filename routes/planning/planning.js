@@ -12,30 +12,27 @@ router.get('/datecompetence', authenticateToken, (req, res) => {
 
     const query = `
     SELECT 
-        hct.horaire_id,
-        hct.competence_id,
-        h.horaire_debut,
-        h.horaire_fin,
-        c.competence,
-        hct.date_debut,
-        hct.date_fin,
-        cd.date_debut AS indisponibilite_debut,
-        cd.date_fin AS indisponibilite_fin,
-        cj.jour_id
-    FROM Thoraire_competence_Tsite hct
-    JOIN Thoraire h ON hct.horaire_id = h.horaire_id
-    JOIN Tcompetence c ON hct.competence_id = c.competence_id
-    LEFT JOIN Tcompetence_disponibilite cd ON hct.competence_id = cd.competence_id
-    LEFT JOIN Thoraire_competence_jour cj ON hct.horaire_id = cj.horaire_id
-    WHERE hct.site_id = ?
-    AND (
-        (hct.date_debut <= ? AND hct.date_fin >= ?)
-        AND (
-            cd.date_debut IS NULL OR cd.date_fin IS NULL OR
-            NOT (cd.date_debut <= ? AND cd.date_fin >= ?)
-        )
-    )
-    ORDER BY hct.horaire_id, hct.competence_id, cj.jour_id;
+    hct.horaire_id,
+    hct.competence_id,
+    h.horaire_debut,
+    h.horaire_fin,
+    c.competence,
+    hct.date_debut,
+    hct.date_fin,
+    cd.date_debut AS indisponibilite_debut,
+    cd.date_fin AS indisponibilite_fin,
+    cj.jour_id
+FROM Thoraire_competence_Tsite hct
+JOIN Thoraire h ON hct.horaire_id = h.horaire_id
+JOIN Tcompetence c ON hct.competence_id = c.competence_id
+LEFT JOIN Tcompetence_disponibilite cd 
+    ON hct.competence_id = cd.competence_id
+LEFT JOIN Thoraire_competence_jour cj 
+    ON hct.horaire_id = cj.horaire_id AND hct.competence_id = cj.competence_id
+WHERE hct.site_id = ?
+  AND hct.date_debut <= ?
+  AND hct.date_fin >= ?
+ORDER BY hct.horaire_id, hct.competence_id, cj.jour_id;
 `;
 
     connection.query(query, [site_id, end_date, start_date, end_date, start_date], (err, results) => {
