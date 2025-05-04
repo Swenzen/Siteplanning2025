@@ -260,6 +260,18 @@ CREATE TABLE Thoraire_competence_jour (
 );
 
 
+CREATE TABLE Tplanningv2 (
+    id INT AUTO_INCREMENT PRIMARY KEY,      -- Identifiant unique auto-incrémenté
+    date DATE NOT NULL,                     -- Date du planning
+    nom_id INT NOT NULL,                    -- Référence à Tnom
+    horaire_id INT NOT NULL,                -- Référence à Thoraire
+    competence_id INT NOT NULL,             -- Référence à Tcompetence
+    site_id INT NOT NULL,                   -- Référence à Tsite
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE, -- Clé étrangère vers Tnom
+    FOREIGN KEY (horaire_id, competence_id, site_id) REFERENCES Thoraire_competence_Tsite(horaire_id, competence_id, site_id) ON DELETE CASCADE, -- Clé étrangère vers Thoraire_competence_Tsite
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE -- Clé étrangère vers Tsite
+);
+
 INSERT INTO Tnom (nom_id, nom, date_debut, date_fin) VALUES
 (1, 'Pierre', '2025-01-01', '2025-12-31'),
 (2, 'Max', '2025-02-01', '2025-11-30'),

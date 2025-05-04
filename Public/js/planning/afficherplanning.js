@@ -19,26 +19,6 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log("Dates restaurées depuis le localStorage :", { savedStartDate, savedEndDate });
 });
 
-// Appliquer le filtre de dates
-applyDateFilterButton.addEventListener("click", async () => {
-    const startDate = startDateInput.value;
-    const endDate = endDateInput.value;
-    const siteId = sessionStorage.getItem("selectedSite");
-
-    // Vérifiez si les dates sont définies
-    if (!startDate || !endDate) {
-        alert("Veuillez sélectionner une date de début et une date de fin.");
-        return;
-    }
-
-    console.log("Dates sélectionnées :", { startDate, endDate });
-
-    // Récupérer les compétences
-    const competences = await fetchCompetences(siteId, startDate, endDate);
-
-    // Afficher le tableau dynamique
-    displayCompetencesWithDates(competences, startDate, endDate);
-});
 
 async function fetchCompetences(siteId, startDate, endDate) {
     const token = localStorage.getItem("token");
@@ -190,3 +170,156 @@ function displayCompetencesWithDates(data, startDate, endDate) {
         tbody.appendChild(row);
     });
 }
+
+
+
+// second planning
+
+async function displayPlanningWithNames(data, startDate, endDate) {
+    const table = document.getElementById("planningTableWithNames");
+    const tbody = table.querySelector("tbody");
+    const thead = table.querySelector("thead");
+
+    // Effacer le contenu précédent
+    tbody.innerHTML = "";
+    thead.innerHTML = "";
+
+    // Créer l'en-tête du tableau
+    const headerRow = document.createElement("tr");
+
+    // Colonnes fixes : Compétence et Horaires
+    const competenceHeader = document.createElement("th");
+    competenceHeader.textContent = "Compétence";
+    headerRow.appendChild(competenceHeader);
+
+    const horairesHeader = document.createElement("th");
+    horairesHeader.textContent = "Horaires";
+    headerRow.appendChild(horairesHeader);
+
+    // Colonnes dynamiques pour les dates
+    const currentDate = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    const dateHeaders = []; // Stocker les dates pour les utiliser dans les lignes
+    while (currentDate <= endDateObj) {
+        const dateHeader = document.createElement("th");
+        const formattedDate = currentDate.toISOString().split("T")[0]; // Format YYYY-MM-DD
+        dateHeader.textContent = currentDate.toLocaleDateString("fr-FR");
+        headerRow.appendChild(dateHeader);
+
+        dateHeaders.push(formattedDate);
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    thead.appendChild(headerRow);
+
+    // Regrouper les données par competence_id et horaire_id
+    const groupedData = {};
+    data.forEach((item) => {
+        const key = `${item.competence_id}-${item.horaire_id}`;
+        if (!groupedData[key]) {
+            groupedData[key] = {
+                competence: item.competence,
+                horaire_debut: item.horaire_debut,
+                horaire_fin: item.horaire_fin,
+                dates: {}, // Stocker les noms par date
+            };
+        }
+
+        // Ajouter les noms pour chaque date
+        if (item.date) {
+            groupedData[key].dates[item.date] = item.nom || null; // Ajouter le nom ou null
+        }
+    });
+
+    // Ajouter les lignes pour chaque combinaison compétence-horaire
+    Object.values(groupedData).forEach(({ competence, horaire_debut, horaire_fin, dates }) => {
+        const row = document.createElement("tr");
+
+        // Colonne Compétence
+        const competenceCell = document.createElement("td");
+        competenceCell.textContent = competence;
+        row.appendChild(competenceCell);
+
+        // Colonne Horaires
+        const horairesCell = document.createElement("td");
+        horairesCell.textContent = `${horaire_debut} - ${horaire_fin}`;
+        row.appendChild(horairesCell);
+
+        // Colonnes dynamiques pour les dates
+        dateHeaders.forEach((date) => {
+            const dateCell = document.createElement("td");
+
+            // Vérifier si un nom est associé à cette date
+            if (dates[date]) {
+                dateCell.textContent = dates[date]; // Afficher le nom
+            } else {
+                dateCell.textContent = ""; // Cellule vide
+            }
+
+            row.appendChild(dateCell);
+        });
+
+        tbody.appendChild(row);
+    });
+}
+
+async function fetchCompetencesWithNames(siteId, startDate, endDate) {
+    const token = localStorage.getItem("token");
+
+    if (!token || !siteId) {
+        console.error("Erreur : le token ou le site_id est manquant.");
+        alert("Erreur : vous devez être authentifié et avoir sélectionné un site.");
+        return [];
+    }
+
+    try {
+        const response = await fetch(
+            `/planning/datecompetencewithnames?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Erreur lors de la récupération des données :", errorText);
+            alert("Erreur lors de la récupération des données.");
+            return [];
+        }
+
+        const data = await response.json();
+        console.log("Données récupérées pour le tableau avec noms :", data);
+        return data;
+    } catch (error) {
+        console.error("Erreur lors de la récupération des données :", error);
+        alert("Une erreur est survenue lors de la récupération des données.");
+        return [];
+    }
+}
+
+applyDateFilterButton.addEventListener("click", async () => {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+    const siteId = sessionStorage.getItem("selectedSite");
+
+    // Vérifiez si les dates sont définies
+    if (!startDate || !endDate) {
+        alert("Veuillez sélectionner une date de début et une date de fin.");
+        return;
+    }
+
+    console.log("Dates sélectionnées :", { startDate, endDate });
+
+    // Récupérer les compétences pour le premier tableau
+    const competences = await fetchCompetences(siteId, startDate, endDate);
+    displayCompetencesWithDates(competences, startDate, endDate);
+
+    // Récupérer les compétences avec noms pour le deuxième tableau
+    const competencesWithNames = await fetchCompetencesWithNames(siteId, startDate, endDate);
+    displayPlanningWithNames(competencesWithNames, startDate, endDate);
+});
