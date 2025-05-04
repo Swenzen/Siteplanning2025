@@ -13,7 +13,13 @@ router.get('/competences', authenticateToken, (req, res) => {
     }
 
     const query = `
-        SELECT c.competence_id, c.competence, c.date_debut, c.date_fin, cd.date_debut AS indisponibilite_debut, cd.date_fin AS indisponibilite_fin
+        SELECT 
+            c.competence_id, 
+            c.competence, 
+            DATE_FORMAT(c.date_debut, '%Y-%m-%d') AS date_debut, -- Renvoyer uniquement la date
+            DATE_FORMAT(c.date_fin, '%Y-%m-%d') AS date_fin,     -- Renvoyer uniquement la date
+            DATE_FORMAT(cd.date_debut, '%Y-%m-%d') AS indisponibilite_debut, -- Renvoyer uniquement la date
+            DATE_FORMAT(cd.date_fin, '%Y-%m-%d') AS indisponibilite_fin     -- Renvoyer uniquement la date
         FROM Tcompetence c
         JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
         LEFT JOIN Tcompetence_disponibilite cd ON c.competence_id = cd.competence_id

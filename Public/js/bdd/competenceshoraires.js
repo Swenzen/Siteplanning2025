@@ -381,13 +381,18 @@ function openDateModal(horaireId, competenceId, dateDebut, dateFin, dateType) {
     const modal = document.getElementById("dateModal");
     const dateDebutInput = document.getElementById("dateDebutInput");
     const dateFinInput = document.getElementById("dateFinInput");
+    const saveButton = document.getElementById("saveDatesButton");
 
     // Pré-remplir les champs avec les dates actuelles
     dateDebutInput.value = dateDebut ? dateDebut.split('T')[0] : ''; // Format YYYY-MM-DD
     dateFinInput.value = dateFin ? dateFin.split('T')[0] : ''; // Format YYYY-MM-DD
 
-    // Sauvegarder les modifications
-    document.getElementById("saveDatesButton").onclick = async () => {
+    // Supprimer tout événement existant sur le bouton "Sauvegarder"
+    saveButton.replaceWith(saveButton.cloneNode(true)); // Remplace le bouton pour supprimer les anciens événements
+    const newSaveButton = document.getElementById("saveDatesButton");
+
+    // Ajouter un nouvel événement pour sauvegarder les modifications
+    newSaveButton.addEventListener("click", async () => {
         const newDateDebut = dateDebutInput.value;
         const newDateFin = dateFinInput.value;
 
@@ -410,8 +415,7 @@ function openDateModal(horaireId, competenceId, dateDebut, dateFin, dateType) {
                 })
             });
 
-            if (response.ok) {
-                alert('Dates mises à jour avec succès.');
+            if (response.ok) {                
                 fetchHoraireCompetenceDates(); // Rafraîchir le tableau
             } else {
                 alert('Erreur lors de la mise à jour des dates.');
@@ -421,7 +425,7 @@ function openDateModal(horaireId, competenceId, dateDebut, dateFin, dateType) {
         }
 
         modal.style.display = "none";
-    };
+    });
 
     modal.style.display = "block";
 }

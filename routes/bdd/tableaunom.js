@@ -142,7 +142,11 @@ router.get('/noms', authenticateToken, (req, res) => {
     console.log('Requête reçue pour /noms avec site_id :', siteId);
 
     const query = `
-        SELECT t.nom_id, t.nom, t.date_debut, t.date_fin
+        SELECT 
+            t.nom_id, 
+            t.nom, 
+            DATE_FORMAT(t.date_debut, '%Y-%m-%d') AS date_debut, -- Renvoyer uniquement la date
+            DATE_FORMAT(t.date_fin, '%Y-%m-%d') AS date_fin     -- Renvoyer uniquement la date
         FROM Tnom t
         JOIN Tnom_Tsite nts ON t.nom_id = nts.nom_id
         WHERE nts.site_id = ?
