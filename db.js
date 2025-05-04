@@ -9,7 +9,8 @@ const pool = mysql.createPool({
     port: process.env.MYSQLPORT || 3306,                   // Port
     waitForConnections: true,
     connectionLimit: 10,                                   // Nombre maximum de connexions simultanées
-    queueLimit: 0                                          // Pas de limite pour les requêtes en attente
+    queueLimit: 0,
+    dateStrings: true // Force MySQL à renvoyer les dates au format YYYY-MM-DD                                          // Pas de limite pour les requêtes en attente
 });
 
 // Test de la connexion

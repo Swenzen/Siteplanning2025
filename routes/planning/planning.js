@@ -4,36 +4,44 @@ const connection = require('../../db'); // Assurez-vous que le chemin est correc
 const authenticateToken = require('../../middleware/auth'); // Middleware d'authentification
 
 router.get('/datecompetence', authenticateToken, (req, res) => {
-    const { start_date, end_date, site_id } = req.query;
+    const { site_id, start_date, end_date } = req.query;
 
     if (!site_id || !start_date || !end_date) {
-        return res.status(400).send('Les paramètres "site_id", "start_date" et "end_date" sont requis.');
+        return res.status(400).send('Les paramètres site_id, start_date et end_date sont requis.');
     }
 
     const query = `
-        SELECT c.competence_id, c.competence, 
-       c.date_debut, 
-       c.date_fin,
-       MIN(cd.date_debut) AS indisponibilite_debut,
-       MAX(cd.date_fin) AS indisponibilite_fin,
-       GROUP_CONCAT(DISTINCT cj.jour_id) AS jours_indisponibles
-FROM Tcompetence c
-JOIN Tcompetence_Tsite cs ON c.competence_id = cs.competence_id
-LEFT JOIN Tcompetence_disponibilite cd ON c.competence_id = cd.competence_id
-LEFT JOIN Tcompetence_jour cj ON c.competence_id = cj.competence_id
-WHERE cs.site_id = ?
-  AND c.date_debut <= ?
-  AND c.date_fin >= ?
-  AND (cd.date_debut IS NULL OR cd.date_fin IS NULL OR NOT (cd.date_debut <= ? AND cd.date_fin >= ?))
-GROUP BY c.competence_id, c.competence, c.date_debut, c.date_fin;
-    `;
+    SELECT 
+        hct.horaire_id,
+        hct.competence_id,
+        h.horaire_debut,
+        h.horaire_fin,
+        c.competence,
+        hct.date_debut,
+        hct.date_fin,
+        cd.date_debut AS indisponibilite_debut,
+        cd.date_fin AS indisponibilite_fin,
+        cj.jour_id
+    FROM Thoraire_competence_Tsite hct
+    JOIN Thoraire h ON hct.horaire_id = h.horaire_id
+    JOIN Tcompetence c ON hct.competence_id = c.competence_id
+    LEFT JOIN Tcompetence_disponibilite cd ON hct.competence_id = cd.competence_id
+    LEFT JOIN Thoraire_competence_jour cj ON hct.horaire_id = cj.horaire_id
+    WHERE hct.site_id = ?
+    AND (
+        (hct.date_debut <= ? AND hct.date_fin >= ?)
+        AND (
+            cd.date_debut IS NULL OR cd.date_fin IS NULL OR
+            NOT (cd.date_debut <= ? AND cd.date_fin >= ?)
+        )
+    )
+    ORDER BY hct.horaire_id, hct.competence_id, cj.jour_id;
+`;
 
-    const queryParams = [site_id, end_date, start_date, start_date, end_date, new Date(start_date).getDay()];
-
-    connection.query(query, queryParams, (err, results) => {
+    connection.query(query, [site_id, end_date, start_date, end_date, start_date], (err, results) => {
         if (err) {
-            console.error('Erreur lors de la récupération des compétences :', err.message);
-            return res.status(500).send('Erreur lors de la récupération des compétences.');
+            console.error('Erreur lors de la récupération des données :', err.message);
+            return res.status(500).send('Erreur lors de la récupération des données.');
         }
 
         res.json(results);

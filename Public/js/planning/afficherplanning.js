@@ -63,22 +63,22 @@ async function fetchCompetences(siteId, startDate, endDate) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Erreur lors de la récupération des compétences :", errorText);
-            alert("Erreur lors de la récupération des compétences.");
+            console.error("Erreur lors de la récupération des données :", errorText);
+            alert("Erreur lors de la récupération des données.");
             return [];
         }
 
-        const competences = await response.json();
-        console.log("Compétences récupérées :", competences);
-        return competences;
+        const data = await response.json();
+        console.log("Données récupérées :", data);
+        return data;
     } catch (error) {
-        console.error("Erreur lors de la récupération des compétences :", error);
-        alert("Une erreur est survenue lors de la récupération des compétences.");
+        console.error("Erreur lors de la récupération des données :", error);
+        alert("Une erreur est survenue lors de la récupération des données.");
         return [];
     }
 }
 
-function displayCompetencesWithDates(competences, startDate, endDate) {
+function displayCompetencesWithDates(data, startDate, endDate) {
     const table = document.getElementById("planningTable");
     const tbody = table.querySelector("tbody");
     const thead = table.querySelector("thead");
@@ -110,67 +110,83 @@ function displayCompetencesWithDates(competences, startDate, endDate) {
         dateHeader.textContent = currentDate.toLocaleDateString("fr-FR");
         headerRow.appendChild(dateHeader);
 
-        dateHeaders.push(formattedDate); // Ajouter la date au tableau
+        dateHeaders.push({
+            date: formattedDate,
+            dayOfWeek: currentDate.getDay(), // 0 = dimanche, 1 = lundi, etc.
+        });
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
     thead.appendChild(headerRow);
 
-    // Ajouter les lignes pour chaque compétence
-    competences.forEach((competence) => {
-        const row = document.createElement("tr");
+    // Regrouper les données par competence_id et horaire_id
+    const groupedData = {};
+    const uniqueData = Array.from(
+        new Map(
+            data.map((item) => [
+                `${item.competence_id}-${item.horaire_id}-${item.jour_id}`,
+                item,
+            ])
+        ).values()
+    );
+    
+    uniqueData.forEach((item) => {
+        const key = `${item.competence_id}-${item.horaire_id}`;
+        if (!groupedData[key]) {
+            groupedData[key] = {
+                competence: item.competence,
+                horaire_debut: item.horaire_debut,
+                horaire_fin: item.horaire_fin,
+                date_debut: item.date_debut,
+                date_fin: item.date_fin,
+                indisponibilite_debut: item.indisponibilite_debut,
+                indisponibilite_fin: item.indisponibilite_fin,
+                jours: [],
+            };
+        }
+        if (!groupedData[key].jours.includes(item.jour_id)) {
+            groupedData[key].jours.push(item.jour_id);
+        }
+    });
 
+    // Ajouter les lignes pour chaque combinaison compétence-horaire
+    Object.values(groupedData).forEach(({ competence, horaire_debut, horaire_fin, date_debut, date_fin, indisponibilite_debut, indisponibilite_fin, jours }) => {
+        const row = document.createElement("tr");
+    
         // Colonne Compétence
         const competenceCell = document.createElement("td");
-        competenceCell.textContent = competence.competence;
+        competenceCell.textContent = competence;
         row.appendChild(competenceCell);
-
-        // Colonne Horaires (vide pour l'instant)
+    
+        // Colonne Horaires
         const horairesCell = document.createElement("td");
-        horairesCell.textContent = "-";
+        horairesCell.textContent = `${horaire_debut} - ${horaire_fin}`;
         row.appendChild(horairesCell);
-
+    
         // Colonnes dynamiques pour les dates
-        dateHeaders.forEach((date) => {
+        dateHeaders.forEach(({ date, dayOfWeek }) => {
             const dateCell = document.createElement("td");
-
-            const currentDate = new Date(date);
-            const dayOfWeek = currentDate.getDay(); // 0 = dimanche, 1 = lundi, etc.
-
+    
             // Vérifier si la date est dans l'intervalle de la compétence
-            const dateDebut = new Date(competence.date_debut);
-            const dateFin = new Date(competence.date_fin);
-
+            const isWithinDateRange = date >= date_debut && date <= date_fin;
+    
             // Vérifier si la date est dans une plage d'indisponibilité
-            const indisponibiliteDebut = competence.indisponibilite_debut
-                ? new Date(competence.indisponibilite_debut)
-                : null;
-            const indisponibiliteFin = competence.indisponibilite_fin
-                ? new Date(competence.indisponibilite_fin)
-                : null;
-
-            // Vérifier si le jour est indisponible
-            const joursIndisponibles = competence.jours_indisponibles
-                ? competence.jours_indisponibles.split(",").map(Number)
-                : [];
-
-            
-
-            if (
-                currentDate >= dateDebut &&
-                currentDate <= dateFin &&
-                !(indisponibiliteDebut && indisponibiliteFin && currentDate >= indisponibiliteDebut && currentDate <= indisponibiliteFin) &&
-                (!joursIndisponibles.length || !joursIndisponibles.includes((dayOfWeek === 0 ? 7 : dayOfWeek))) // Correction ici
-            ) {
+            const isWithinIndispoRange =
+                indisponibilite_debut && indisponibilite_fin && date >= indisponibilite_debut && date <= indisponibilite_fin;
+    
+            // Vérifier si le jour est autorisé
+            const isDayAllowed = jours.includes(dayOfWeek);
+    
+            if (isWithinDateRange && !isWithinIndispoRange && isDayAllowed) {
                 dateCell.textContent = "✔"; // Disponible
             } else {
                 dateCell.textContent = "✘"; // Non disponible
                 dateCell.style.backgroundColor = "#d3d3d3"; // Griser la cellule
             }
-
+    
             row.appendChild(dateCell);
         });
-
+    
         tbody.appendChild(row);
     });
 }
