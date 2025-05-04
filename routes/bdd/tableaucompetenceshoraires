@@ -53,13 +53,13 @@ router.get('/horaires-competences', authenticateToken, (req, res) => {
 });
 
 router.post('/add-horaire-competence', authenticateToken, (req, res) => {
-    const { horaire_id, competence_id, site_id } = req.body;
+    const { horaire_id, competence_id, site_id, date_debut, date_fin } = req.body;
     const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
 
-    console.log('Requête reçue pour /add-horaire-competence :', { horaire_id, competence_id, site_id, userSiteIds });
+    console.log('Requête reçue pour /add-horaire-competence :', { horaire_id, competence_id, site_id, date_debut, date_fin, userSiteIds });
 
-    if (!horaire_id || !competence_id || !site_id) {
-        return res.status(400).send('Les champs "horaire_id", "competence_id" et "site_id" sont requis');
+    if (!horaire_id || !competence_id || !site_id || !date_debut || !date_fin) {
+        return res.status(400).send('Les champs "horaire_id", "competence_id", "site_id", "date_debut" et "date_fin" sont requis');
     }
 
     // Vérifier que le site_id est dans la liste des sites autorisés
@@ -69,11 +69,11 @@ router.post('/add-horaire-competence', authenticateToken, (req, res) => {
     }
 
     const query = `
-        INSERT INTO Thoraire_competence_Tsite (horaire_id, competence_id, site_id)
-        VALUES (?, ?, ?)
+        INSERT INTO Thoraire_competence_Tsite (horaire_id, competence_id, site_id, date_debut, date_fin)
+        VALUES (?, ?, ?, ?, ?)
     `;
 
-    connection.query(query, [horaire_id, competence_id, site_id], (err) => {
+    connection.query(query, [horaire_id, competence_id, site_id, date_debut, date_fin], (err) => {
         if (err) {
             console.error('Erreur lors de l\'ajout de la compétence à l\'horaire :', err.message);
             return res.status(500).send('Erreur lors de l\'ajout de la compétence à l\'horaire');

@@ -85,6 +85,7 @@ async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
 
     try {
         if (cell.textContent === '✔') {
+            // Supprimer la compétence de l'horaire
             const response = await fetch('/api/delete-horaire-competence', {
                 method: 'POST',
                 headers: {
@@ -101,13 +102,17 @@ async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
                 console.error('Erreur lors de la suppression de la compétence de l\'horaire :', error);
             }
         } else {
+            // Ajouter la compétence à l'horaire avec des dates par défaut
+            const dateDebut = new Date().toISOString().split('T')[0]; // Date actuelle au format YYYY-MM-DD
+            const dateFin = '3000-01-01'; // Date éloignée dans le futur
+
             const response = await fetch('/api/add-horaire-competence', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ horaire_id, competence_id, site_id: siteId })
+                body: JSON.stringify({ horaire_id, competence_id, site_id: siteId, date_debut: dateDebut, date_fin: dateFin })
             });
 
             if (response.ok) {
