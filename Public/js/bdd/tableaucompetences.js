@@ -1,11 +1,17 @@
 // Fonction pour afficher les compétences dans le tableau *
 let selectedCompetenceId = null;
+let currentCompetenceId = null;
 
 async function fetchCompetences() {
-    try {
-        const siteId = sessionStorage.getItem('selectedSite');
-        const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    const siteId = sessionStorage.getItem('selectedSite');
 
+    if (!token || !siteId) {
+        console.error('Erreur : le token ou le site_id est introuvable.');
+        return;
+    }
+
+    try {
         const response = await fetch(`/api/competences?site_id=${siteId}`, {
             method: 'GET',
             headers: {
@@ -14,61 +20,45 @@ async function fetchCompetences() {
             }
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Données reçues de l\'API :', data);
-
-            const tableBody = document.querySelector("#competencesTable tbody");
-            tableBody.innerHTML = '';
-
-            const groupedData = data.reduce((acc, row) => {
-                if (!acc[row.competence_id]) {
-                    acc[row.competence_id] = {
-                        competence_id: row.competence_id, // Ajout explicite de competence_id
-                        competence: row.competence,
-                        date_debut: row.date_debut,
-                        date_fin: row.date_fin,
-                        indisponibilites: []
-                    };
-                }
-                if (row.indisponibilite_debut && row.indisponibilite_fin) {
-                    acc[row.competence_id].indisponibilites.push({
-                        date_debut: row.indisponibilite_debut,
-                        date_fin: row.indisponibilite_fin
-                    });
-                }
-                return acc;
-            }, {});
-
-            console.log('groupedData:', groupedData);
-
-            Object.values(groupedData).forEach(({ competence_id, competence, date_debut, date_fin }) => {
-                const row = document.createElement("tr");
-
-                const competenceCell = document.createElement("td");
-                competenceCell.textContent = competence;
-                row.appendChild(competenceCell);
-
-                const dateDebutCell = document.createElement("td");
-                dateDebutCell.textContent = formatDate(date_debut);
-                dateDebutCell.addEventListener("click", () => makeDateEditable(dateDebutCell, competence_id, "date_debut"));
-                row.appendChild(dateDebutCell);
-
-                const dateFinCell = document.createElement("td");
-                dateFinCell.textContent = formatDate(date_fin);
-                dateFinCell.addEventListener("click", () => makeDateEditable(dateFinCell, competence_id, "date_fin"));
-                row.appendChild(dateFinCell);
-
-                const actionsCell = document.createElement("td");
-                const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Supprimer";
-                deleteButton.addEventListener("click", () => deleteCompetence(competence_id));
-                actionsCell.appendChild(deleteButton);
-                row.appendChild(actionsCell);
-
-                tableBody.appendChild(row);
-            });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erreur lors de la récupération des compétences : ${errorText}`);
         }
+
+        const data = await response.json();
+        console.log('Données reçues :', data);
+
+        // Insérer les données dans le tableau HTML
+        const tableBody = document.querySelector("#competencesTable tbody");
+        tableBody.innerHTML = ''; // Vider le tableau avant de le remplir
+
+        data.forEach(({ competence_id, competence, date_debut, date_fin }) => {
+            const row = document.createElement('tr');
+
+            const competenceCell = document.createElement('td');
+            competenceCell.textContent = competence;
+            row.appendChild(competenceCell);
+
+            const dateDebutCell = document.createElement('td');
+            dateDebutCell.textContent = formatDate(date_debut); // Reformater la date
+            dateDebutCell.addEventListener("click", () => openCompetenceDateModal(competence_id, date_debut, date_fin));
+            row.appendChild(dateDebutCell);
+
+            const dateFinCell = document.createElement('td');
+            dateFinCell.textContent = formatDate(date_fin); // Reformater la date
+            dateFinCell.addEventListener("click", () => openCompetenceDateModal(competence_id, date_debut, date_fin));
+            row.appendChild(dateFinCell);
+
+            const actionsCell = document.createElement('td');
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Supprimer';
+            deleteButton.dataset.competenceId = competence_id; // Ajouter l'ID de la compétence au bouton
+            deleteButton.addEventListener("click", () => deleteCompetence(competence_id));
+            actionsCell.appendChild(deleteButton);
+            row.appendChild(actionsCell);
+
+            tableBody.appendChild(row);
+        });
     } catch (error) {
         console.error('Erreur lors de la récupération des compétences :', error);
     }
@@ -87,12 +77,30 @@ function openDateModal(competenceId, dateDebut, dateFin) {
     modal.style.display = "block";
 }
 
+function openCompetenceDateModal(competenceId, dateDebut, dateFin) {
+    currentCompetenceId = competenceId;
+
+    const modal = document.getElementById("dateModal");
+    const dateDebutInput = document.getElementById("dateDebutInput");
+    const dateFinInput = document.getElementById("dateFinInput");
+
+    dateDebutInput.value = dateDebut ? dateDebut.split('T')[0] : ''; // Format YYYY-MM-DD
+    dateFinInput.value = dateFin ? dateFin.split('T')[0] : ''; // Format YYYY-MM-DD
+
+    modal.style.display = "block";
+}
+
 document.getElementById("saveDatesButton").addEventListener("click", async () => {
     const dateDebut = document.getElementById("dateDebutInput").value;
     const dateFin = document.getElementById("dateFinInput").value;
 
     const siteId = sessionStorage.getItem('selectedSite');
     const token = localStorage.getItem('token');
+
+    if (!currentCompetenceId) {
+        alert("Erreur : ID de la compétence manquant.");
+        return;
+    }
 
     try {
         const response = await fetch('/api/update-competence-dates', {
@@ -102,7 +110,7 @@ document.getElementById("saveDatesButton").addEventListener("click", async () =>
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                competence_id: selectedCompetenceId,
+                competence_id: currentCompetenceId,
                 date_debut: dateDebut,
                 date_fin: dateFin,
                 site_id: siteId
@@ -111,7 +119,7 @@ document.getElementById("saveDatesButton").addEventListener("click", async () =>
 
         if (response.ok) {
             alert('Dates mises à jour avec succès.');
-            fetchCompetences();
+            fetchCompetences(); // Recharger les données
         } else {
             alert('Erreur lors de la mise à jour des dates.');
         }
@@ -122,9 +130,6 @@ document.getElementById("saveDatesButton").addEventListener("click", async () =>
     document.getElementById("dateModal").style.display = "none";
 });
 
-document.querySelector(".date-close").addEventListener("click", () => {
-    document.getElementById("dateModal").style.display = "none";
-});
 function formatDate(dateString) {
     if (!dateString) return 'Non définie';
     const date = new Date(dateString);
@@ -197,21 +202,8 @@ async function addCompetence() {
 }
 
 async function deleteCompetence(competenceId) {
-    const token = localStorage.getItem('token');
     const siteId = sessionStorage.getItem('selectedSite');
-
-    console.log('competenceId:', competenceId);
-    console.log('siteId:', siteId);
-
-    if (!siteId) {
-        alert('Erreur : le site n\'est pas chargé.');
-        return;
-    }
-
-    if (!competenceId) {
-        alert('Erreur : l\'ID de la compétence est manquant.');
-        return;
-    }
+    const token = localStorage.getItem('token');
 
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette compétence ?')) {
         return;
@@ -229,15 +221,12 @@ async function deleteCompetence(competenceId) {
 
         if (response.ok) {
             alert('Compétence supprimée avec succès.');
-            fetchCompetences(); // Rafraîchir la liste des compétences
+            fetchCompetences(); // Recharger les données
         } else {
-            const error = await response.text();
-            console.error('Erreur lors de la suppression de la compétence :', error);
             alert('Erreur lors de la suppression de la compétence.');
         }
     } catch (error) {
-        console.error('Erreur lors de la requête :', error);
-        alert('Erreur lors de la suppression de la compétence.');
+        console.error('Erreur lors de la suppression de la compétence :', error);
     }
 }
 
