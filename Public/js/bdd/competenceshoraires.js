@@ -186,31 +186,36 @@ async function fetchHoraireCompetenceDays() {
                 const competence = Object.values(horaire.competences).find(c => c.competence === competenceName);
 
                 if (competence) {
-                    // Sous-tableau pour les jours
+                    // Sous-tableau pour les jours (jours en colonnes avec initiales)
                     const subTable = document.createElement("table");
                     subTable.classList.add("sub-table");
 
-                    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+                    // Ajouter l'en-tête des jours
+                    const subTableHead = document.createElement("thead");
+                    const subTableHeaderRow = document.createElement("tr");
+                    const days = ['L', 'M', 'M', 'J', 'V', 'S', 'D']; // Initiales des jours
+                    days.forEach(day => {
+                        const dayHeaderCell = document.createElement("th");
+                        dayHeaderCell.textContent = day;
+                        subTableHeaderRow.appendChild(dayHeaderCell);
+                    });
+                    subTableHead.appendChild(subTableHeaderRow);
+                    subTable.appendChild(subTableHead);
 
-                    days.forEach((day, index) => {
-                        const subRow = document.createElement("tr");
-
-                        // Ajouter le nom du jour
-                        const dayNameCell = document.createElement("td");
-                        dayNameCell.textContent = day;
-                        subRow.appendChild(dayNameCell);
-
-                        // Ajouter la case à cocher
+                    // Ajouter la ligne des cases à cocher
+                    const subTableBody = document.createElement("tbody");
+                    const subTableRow = document.createElement("tr");
+                    days.forEach((_, index) => {
                         const dayCell = document.createElement("td");
                         const checkbox = document.createElement("input");
                         checkbox.type = "checkbox";
                         checkbox.checked = competence.jours[index + 1] || false; // Vérifier si le jour est associé
                         checkbox.addEventListener("change", () => toggleHoraireCompetenceDay(horaire.horaire_id, competence.competence_id, index + 1, checkbox.checked));
                         dayCell.appendChild(checkbox);
-
-                        subRow.appendChild(dayCell);
-                        subTable.appendChild(subRow);
+                        subTableRow.appendChild(dayCell);
                     });
+                    subTableBody.appendChild(subTableRow);
+                    subTable.appendChild(subTableBody);
 
                     cell.appendChild(subTable);
                 }

@@ -124,7 +124,8 @@ router.get('/horaire-competence-jours', authenticateToken, (req, res) => {
     const query = `
         SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, 
                c.competence_id, c.competence, 
-               j.jour_id, j.jour
+               j.jour_id, j.jour,
+               hcj.site_id
         FROM Thoraire h
         JOIN Thoraire_Tsite ht ON h.horaire_id = ht.horaire_id
         JOIN Thoraire_competence_Tsite hct ON h.horaire_id = hct.horaire_id AND hct.site_id = ht.site_id
@@ -134,11 +135,12 @@ router.get('/horaire-competence-jours', authenticateToken, (req, res) => {
                ON h.horaire_id = hcj.horaire_id 
                AND c.competence_id = hcj.competence_id 
                AND hcj.jour_id = j.jour_id
+               AND hcj.site_id = ?
         WHERE ht.site_id = ?
         ORDER BY h.horaire_id, c.competence_id, j.jour_id;
     `;
 
-    connection.query(query, [siteId], (err, results) => {
+    connection.query(query, [siteId, siteId], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données :', err.message);
             return res.status(500).send('Erreur lors de la récupération des données.');
@@ -162,7 +164,7 @@ router.get('/horaire-competence-jours', authenticateToken, (req, res) => {
                 };
             }
 
-            if (row.jour_id) {
+            if (row.jour_id && row.site_id) {
                 acc[row.horaire_id].competences[row.competence_id].jours[row.jour_id] = true;
             }
 
@@ -181,16 +183,15 @@ router.post('/add-horaire-competence-jour', authenticateToken, (req, res) => {
     }
 
     const query = `
-        INSERT INTO Thoraire_competence_jour (horaire_id, competence_id, jour_id)
-        SELECT ?, ?, ?
+        INSERT INTO Thoraire_competence_jour (horaire_id, competence_id, jour_id, site_id)
+        SELECT ?, ?, ?, ?
         WHERE EXISTS (
-            SELECT 1 FROM Thoraire_Tsite WHERE horaire_id = ? AND site_id = ?
-        ) AND EXISTS (
-            SELECT 1 FROM Tcompetence_Tsite WHERE competence_id = ? AND site_id = ?
+            SELECT 1 FROM Thoraire_competence_Tsite 
+            WHERE horaire_id = ? AND competence_id = ? AND site_id = ?
         )
     `;
 
-    connection.query(query, [horaire_id, competence_id, jour_id, horaire_id, site_id, competence_id, site_id], (err) => {
+    connection.query(query, [horaire_id, competence_id, jour_id, site_id, horaire_id, competence_id, site_id], (err) => {
         if (err) {
             console.error('Erreur lors de l\'ajout de l\'association :', err.message);
             return res.status(500).send('Erreur lors de l\'ajout de l\'association.');
@@ -209,15 +210,10 @@ router.post('/delete-horaire-competence-jour', authenticateToken, (req, res) => 
 
     const query = `
         DELETE FROM Thoraire_competence_jour
-        WHERE horaire_id = ? AND competence_id = ? AND jour_id = ?
-        AND EXISTS (
-            SELECT 1 FROM Thoraire_Tsite WHERE horaire_id = ? AND site_id = ?
-        ) AND EXISTS (
-            SELECT 1 FROM Tcompetence_Tsite WHERE competence_id = ? AND site_id = ?
-        )
+        WHERE horaire_id = ? AND competence_id = ? AND jour_id = ? AND site_id = ?
     `;
 
-    connection.query(query, [horaire_id, competence_id, jour_id, horaire_id, site_id, competence_id, site_id], (err) => {
+    connection.query(query, [horaire_id, competence_id, jour_id, site_id], (err) => {
         if (err) {
             console.error('Erreur lors de la suppression de l\'association :', err.message);
             return res.status(500).send('Erreur lors de la suppression de l\'association.');
