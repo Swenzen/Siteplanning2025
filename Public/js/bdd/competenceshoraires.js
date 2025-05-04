@@ -122,5 +122,145 @@ async function toggleHoraireCompetence(horaire_id, competence_id, cell) {
     }
 }
 
+async function fetchHoraireCompetenceDays() {
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    if (!siteId || !token) {
+        console.error('Erreur : le site ou le token est manquant.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/horaire-competence-jours?site_id=${siteId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erreur lors de la récupération des données :', errorText);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Données récupérées :', data);
+
+        const tableHead = document.querySelector("#horaireCompetenceDaysTable thead tr");
+        const tableBody = document.querySelector("#horaireCompetenceDaysTable tbody");
+
+        // Réinitialiser l'en-tête et le corps du tableau
+        tableHead.innerHTML = '<th>Horaires</th>';
+        tableBody.innerHTML = '';
+
+        // Ajouter les colonnes pour les compétences
+        const allCompetences = new Set();
+        data.forEach(horaire => {
+            Object.values(horaire.competences).forEach(competence => {
+                allCompetences.add(competence.competence);
+            });
+        });
+
+        allCompetences.forEach(competence => {
+            const th = document.createElement("th");
+            th.textContent = competence; // Afficher le nom de la compétence
+            tableHead.appendChild(th);
+        });
+
+        // Ajouter les lignes pour les horaires
+        data.forEach(horaire => {
+            const row = document.createElement("tr");
+
+            // Colonne des horaires
+            const horaireCell = document.createElement("td");
+            horaireCell.textContent = `${horaire.horaire_debut} - ${horaire.horaire_fin}`;
+            row.appendChild(horaireCell);
+
+            // Colonnes des compétences
+            allCompetences.forEach(competenceName => {
+                const cell = document.createElement("td");
+
+                const competence = Object.values(horaire.competences).find(c => c.competence === competenceName);
+
+                if (competence) {
+                    // Sous-tableau pour les jours
+                    const subTable = document.createElement("table");
+                    subTable.classList.add("sub-table");
+
+                    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+                    days.forEach((day, index) => {
+                        const subRow = document.createElement("tr");
+
+                        // Ajouter le nom du jour
+                        const dayNameCell = document.createElement("td");
+                        dayNameCell.textContent = day;
+                        subRow.appendChild(dayNameCell);
+
+                        // Ajouter la case à cocher
+                        const dayCell = document.createElement("td");
+                        const checkbox = document.createElement("input");
+                        checkbox.type = "checkbox";
+                        checkbox.checked = competence.jours[index + 1] || false; // Vérifier si le jour est associé
+                        checkbox.addEventListener("change", () => toggleHoraireCompetenceDay(horaire.horaire_id, competence.competence_id, index + 1, checkbox.checked));
+                        dayCell.appendChild(checkbox);
+
+                        subRow.appendChild(dayCell);
+                        subTable.appendChild(subRow);
+                    });
+
+                    cell.appendChild(subTable);
+                }
+
+                row.appendChild(cell);
+            });
+
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des données :', error);
+    }
+}
+
+async function toggleHoraireCompetenceDay(horaireId, competenceId, jourId, isChecked) {
+    const siteId = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+
+    if (!siteId || !token) {
+        console.error('Erreur : le site ou le token est manquant.');
+        return;
+    }
+
+    try {
+        const response = await fetch(isChecked ? '/api/add-horaire-competence-jour' : '/api/delete-horaire-competence-jour', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                horaire_id: horaireId,
+                competence_id: competenceId,
+                jour_id: jourId,
+                site_id: siteId
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erreur lors de la mise à jour des jours :', errorText);
+        } else {
+            console.log(`Jour ${jourId} pour l'horaire ${horaireId} et la compétence ${competenceId} mis à jour : ${isChecked}`);
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour des jours :', error);
+    }
+}
+
+
 // Appeler la fonction pour récupérer les horaires par compétence lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', fetchHorairesCompetences);
+document.addEventListener('DOMContentLoaded', fetchHoraireCompetenceDays);

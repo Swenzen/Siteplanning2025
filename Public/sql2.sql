@@ -245,6 +245,18 @@ CREATE TABLE Tcompetence_jour (
     FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id) ON DELETE CASCADE
 );
 
+
+CREATE TABLE Thoraire_competence_jour (
+    horaire_id INT NOT NULL,
+    competence_id INT NOT NULL,
+    jour_id INT NOT NULL,
+    PRIMARY KEY (horaire_id, competence_id, jour_id),
+    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id) ON DELETE CASCADE,
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
+    FOREIGN KEY (jour_id) REFERENCES Tjour(jour_id) ON DELETE CASCADE
+);
+
+
 INSERT INTO Tnom (nom_id, nom, date_debut, date_fin) VALUES
 (1, 'Pierre', '2025-01-01', '2025-12-31'),
 (2, 'Max', '2025-02-01', '2025-11-30'),

@@ -114,4 +114,117 @@ router.post('/delete-horaire-competence', authenticateToken, (req, res) => {
     });
 });
 
+router.get('/horaire-competence-jours', authenticateToken, (req, res) => {
+    const siteId = req.query.site_id;
+
+    if (!siteId) {
+        return res.status(400).send('Le site_id est requis.');
+    }
+
+    const query = `
+        SELECT h.horaire_id, h.horaire_debut, h.horaire_fin, 
+               c.competence_id, c.competence, 
+               j.jour_id, j.jour
+        FROM Thoraire h
+        JOIN Thoraire_Tsite ht ON h.horaire_id = ht.horaire_id
+        JOIN Thoraire_competence_Tsite hct ON h.horaire_id = hct.horaire_id AND hct.site_id = ht.site_id
+        JOIN Tcompetence c ON hct.competence_id = c.competence_id
+        JOIN Tjour j
+        LEFT JOIN Thoraire_competence_jour hcj 
+               ON h.horaire_id = hcj.horaire_id 
+               AND c.competence_id = hcj.competence_id 
+               AND hcj.jour_id = j.jour_id
+        WHERE ht.site_id = ?
+        ORDER BY h.horaire_id, c.competence_id, j.jour_id;
+    `;
+
+    connection.query(query, [siteId], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des données :', err.message);
+            return res.status(500).send('Erreur lors de la récupération des données.');
+        }
+
+        const groupedData = results.reduce((acc, row) => {
+            if (!acc[row.horaire_id]) {
+                acc[row.horaire_id] = {
+                    horaire_id: row.horaire_id,
+                    horaire_debut: row.horaire_debut,
+                    horaire_fin: row.horaire_fin,
+                    competences: {}
+                };
+            }
+
+            if (!acc[row.horaire_id].competences[row.competence_id]) {
+                acc[row.horaire_id].competences[row.competence_id] = {
+                    competence_id: row.competence_id,
+                    competence: row.competence,
+                    jours: {}
+                };
+            }
+
+            if (row.jour_id) {
+                acc[row.horaire_id].competences[row.competence_id].jours[row.jour_id] = true;
+            }
+
+            return acc;
+        }, {});
+
+        res.json(Object.values(groupedData));
+    });
+});
+
+router.post('/add-horaire-competence-jour', authenticateToken, (req, res) => {
+    const { horaire_id, competence_id, jour_id, site_id } = req.body;
+
+    if (!horaire_id || !competence_id || !jour_id || !site_id) {
+        return res.status(400).send('Les champs horaire_id, competence_id, jour_id et site_id sont requis.');
+    }
+
+    const query = `
+        INSERT INTO Thoraire_competence_jour (horaire_id, competence_id, jour_id)
+        SELECT ?, ?, ?
+        WHERE EXISTS (
+            SELECT 1 FROM Thoraire_Tsite WHERE horaire_id = ? AND site_id = ?
+        ) AND EXISTS (
+            SELECT 1 FROM Tcompetence_Tsite WHERE competence_id = ? AND site_id = ?
+        )
+    `;
+
+    connection.query(query, [horaire_id, competence_id, jour_id, horaire_id, site_id, competence_id, site_id], (err) => {
+        if (err) {
+            console.error('Erreur lors de l\'ajout de l\'association :', err.message);
+            return res.status(500).send('Erreur lors de l\'ajout de l\'association.');
+        }
+
+        res.send('Association ajoutée avec succès.');
+    });
+});
+
+router.post('/delete-horaire-competence-jour', authenticateToken, (req, res) => {
+    const { horaire_id, competence_id, jour_id, site_id } = req.body;
+
+    if (!horaire_id || !competence_id || !jour_id || !site_id) {
+        return res.status(400).send('Les champs horaire_id, competence_id, jour_id et site_id sont requis.');
+    }
+
+    const query = `
+        DELETE FROM Thoraire_competence_jour
+        WHERE horaire_id = ? AND competence_id = ? AND jour_id = ?
+        AND EXISTS (
+            SELECT 1 FROM Thoraire_Tsite WHERE horaire_id = ? AND site_id = ?
+        ) AND EXISTS (
+            SELECT 1 FROM Tcompetence_Tsite WHERE competence_id = ? AND site_id = ?
+        )
+    `;
+
+    connection.query(query, [horaire_id, competence_id, jour_id, horaire_id, site_id, competence_id, site_id], (err) => {
+        if (err) {
+            console.error('Erreur lors de la suppression de l\'association :', err.message);
+            return res.status(500).send('Erreur lors de la suppression de l\'association.');
+        }
+
+        res.send('Association supprimée avec succès.');
+    });
+});
+
 module.exports = router;
