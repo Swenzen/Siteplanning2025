@@ -76,4 +76,66 @@ router.get('/nom-ids', authenticateToken, (req, res) => {
     );
 });
 
+
+router.get('/available-names', (req, res) => {
+    const { competence_id, site_id, date } = req.query;
+
+    if (!competence_id || !site_id || !date) {
+        return res.status(400).send('Les paramètres competence_id, site_id et date sont requis.');
+    }
+
+    const query = `
+        SELECT DISTINCT n.nom, n.nom_id
+        FROM Tcompetence_nom_Tsite cns
+        JOIN Tnom n ON cns.nom_id = n.nom_id
+        WHERE cns.competence_id = ?
+          AND cns.site_id = ?
+          AND n.nom_id NOT IN (
+              SELECT p.nom_id
+              FROM Tplanningv2 p
+              WHERE p.date = ? AND p.competence_id = ? AND p.site_id = ?
+          )
+    `;
+
+    connection.query(
+        query,
+        [competence_id, site_id, date, competence_id, site_id],
+        (err, results) => {
+            if (err) {
+                console.error('Erreur lors de la récupération des noms disponibles :', err.message);
+                return res.status(500).send('Erreur lors de la récupération des noms disponibles.');
+            }
+
+            res.json(results); // On renvoie [{nom: ..., nom_id: ...}, ...]
+        }
+    );
+});
+
+router.post('/update-planningv2', authenticateToken, (req, res) => {
+    const { date, nom_id, competence_id, horaire_id, site_id } = req.body;
+
+    if (!date || !nom_id || !competence_id || !horaire_id || !site_id) {
+        return res.status(400).send('Tous les champs sont requis.');
+    }
+
+    const query = `
+        INSERT INTO Tplanningv2 (date, nom_id, competence_id, horaire_id, site_id)
+        VALUES (?, ?, ?, ?, ?)
+    `;
+
+    connection.query(
+        query,
+        [date, nom_id, competence_id, horaire_id, site_id],
+        (err) => {
+            if (err) {
+                console.error('Erreur lors de la mise à jour de Tplanningv2 :', err.message);
+                return res.status(500).send('Erreur lors de la mise à jour de Tplanningv2.');
+            }
+
+            res.send('Planning mis à jour avec succès.');
+        }
+    );
+});
+
+
 module.exports = router;

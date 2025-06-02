@@ -107,96 +107,6 @@ function adjustTooltipPosition(tooltip, event) {
     tooltip.style.top = `${top}px`;
 }
 
-async function showTooltip(event, noms) {
-    const tooltip = document.getElementById("tooltip");
-    const semaine = document.getElementById("weekNumber").value;
-    const annee = document.getElementById("yearNumber").value;
-    const siteId = sessionStorage.getItem('selectedSite');
-    const competenceName = currentCompetenceName; // Nom de la compétence cliquée
-    const clickedDay = currentDay; // Jour cliqué (1 = lundi, 2 = mardi, etc.)
-
-    // Récupérer les détails des noms pour les autres jours de la semaine
-    const nomDetails = await fetchNomDetails(currentCompetenceId, siteId, semaine, annee, noms);
-
-    // Construire le tableau avec une colonne pour les noms et 7 colonnes pour les jours de la semaine
-    tooltip.innerHTML = `
-        <div style="position: relative; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #eee; text-align: right;">
-            <div class="tooltip-close" style="position: static; cursor: pointer; display: inline-block; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 18px; font-weight: bold;">&times;</div>
-        </div>
-        <table style="border-collapse: collapse; width: 100%; text-align: center;">
-            <thead>
-                <tr>
-                    <th style="border: 1px solid #ddd; padding: 5px;">Noms</th>
-                    ${['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-                        .map((day, index) => `
-                            <th style="border: 1px solid #ddd; padding: 5px; ${index + 1 === parseInt(clickedDay) ? 'background-color: #ffeb3b;' : ''}">
-                                ${day}
-                            </th>
-                        `)
-                        .join('')}
-                </tr>
-            </thead>
-            <tbody>
-                ${noms.map(nom => `
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 5px; cursor: pointer;" class="tooltip-date">${nom}</td>
-                        ${Array.from({ length: 7 }).map((_, dayIndex) => {
-                            const dayDetails = nomDetails[nom]?.[dayIndex + 1]; // Récupérer les détails pour le jour (1 = lundi, 2 = mardi, etc.)
-                            const isSameCompetence = dayDetails && dayDetails.competence === competenceName; // Comparer le nom de la compétence
-                            return `
-                                <td style="border: 1px solid #ddd; padding: 5px; 
-                                    ${dayIndex + 1 === parseInt(clickedDay) ? 'background-color: #ffeb3b;' : ''}
-                                    ${isSameCompetence ? 'background-color: #4caf50; color: white;' : ''}">
-                                    ${dayDetails ? `${formatTime(dayDetails.horaire_debut)}-${formatTime(dayDetails.horaire_fin)}<br>${dayDetails.competence}` : '-'}
-                                </td>
-                            `;
-                        }).join('')}
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-
-    tooltip.style.display = 'block';
-    tooltip.style.width = '600px'; // Ajuster la largeur pour inclure toutes les colonnes
-    tooltip.style.padding = '10px';
-
-    // Ajuster dynamiquement la position du tooltip
-    adjustTooltipPosition(tooltip, event);
-
-    // Ajouter un gestionnaire de clics pour fermer le tooltip avec la croix
-    tooltip.querySelector('.tooltip-close').addEventListener('click', function (e) {
-        tooltip.style.display = 'none';
-        e.stopPropagation(); // Empêcher la propagation du clic
-    });
-
-    // Ajouter également un gestionnaire de clic sur le document pour fermer le tooltip quand on clique ailleurs
-    document.addEventListener('click', function closeTooltip(e) {
-        if (e.target.closest('.tooltip-close') || (e.target !== tooltip && tooltip.contains(e.target))) return;
-        tooltip.style.display = 'none';
-        document.removeEventListener('click', closeTooltip);
-    }, { once: true });
-
-    // Ajouter un gestionnaire de clics aux éléments de la colonne "Noms"
-    document.querySelectorAll('.tooltip-date').forEach(element => {
-        element.addEventListener('click', function () {
-            const nom = this.textContent; // Récupérer le nom sélectionné
-            console.log(`Nom sélectionné : ${nom}`);
-            tooltip.style.display = 'none'; // Fermer le tooltip
-
-            // Appeler updatePlanning pour ajouter le nom dans la base de données
-            updatePlanning(
-                document.getElementById("weekNumber").value, // semaine
-                document.getElementById("yearNumber").value, // année
-                currentDay, // jour_id
-                currentHorairesNom.split(' - ')[0], // horaire_debut
-                currentHorairesNom.split(' - ')[1], // horaire_fin
-                currentCompetenceId, // competenceId
-                nom // nom
-            );
-        });
-    });
-}
 
 // Fonction pour afficher le tooltip vide et charger les noms disponibles
 function showEmptyTooltip(event, nom, nom_id, day, semaine, annee, competenceId, horaireDebut, horaireFin) {
@@ -277,3 +187,12 @@ async function updatePlanning(semaine, annee, jour_id, horaire_debut, horaire_fi
         alert('Une erreur est survenue lors de la mise à jour du planning.');
     }
 }
+
+
+
+
+
+// deuxième tooltip   
+
+
+

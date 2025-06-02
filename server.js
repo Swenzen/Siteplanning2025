@@ -79,7 +79,9 @@ app.use('/api', creationjreposRoutes);
 app.use('/api', retoursiteRoutes);
 app.use('/api', planningsRoutes);
 app.use('/api', parametrageRoutes);
+app.use('/planning', tooltipRoutes);
 app.use('/planning', planningRoutes);
+
 
 // Route par défaut pour servir "index2.html"
 app.get('/', (req, res) => {

@@ -126,6 +126,8 @@ function displayCompetencesWithDates(data, startDate, endDate) {
         groupedData[key].jours[mappedDayOfWeek] = true;
     });
 
+    console.log("Données regroupées dans groupedData :", groupedData);
+
     // Ajouter les lignes pour chaque combinaison compétence-horaire
     Object.values(groupedData).forEach(({ competence, horaire_debut, horaire_fin, date_debut, date_fin, indisponibilite_debut, indisponibilite_fin, jours }) => {
         const row = document.createElement("tr");
@@ -219,10 +221,12 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         const key = `${item.competence_id}-${item.horaire_id}`;
         if (!groupedData[key]) {
             groupedData[key] = {
+                competence_id: item.competence_id, // Ajoutez cette ligne
+                horaire_id: item.horaire_id,     // Ajoutez cette ligne
                 competence: item.competence,
                 horaire_debut: item.horaire_debut,
                 horaire_fin: item.horaire_fin,
-                dates: {}, // Stocker les noms par date
+                dates: {} // Stocker les noms par date
             };
         }
 
@@ -232,8 +236,11 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         }
     });
 
+    console.log("Données reçues dans displayPlanningWithNames :", data);
+
     // Ajouter les lignes pour chaque combinaison compétence-horaire
-    Object.values(groupedData).forEach(({ competence, horaire_debut, horaire_fin, dates }) => {
+    Object.values(groupedData).forEach((item) => {
+        const { competence, horaire_debut, horaire_fin, dates } = item;
         const row = document.createElement("tr");
 
         // Colonne Compétence
@@ -249,14 +256,26 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         // Colonnes dynamiques pour les dates
         dateHeaders.forEach((date) => {
             const dateCell = document.createElement("td");
-
+        
+            // Vérifiez que les données existent avant de les utiliser
+            if (item.competence_id && item.horaire_id) {
+                dateCell.dataset.competenceId = item.competence_id;
+                dateCell.dataset.horaireId = item.horaire_id;
+            } else {
+                console.warn("Données manquantes pour competence_id ou horaire_id :", item);
+                dateCell.dataset.competenceId = "inconnu";
+                dateCell.dataset.horaireId = "inconnu";
+            }
+        
+            dateCell.dataset.date = date;
+        
             // Vérifier si un nom est associé à cette date
             if (dates[date]) {
                 dateCell.textContent = dates[date]; // Afficher le nom
             } else {
                 dateCell.textContent = ""; // Cellule vide
             }
-
+        
             row.appendChild(dateCell);
         });
 
@@ -302,6 +321,16 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
     }
 }
 
+async function refreshSecondTable() {
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (startDate && endDate && siteId) {
+        const competencesWithNames = await fetchCompetencesWithNames(siteId, startDate, endDate);
+        displayPlanningWithNames(competencesWithNames, startDate, endDate);
+    }
+}
+
 applyDateFilterButton.addEventListener("click", async () => {
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
@@ -323,3 +352,32 @@ applyDateFilterButton.addEventListener("click", async () => {
     const competencesWithNames = await fetchCompetencesWithNames(siteId, startDate, endDate);
     displayPlanningWithNames(competencesWithNames, startDate, endDate);
 });
+
+
+document.getElementById("planningTableWithNames").addEventListener("click", async (event) => {
+    const cell = event.target;
+
+    // Vérifiez si la cellule cliquée est valide
+    if (cell.tagName !== "TD" || !cell.dataset.competenceId || !cell.dataset.horaireId || !cell.dataset.date) {
+        console.log("Clic ignoré : attributs manquants ou cellule invalide.");
+        return;
+    }
+
+    console.log("Cellule cliquée :", {
+        competenceId: cell.dataset.competenceId,
+        horaireId: cell.dataset.horaireId,
+        date: cell.dataset.date,
+    });
+
+    const competenceId = cell.dataset.competenceId;
+    const horaireId = cell.dataset.horaireId;
+    const date = cell.dataset.date;
+    const siteId = sessionStorage.getItem("selectedSite");
+
+    // Récupérer les noms disponibles
+    const noms = await fetchAvailableNames(competenceId, siteId, date);
+
+    // Afficher le tooltip
+    showTooltip(event, noms, { competenceId, horaireId, date, siteId });
+});
+
