@@ -257,7 +257,7 @@ async function updatePlanning(
   }
 }
 
-// 2ème tooltip pour récupérer les noms disponibles
+// 2eme tableau pour afficher les noms disponibles
 
 async function fetchAvailableNames(competenceId, siteId, date) {
   console.log("Appel à fetchAvailableNames avec :", {

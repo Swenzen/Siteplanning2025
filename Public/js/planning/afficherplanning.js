@@ -221,18 +221,22 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         const key = `${item.competence_id}-${item.horaire_id}`;
         if (!groupedData[key]) {
             groupedData[key] = {
-                competence_id: item.competence_id, // Ajoutez cette ligne
-                horaire_id: item.horaire_id,     // Ajoutez cette ligne
+                competence_id: item.competence_id,
+                horaire_id: item.horaire_id,
                 competence: item.competence,
                 horaire_debut: item.horaire_debut,
                 horaire_fin: item.horaire_fin,
                 dates: {} // Stocker les noms par date
             };
         }
-
-        // Ajouter les noms pour chaque date
+        // Ici, on stocke un tableau de noms par date
         if (item.date) {
-            groupedData[key].dates[item.date] = item.nom || null; // Ajouter le nom ou null
+            if (!groupedData[key].dates[item.date]) {
+                groupedData[key].dates[item.date] = [];
+            }
+            if (item.nom) {
+                groupedData[key].dates[item.date].push(item.nom);
+            }
         }
     });
 
@@ -270,10 +274,12 @@ async function displayPlanningWithNames(data, startDate, endDate) {
             dateCell.dataset.date = date;
         
             // Vérifier si un nom est associé à cette date
-            if (dates[date]) {
-                dateCell.textContent = dates[date]; // Afficher le nom
+            if (dates[date] && dates[date].length > 0) {
+                dateCell.textContent = dates[date].join('\n');
+                dateCell.style.whiteSpace = "pre-line"; // <-- ajoute cette ligne ici aussi !
             } else {
-                dateCell.textContent = ""; // Cellule vide
+                dateCell.textContent = "";
+                dateCell.style.whiteSpace = "pre-line";
             }
         
             row.appendChild(dateCell);
