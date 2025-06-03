@@ -1,192 +1,73 @@
-// Fonction pour afficher un tooltip avec des options de suppression et d'ajout de commentaire lors d'un clic droit
-function showEmptyTooltipdt(event, nom, nom_id, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
-    console.log(`Appel de showEmptyTooltip avec les paramètres : nom=${nom}, nom_id=${nom_id}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
-    
-    // Vérifie si nom_id est null
-    if (!nom_id) {
-        console.warn("Aucun nom_id trouvé pour cette cellule.");
-        return;
-    }
+document.getElementById("planningTableWithNames").addEventListener("contextmenu", function(event) {
+  event.preventDefault();
 
-    // Récupérer les commentaires correspondants à partir de la base de données
-    fetch(`/api/comment?nom_id=${nom_id}&jour_id=${jour_id}&semaine=${semaine}&annee=${annee}`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erreur lors de la récupération des commentaires');
-            }
-            return response.json();
-        })
-        .then(data => {
-            const commentaires = data.map(item => `
-                <div class="comment-item">
-                    <span class="comment-text">${item.commentaire}</span>
-                    <button class="delete-comment-button" data-comment-id="${item.commentaire_id}">Supprimer</button>
-                </div>
-            `).join('');
-            console.log(`Commentaires récupérés pour nom_id=${nom_id}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee} : ${commentaires}`);
-            const emptyTooltip = document.createElement('div');
-            emptyTooltip.id = 'emptyTooltip';
-            emptyTooltip.innerHTML = `
-                <div class="tooltip-item">
-                    <div class="tooltip-date">${nom || 'Aucun nom'}</div>
-                    <div class="tooltip-comment">${commentaires}</div>
-                    <div class="tooltip-options">
-                        <button class="tooltip-option" id="deleteNameButton">Supprimer Nom</button>
-                        <button class="tooltip-option" id="commentButton">Ajouter Commentaire</button>
-                    </div>
-                </div>
-            `;
-            emptyTooltip.style.position = 'absolute';
-            emptyTooltip.style.left = `${event.pageX + 10}px`; // Décalage pour une meilleure visibilité
-            emptyTooltip.style.top = `${event.pageY + 10}px`; // Décalage pour une meilleure visibilité
-            emptyTooltip.style.backgroundColor = 'white';
-            emptyTooltip.style.border = '1px solid black';
-            emptyTooltip.style.padding = '10px';
-            emptyTooltip.style.borderRadius = '5px';
-            emptyTooltip.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
-            document.body.appendChild(emptyTooltip);
+  // Cherche si on a cliqué sur un .nom-block ou un de ses enfants
+  const nomBlock = event.target.closest('.nom-block');
+  if (nomBlock) {
+    const nomClique = nomBlock.dataset.nom;
+    const cell = nomBlock.closest("td");
+    const competenceId = cell.dataset.competenceId;
+    const horaireId = cell.dataset.horaireId;
+    const date = cell.dataset.date;
+    const siteId = sessionStorage.getItem("selectedSite");
 
-            // Ajouter un gestionnaire de clic au bouton de suppression pour chaque commentaire
-            document.querySelectorAll('.delete-comment-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    const commentId = button.dataset.commentId;
-                    deleteComment(commentId, () => {
-                        // Fermer le tooltip après la suppression du commentaire
-                        emptyTooltip.remove();
-                    });
-                });
-            });
-
-            // Ajouter un gestionnaire de clic au bouton de suppression du nom
-            document.getElementById('deleteNameButton').addEventListener('click', () => {
-                const site_id = localStorage.getItem('site_id'); // Récupérer le site_id depuis le localStorage
-                removeValueFromPlanning(nom, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin, site_id); // Appeler la fonction depuis afficherplanning.js
-                emptyTooltip.remove();
-            });
-
-            // Ajouter un gestionnaire de clic au bouton de commentaire
-            document.getElementById('commentButton').addEventListener('click', () => {
-                const commentaire = prompt('Entrez votre commentaire :');
-                if (commentaire) {
-                    console.log('Appel de addCommentToPlanning avec jour_id :', jour_id);
-                    addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin);
-                }
-                emptyTooltip.remove();
-            });
-
-            // Cacher le tooltip lorsque l'utilisateur clique ailleurs
-            document.addEventListener('click', (event) => {
-                if (!event.target.closest('#emptyTooltip')) {
-                    emptyTooltip.remove();
-                }
-            }, { once: true });
-        })
-        .catch(error => {
-            console.error('Erreur lors de la récupération des commentaires :', error);
-        });
-}
-
-function deleteComment(commentId, callback) {
-    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-
-    if (!token) {
-        console.error('Erreur : le token est manquant.');
-        return;
-    }
-
-    fetch(`/api/delete-comment?comment_id=${commentId}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erreur lors de la suppression du commentaire');
-        }
-        console.log(`Commentaire ${commentId} supprimé`);
-        if (callback) callback();
-        fetchPlanningData(); // Rafraîchir le tableau principal
-    })
-    .catch(error => {
-        console.error('Erreur lors de la suppression du commentaire :', error);
+    tooltipClicDroit(event, {
+      nom: nomClique,
+      competenceId,
+      horaireId,
+      date,
+      siteId
     });
-}
+    return;
+  }
 
-// Nouvelle fonction pour afficher un tooltip spécifique pour les cellules vides
-function showTooltipForEmptyCell(event, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
-    console.log(`Appel de showTooltipForEmptyCell avec les paramètres : jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
-    
-    const emptyTooltip = document.createElement('div');
-    emptyTooltip.id = 'emptyTooltip';
-    emptyTooltip.innerHTML = `
-        <div class="tooltip-item">
-            <div class="tooltip-options">
-                <button class="tooltip-option" id="closeButton">FERMER</button>
-            </div>
-        </div>
-    `;
-    emptyTooltip.style.position = 'absolute';
-    emptyTooltip.style.left = `${event.pageX + 10}px`; // Slight offset for better visibility
-    emptyTooltip.style.top = `${event.pageY + 10}px`; // Slight offset for better visibility
-    emptyTooltip.style.backgroundColor = 'white';
-    emptyTooltip.style.border = '1px solid black';
-    emptyTooltip.style.padding = '10px';
-    emptyTooltip.style.borderRadius = '5px';
-    emptyTooltip.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
-    document.body.appendChild(emptyTooltip);
+  // Si clic ailleurs dans la cellule, comportement par défaut ou rien
+});
 
-    // Ajouter un gestionnaire de clic au bouton de fermeture
-    document.getElementById('closeButton').addEventListener('click', async () => {
-        try {
-            const response = await fetch('/api/add-fermeture', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin })
-            });
+// Tooltip clic droit qui affiche toutes les infos
+function tooltipClicDroit(event, { nom, competenceId, horaireId, date, siteId }) {
+  let tooltip = document.getElementById("tooltip-clicdroit");
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.id = "tooltip-clicdroit";
+    tooltip.style.position = "absolute";
+    tooltip.style.zIndex = 10000;
+    tooltip.style.background = "#fff";
+    tooltip.style.border = "1px solid #ccc";
+    tooltip.style.borderRadius = "6px";
+    tooltip.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
+    tooltip.style.padding = "10px";
+    tooltip.style.minWidth = "180px";
+    tooltip.style.maxWidth = "300px";
+    tooltip.style.fontFamily = "Arial, sans-serif";
+    document.body.appendChild(tooltip);
+  }
 
-            if (!response.ok) {
-                throw new Error('Erreur lors de l\'ajout dans Tfermeture');
-            }
+  tooltip.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 6px;">
+      <span style="font-weight: bold;">${nom}</span>
+      <span class="tooltip-close" style="cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+    </div>
+    <div style="font-size: 13px; color: #555;">
+      <div><b>Compétence ID :</b> ${competenceId}</div>
+      <div><b>Horaire ID :</b> ${horaireId}</div>
+      <div><b>Date :</b> ${date}</div>
+      <div><b>Site ID :</b> ${siteId}</div>
+    </div>
+  `;
 
-            const result = await response.text();
-            console.log('Résultat de l\'ajout dans Tfermeture :', result);
+  tooltip.style.left = event.pageX + "px";
+  tooltip.style.top = event.pageY + "px";
+  tooltip.style.display = "block";
 
-            // Fermer le tooltip après l'ajout
-            emptyTooltip.remove();
+  tooltip.querySelector(".tooltip-close").onclick = function() {
+    tooltip.style.display = "none";
+  };
 
-            // Relancer la fonction fetchPlanningData pour recharger le tableau
-            fetchPlanningData();
-        } catch (error) {
-            console.error('Erreur lors de l\'ajout dans Tfermeture :', error);
-        }
-    });
-
-    // Cacher le tooltip lorsque l'utilisateur clique ailleurs
-    document.addEventListener('click', (event) => {
-        if (!event.target.closest('#emptyTooltip')) {
-            emptyTooltip.remove();
-        }
-    }, { once: true });
-}
-
-// Fonction pour ajouter un nom au planning
-function addNameToPlanning(nom, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
-    // Ajoutez ici la logique pour ajouter le nom au planning
-    console.log(`Nom ${nom} ajouté au planning pour jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
-}
-
-// Fonction pour ajouter un commentaire au planning
-function addCommentToPlanning(nom, commentaire, jour_id, semaine, annee, competence_id, horaire_debut, horaire_fin) {
-    // Ajoutez ici la logique pour ajouter le commentaire au planning
-    console.log(`Commentaire ajouté au planning pour nom=${nom}, jour_id=${jour_id}, semaine=${semaine}, annee=${annee}, competence_id=${competence_id}, horaire_debut=${horaire_debut}, horaire_fin=${horaire_fin}`);
+  document.addEventListener("click", function hideTooltip(e) {
+    if (!tooltip.contains(e.target)) {
+      tooltip.style.display = "none";
+      document.removeEventListener("click", hideTooltip);
+    }
+  });
 }
