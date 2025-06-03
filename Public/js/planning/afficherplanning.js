@@ -33,7 +33,7 @@ async function fetchCompetences(siteId, startDate, endDate) {
 
   try {
     const response = await fetch(
-      `/planning/datecompetence?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`,
+      `/api/datecompetence?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`,
       {
         method: "GET",
         headers: {
@@ -248,8 +248,8 @@ async function displayPlanningWithNames(data, startDate, endDate) {
       if (!groupedData[key].dates[item.date]) {
         groupedData[key].dates[item.date] = [];
       }
-      if (item.nom) {
-        groupedData[key].dates[item.date].push(item.nom);
+      if (item.nom && item.nom_id) {
+        groupedData[key].dates[item.date].push({ nom: item.nom, nom_id: item.nom_id });
       }
     }
   });
@@ -295,11 +295,11 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         // Exemple sans commentaire (tu peux adapter)
         dateCell.innerHTML = dates[date]
           .map(
-            (nom, idx) => `
-          <div class="nom-block" data-nom="${nom}">
-            <span class="nom-valeur">${nom}</span>                
-          </div>
-        `
+            ({ nom, nom_id }) => `
+      <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
+        <span class="nom-valeur">${nom}</span>                
+      </div>
+    `
           )
           .join("");
         dateCell.style.whiteSpace = "normal";
@@ -326,7 +326,7 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
 
     try {
         const response = await fetch(
-            `/planning/datecompetencewithnames?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`,
+            `/api/datecompetencewithnames?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`,
             {
                 method: "GET",
                 headers: {

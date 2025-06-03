@@ -62,7 +62,8 @@ router.get('/datecompetencewithnames', authenticateToken, (req, res) => {
         h.horaire_fin,
         c.competence,
         p.date,
-        n.nom
+        n.nom,
+        n.nom_id
     FROM Thoraire_competence_Tsite hct
     JOIN Thoraire h ON hct.horaire_id = h.horaire_id
     JOIN Tcompetence c ON hct.competence_id = c.competence_id

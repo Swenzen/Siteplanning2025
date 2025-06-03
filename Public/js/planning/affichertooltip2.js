@@ -48,7 +48,12 @@ async function fetchNomIds(competenceId, event) {
     console.log("Noms récupérés :", data);
 
     // Appeler showTooltip pour afficher les noms dans le tooltip
-    showTooltip(event, data);
+    showTooltip(event, data, {
+      competenceId,
+      horaireId: null, // ou la vraie valeur si tu l'as
+      date: null, // ou la vraie valeur si tu l'as
+      siteId,
+    });
   } catch (error) {
     console.error("Erreur lors de la récupération des noms :", error);
     alert("Une erreur est survenue lors de la récupération des noms.");
@@ -275,7 +280,7 @@ async function fetchAvailableNames(competenceId, siteId, date) {
 
   try {
     const response = await fetch(
-      `/planning/available-names?competence_id=${competenceId}&site_id=${siteId}&date=${date}`,
+      `/api/available-names?competence_id=${competenceId}&site_id=${siteId}&date=${date}`,
       {
         method: "GET",
         headers: {
@@ -307,21 +312,22 @@ async function fetchAvailableNames(competenceId, siteId, date) {
 function showTooltip(event, noms, { competenceId, horaireId, date, siteId }) {
   const tooltip = document.getElementById("tooltip");
 
-  console.log("Affichage du tooltip avec les noms :", noms);
-
   tooltip.innerHTML = `
     <div style="position: relative; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #eee; text-align: right;">
         <div class="tooltip-close" style="cursor: pointer;">&times;</div>
     </div>
     <ul style="list-style: none; padding: 0; margin: 0;">
-        ${noms
-          .map(
-            (nomObj) =>
-              `<li style="cursor: pointer;" data-nom="${nomObj.nom}" data-nom-id="${nomObj.nom_id}">${nomObj.nom}</li>`
-          )
-          .join("")}
+        ${noms.map(nomObj => {
+          // Si nomObj est une chaîne, on l'affiche et on ne met pas de data-nom-id
+          if (typeof nomObj === "string") {
+            return `<li style="cursor:pointer;" data-nom="${nomObj}">${nomObj}</li>`;
+          } else {
+            // Sinon, on affiche comme avant
+            return `<li style="cursor:pointer;" data-nom="${nomObj.nom}" data-nom-id="${nomObj.nom_id}">${nomObj.nom}</li>`;
+          }
+        }).join("")}
     </ul>
-`;
+  `;
 
   tooltip.style.display = "block";
   tooltip.style.left = `${event.pageX}px`;
@@ -331,13 +337,27 @@ function showTooltip(event, noms, { competenceId, horaireId, date, siteId }) {
     tooltip.style.display = "none";
   });
 
-  tooltip.querySelectorAll("li").forEach((item) => {
-    item.addEventListener("click", () => {
-      const nom_id = item.dataset.nomId;
-      updatePlanningV2({ date, nom_id, competenceId, horaireId, siteId });
-      tooltip.style.display = "none";
+  // Ajoute le clic sur chaque nom pour updatePlanningV2
+ 
+  tooltip.querySelectorAll("li").forEach(li => {
+  li.addEventListener("click", async () => {
+    tooltip.style.display = "none";
+    const nomId = li.dataset.nomId;
+    if (!nomId) {
+      console.error("Impossible d'ajouter ce nom : nom_id manquant.");
+      // Optionnel : affiche un message à l'utilisateur
+      // alert("Impossible d'ajouter ce nom (nom_id manquant).");
+      return;
+    }
+    await updatePlanningV2({
+      date,
+      nom_id: nomId,
+      competenceId,
+      horaireId,
+      siteId
     });
   });
+});
 }
 
 async function updatePlanningV2({
@@ -355,7 +375,7 @@ async function updatePlanningV2({
   }
 
   try {
-    const response = await fetch("/planning/update-planningv2", {
+    const response = await fetch("/api/update-planningv2", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

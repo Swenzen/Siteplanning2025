@@ -576,59 +576,6 @@ router.get('/count-horaire-competence', (req, res) => {
     });
 });
 
-// Route pour récupérer les noms disponibles pour un jour spécifique
-router.get('/available-names', async (req, res) => {
-    const { jour_id, semaine, annee } = req.query;
 
-    try {
-        // Récupérer la liste des tables Tjrepos_
-        const tablesQuery = `
-            SELECT TABLE_NAME
-            FROM information_schema.tables
-            WHERE table_schema = 'planning2' AND table_name LIKE 'tjrepos_%'
-        `;
-        const [tablesResults] = await connection.promise().query(tablesQuery);
-        const tables = tablesResults.map(row => row.TABLE_NAME);
-
-        // Construire dynamiquement la requête SQL pour exclure les noms dans les tables Tjrepos_
-        const unionQueries = tables.map(table => `
-            SELECT nom_id FROM ${table} WHERE jour_id = ? AND semaine = ? AND annee = ?
-        `).join(' UNION ALL ');
-
-        const query = `
-            SELECT n.nom
-            FROM Tnom n
-            WHERE n.nom_id NOT IN (
-                SELECT p.nom_id
-                FROM Tplanning p
-                WHERE p.jour_id = ? AND p.semaine = ? AND p.annee = ?
-            )
-            AND n.nom_id NOT IN (
-                SELECT v.nom_id
-                FROM Tvacances v
-                WHERE v.semaine = ? AND v.annee = ?
-            )
-            ${unionQueries ? `AND n.nom_id NOT IN (${unionQueries})` : ''}
-        `;
-
-        const params = [
-            jour_id, semaine, annee, // Pour Tplanning
-            semaine, annee,          // Pour Tvacances
-            ...tables.flatMap(() => [jour_id, semaine, annee]) // Pour les tables Tjrepos_
-        ];
-
-        connection.query(query, params, (err, results) => {
-            if (err) {
-                console.error('Erreur lors de la récupération des noms disponibles :', err.message);
-                res.status(500).send('Erreur lors de la récupération des noms disponibles');
-            } else {
-                res.json(results.map(row => row.nom));
-            }
-        });
-    } catch (error) {
-        console.error('Erreur lors de la récupération des tables Tjrepos_ :', error.message);
-        res.status(500).send('Erreur lors de la récupération des tables Tjrepos_');
-    }
-});
 
 module.exports = router;

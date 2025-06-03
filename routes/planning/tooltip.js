@@ -6,19 +6,15 @@ const authenticateToken = require('../../middleware/auth'); // Middleware d'auth
 // Route pour récupérer les noms disponibles pour une compétence donnée
 router.get('/nom-ids', authenticateToken, (req, res) => {
     const { competence_id, semaine, annee, jour_id } = req.query;
-    const site_id = req.query.site_id; // Récupérer le site_id depuis la requête
-    const userSiteIds = req.user.siteIds; // Récupérer les siteIds autorisés depuis le token
+    const site_id = req.query.site_id;
+    const userSiteIds = req.user.siteIds;
 
-    console.log('Paramètres reçus :', { competence_id, site_id, semaine, annee, jour_id, userSiteIds });
-
-    // Vérifier que le site_id est dans la liste des sites autorisés
     if (!userSiteIds.includes(String(site_id))) {
-        console.error('Accès refusé : site_id non autorisé');
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     const query = `
-        SELECT DISTINCT n.nom
+        SELECT DISTINCT n.nom, n.nom_id
         FROM Tcompetence_nom_Tsite cns
         JOIN Tnom n ON cns.nom_id = n.nom_id
         JOIN Tnom_Tsite nts ON n.nom_id = nts.nom_id
@@ -48,14 +44,6 @@ router.get('/nom-ids', authenticateToken, (req, res) => {
         )
     `;
 
-    console.log('Requête SQL générée :', query);
-    console.log('Paramètres SQL :', [
-        competence_id, site_id, site_id, site_id,
-        semaine, annee, jour_id, site_id,
-        semaine, annee, jour_id, site_id,
-        semaine, annee, site_id
-    ]);
-
     connection.query(
         query,
         [
@@ -66,18 +54,15 @@ router.get('/nom-ids', authenticateToken, (req, res) => {
         ],
         (err, results) => {
             if (err) {
-                console.error('Erreur lors de l\'exécution de la requête SQL :', err.message);
                 return res.status(500).send('Erreur lors de la récupération des noms');
             }
-
-            console.log('Résultats SQL :', results);
-            res.json(results.map(row => row.nom));
+            // Ici, on renvoie [{ nom: ..., nom_id: ... }, ...]
+            res.json(results);
         }
     );
 });
 
-
-router.get('/available-names', (req, res) => {
+router.get('/available-names', authenticateToken, (req, res) => {
     const { competence_id, site_id, date } = req.query;
 
     if (!competence_id || !site_id || !date) {
@@ -106,7 +91,8 @@ router.get('/available-names', (req, res) => {
                 return res.status(500).send('Erreur lors de la récupération des noms disponibles.');
             }
 
-            res.json(results); // On renvoie [{nom: ..., nom_id: ...}, ...]
+            // Ici, on renvoie [{ nom: ..., nom_id: ... }, ...]
+            res.json(results);
         }
     );
 });
@@ -137,5 +123,40 @@ router.post('/update-planningv2', authenticateToken, (req, res) => {
     );
 });
 
+router.post('/delete-planningv2', authenticateToken, (req, res) => {
+    const { date, nom_id, competence_id, horaire_id, site_id } = req.body;
+    const userSiteIds = req.user.siteIds; // Sites autorisés pour l'utilisateur
+
+    // Vérification des paramètres
+    if (!date || !nom_id || !competence_id || !horaire_id || !site_id) {
+        return res.status(400).send('Tous les champs sont requis.');
+    }
+
+    // Vérification de l'accès au site
+    if (!userSiteIds.includes(String(site_id))) {
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
+
+    const query = `
+        DELETE FROM Tplanningv2
+        WHERE date = ? AND nom_id = ? AND competence_id = ? AND horaire_id = ? AND site_id = ?
+        LIMIT 1
+    `;
+
+    connection.query(
+        query,
+        [date, nom_id, competence_id, horaire_id, site_id],
+        (err, result) => {
+            if (err) {
+                console.error('Erreur lors de la suppression dans Tplanningv2 :', err.message);
+                return res.status(500).send('Erreur lors de la suppression dans Tplanningv2.');
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).send('Aucune entrée trouvée à supprimer.');
+            }
+            res.send('Suppression réussie.');
+        }
+    );
+});
 
 module.exports = router;
