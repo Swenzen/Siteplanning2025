@@ -78,25 +78,22 @@ router.get('/available-names', authenticateToken, (req, res) => {
           AND n.nom_id NOT IN (
               SELECT p.nom_id
               FROM Tplanningv2 p
-              WHERE p.date = ? AND p.competence_id = ? AND p.site_id = ?
+              WHERE p.date = ? AND p.site_id = ?
           )
     `;
 
     connection.query(
         query,
-        [competence_id, site_id, date, competence_id, site_id],
+        [competence_id, site_id, date, site_id],
         (err, results) => {
             if (err) {
                 console.error('Erreur lors de la récupération des noms disponibles :', err.message);
                 return res.status(500).send('Erreur lors de la récupération des noms disponibles.');
             }
-
-            // Ici, on renvoie [{ nom: ..., nom_id: ... }, ...]
             res.json(results);
         }
     );
 });
-
 router.post('/update-planningv2', authenticateToken, (req, res) => {
     const { date, nom_id, competence_id, horaire_id, site_id } = req.body;
 
