@@ -133,10 +133,17 @@ router.get('/data', authenticateToken, (req, res) => {
 
 router.get('/noms', authenticateToken, (req, res) => {
     const siteId = req.query.site_id;
+    const userSiteIds = req.user.siteIds;
 
     if (!siteId) {
         console.error('Erreur : Le paramètre site_id est manquant.');
         return res.status(400).send('Le paramètre site_id est requis.');
+    }
+
+    // Vérification de l'accès au site
+    if (!userSiteIds.includes(String(siteId))) {
+        console.error('Accès refusé : site_id non autorisé');
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
     console.log('Requête reçue pour /noms avec site_id :', siteId);
@@ -145,8 +152,8 @@ router.get('/noms', authenticateToken, (req, res) => {
         SELECT 
             t.nom_id, 
             t.nom, 
-            DATE_FORMAT(t.date_debut, '%Y-%m-%d') AS date_debut, -- Renvoyer uniquement la date
-            DATE_FORMAT(t.date_fin, '%Y-%m-%d') AS date_fin     -- Renvoyer uniquement la date
+            DATE_FORMAT(t.date_debut, '%Y-%m-%d') AS date_debut,
+            DATE_FORMAT(t.date_fin, '%Y-%m-%d') AS date_fin
         FROM Tnom t
         JOIN Tnom_Tsite nts ON t.nom_id = nts.nom_id
         WHERE nts.site_id = ?

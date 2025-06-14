@@ -85,17 +85,18 @@ function displayCompetencesWithDates(data, startDate, endDate) {
   const currentDate = new Date(startDate);
   const endDateObj = new Date(endDate);
 
-  const dateHeaders = []; // Stocker les dates pour les utiliser dans les lignes
+  const dateHeaders = [];
   while (currentDate <= endDateObj) {
     const dateHeader = document.createElement("th");
-    const formattedDate = currentDate.toISOString().split("T")[0]; // Format YYYY-MM-DD
+    const formattedDate = currentDate.toISOString().split("T")[0];
     dateHeader.textContent = currentDate.toLocaleDateString("fr-FR");
     headerRow.appendChild(dateHeader);
 
-    dateHeaders.push({
-      date: formattedDate,
-      dayOfWeek: currentDate.getDay(), // 0 = dimanche, 1 = lundi, etc.
-    });
+    // Mapping JS (0=dimanche) vers SQL (1=lundi, ..., 7=dimanche)
+    const jsDay = currentDate.getDay();
+    const jour_id = jsDay === 0 ? 7 : jsDay;
+
+    dateHeaders.push({ date: formattedDate, jour_id }); // <-- stocke un objet
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
@@ -155,11 +156,11 @@ function displayCompetencesWithDates(data, startDate, endDate) {
       row.appendChild(horairesCell);
 
       // Colonnes dynamiques pour les dates
-      dateHeaders.forEach(({ date, dayOfWeek }) => {
+      dateHeaders.forEach(({ date, jour_id }) => {
         const dateCell = document.createElement("td");
 
         // Mapper le jour de la semaine pour correspondre à la base de données
-        const mappedDayOfWeek = mapDayToDatabase(dayOfWeek);
+        const mappedDayOfWeek = mapDayToDatabase(jour_id);
 
         // Vérifier si la date est dans l'intervalle de la compétence
         const isWithinDateRange = date >= date_debut && date <= date_fin;
@@ -249,7 +250,11 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         groupedData[key].dates[item.date] = [];
       }
       if (item.nom && item.nom_id) {
-        groupedData[key].dates[item.date].push({ nom: item.nom, nom_id: item.nom_id });
+        groupedData[key].dates[item.date].push({ 
+          nom: item.nom, 
+          nom_id: item.nom_id, 
+          ouverture: item.ouverture // <-- AJOUTE CETTE LIGNE
+        });
       }
     }
   });
@@ -295,9 +300,10 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         // Exemple sans commentaire (tu peux adapter)
         dateCell.innerHTML = dates[date]
           .map(
-            ({ nom, nom_id }) => `
-      <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
-        <span class="nom-valeur">${nom}</span>                
+            ({ nom, nom_id, ouverture }) => `
+      <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}" data-ouverture="${ouverture ? 'oui' : 'non'}">
+        <span class="nom-valeur">${nom}</span>
+        <span class="ouverture-info" style="font-size: 0.8em; margin-left: 5px;">${ouverture ? 'Ouverture : oui' : 'Ouverture : non'}</span>
       </div>
     `
           )

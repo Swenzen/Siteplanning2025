@@ -55,26 +55,42 @@ router.get('/datecompetencewithnames', authenticateToken, (req, res) => {
     }
 
     const query = `
-    SELECT 
-        hct.horaire_id,
-        hct.competence_id,
-        h.horaire_debut,
-        h.horaire_fin,
-        c.competence,
-        p.date,
-        n.nom,
-        n.nom_id
-    FROM Thoraire_competence_Tsite hct
-    JOIN Thoraire h ON hct.horaire_id = h.horaire_id
-    JOIN Tcompetence c ON hct.competence_id = c.competence_id
-    LEFT JOIN Tplanningv2 p 
-        ON hct.horaire_id = p.horaire_id 
-        AND hct.competence_id = p.competence_id 
-        AND hct.site_id = p.site_id
-    LEFT JOIN Tnom n ON p.nom_id = n.nom_id
-    WHERE hct.site_id = ?
-      AND (p.date BETWEEN ? AND ? OR p.date IS NULL)
-    ORDER BY hct.horaire_id, hct.competence_id, p.date;
+SELECT 
+    hct.horaire_id,
+    hct.competence_id,
+    h.horaire_debut,
+    h.horaire_fin,
+    c.competence,
+    c.date_debut AS competence_date_debut,
+    c.date_fin AS competence_date_fin,
+    p.date,
+    n.nom,
+    n.nom_id,
+    ((DAYOFWEEK(p.date) + 6) % 7 + 1) AS jour_id,
+    CASE 
+        WHEN 
+            hcj.horaire_id IS NOT NULL
+            AND p.date >= c.date_debut
+            AND p.date <= c.date_fin
+        THEN 1
+        ELSE 0
+    END AS ouverture
+FROM Thoraire_competence_Tsite hct
+JOIN Thoraire h ON hct.horaire_id = h.horaire_id
+JOIN Tcompetence c ON hct.competence_id = c.competence_id
+LEFT JOIN Tplanningv2 p 
+    ON hct.horaire_id = p.horaire_id 
+    AND hct.competence_id = p.competence_id 
+    AND hct.site_id = p.site_id
+LEFT JOIN Tnom n ON p.nom_id = n.nom_id
+LEFT JOIN Thoraire_competence_jour hcj
+    ON hct.horaire_id = hcj.horaire_id
+    AND hct.competence_id = hcj.competence_id
+    AND hcj.site_id = hct.site_id
+    AND hcj.jour_id = ((DAYOFWEEK(p.date) + 6) % 7 + 1)
+WHERE hct.site_id = ?
+  AND (p.date BETWEEN ? AND ? OR p.date IS NULL)
+ORDER BY hct.horaire_id, hct.competence_id, p.date;
     `;
 
     connection.query(query, [site_id, start_date, end_date], (err, results) => {
@@ -86,7 +102,6 @@ router.get('/datecompetencewithnames', authenticateToken, (req, res) => {
         res.json(results);
     });
 });
-
 
 
 module.exports = router;
