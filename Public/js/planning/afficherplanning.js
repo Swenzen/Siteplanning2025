@@ -87,16 +87,11 @@ function displayCompetencesWithDates(data, startDate, endDate) {
 
   const dateHeaders = [];
   while (currentDate <= endDateObj) {
-    const dateHeader = document.createElement("th");
     const formattedDate = currentDate.toISOString().split("T")[0];
-    dateHeader.textContent = currentDate.toLocaleDateString("fr-FR");
-    headerRow.appendChild(dateHeader);
-
-    // Mapping JS (0=dimanche) vers SQL (1=lundi, ..., 7=dimanche)
     const jsDay = currentDate.getDay();
-    const jour_id = jsDay === 0 ? 7 : jsDay;
+    const jour_id = jsDay === 0 ? 7 : jsDay; // <-- CORRECTION ICI
 
-    dateHeaders.push({ date: formattedDate, jour_id }); // <-- stocke un objet
+    dateHeaders.push({ date: formattedDate, jour_id });
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
@@ -250,10 +245,13 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         groupedData[key].dates[item.date] = [];
       }
       if (item.nom && item.nom_id) {
+        const jsDay = new Date(item.date).getDay();
+        const jourPondere = jsDay === 0 ? 7 : jsDay; // CORRECTION ICI
         groupedData[key].dates[item.date].push({ 
           nom: item.nom, 
           nom_id: item.nom_id, 
-          ouverture: item.ouverture // <-- AJOUTE CETTE LIGNE
+          ouverture: item.ouverture,
+          jourPondere
         });
       }
     }

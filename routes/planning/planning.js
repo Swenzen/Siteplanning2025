@@ -66,7 +66,11 @@ SELECT
     p.date,
     n.nom,
     n.nom_id,
-    ((DAYOFWEEK(p.date) + 6) % 7 + 1) AS jour_id,
+    CASE 
+        WHEN p.date IS NOT NULL THEN 
+            CASE WHEN DAYOFWEEK(p.date) = 1 THEN 7 ELSE DAYOFWEEK(p.date) - 1 END
+        ELSE NULL
+    END AS jour_id,
     CASE 
         WHEN 
             hcj.horaire_id IS NOT NULL
@@ -87,9 +91,14 @@ LEFT JOIN Thoraire_competence_jour hcj
     ON hct.horaire_id = hcj.horaire_id
     AND hct.competence_id = hcj.competence_id
     AND hcj.site_id = hct.site_id
-    AND hcj.jour_id = ((DAYOFWEEK(p.date) + 6) % 7 + 1)
-WHERE hct.site_id = ?
-  AND (p.date BETWEEN ? AND ? OR p.date IS NULL)
+    AND hcj.jour_id = 
+        CASE 
+            WHEN p.date IS NOT NULL THEN 
+                CASE WHEN DAYOFWEEK(p.date) = 1 THEN 7 ELSE DAYOFWEEK(p.date) - 1 END
+            ELSE NULL
+        END
+WHERE hct.site_id = 1
+  AND (p.date BETWEEN '2025-05-05' AND '2025-05-11' OR p.date IS NULL)
 ORDER BY hct.horaire_id, hct.competence_id, p.date;
     `;
 
