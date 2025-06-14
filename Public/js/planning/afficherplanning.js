@@ -22,168 +22,9 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-async function fetchCompetences(siteId, startDate, endDate) {
-  const token = localStorage.getItem("token");
 
-  if (!token || !siteId) {
-    console.error("Erreur : le token ou le site_id est manquant.");
-    alert("Erreur : vous devez être authentifié et avoir sélectionné un site.");
-    return [];
-  }
 
-  try {
-    const response = await fetch(
-      `/api/datecompetence?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erreur lors de la récupération des données :", errorText);
-      alert("Erreur lors de la récupération des données.");
-      return [];
-    }
-
-    const data = await response.json();
-    console.log("Données récupérées :", data);
-    return data;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des données :", error);
-    alert("Une erreur est survenue lors de la récupération des données.");
-    return [];
-  }
-}
-
-function displayCompetencesWithDates(data, startDate, endDate) {
-  const table = document.getElementById("planningTable");
-  const tbody = table.querySelector("tbody");
-  const thead = table.querySelector("thead");
-
-  // Effacer le contenu précédent
-  tbody.innerHTML = "";
-  thead.innerHTML = "";
-
-  // Créer l'en-tête du tableau
-  const headerRow = document.createElement("tr");
-
-  // Colonnes fixes : Compétence et Horaires
-  const competenceHeader = document.createElement("th");
-  competenceHeader.textContent = "Compétence";
-  headerRow.appendChild(competenceHeader);
-
-  const horairesHeader = document.createElement("th");
-  horairesHeader.textContent = "Horaires";
-  headerRow.appendChild(horairesHeader);
-
-  // Colonnes dynamiques pour les dates
-  const currentDate = new Date(startDate);
-  const endDateObj = new Date(endDate);
-
-  const dateHeaders = [];
-  while (currentDate <= endDateObj) {
-    const formattedDate = currentDate.toISOString().split("T")[0];
-    const jsDay = currentDate.getDay();
-    const jour_id = jsDay === 0 ? 7 : jsDay; // <-- CORRECTION ICI
-
-    dateHeaders.push({ date: formattedDate, jour_id });
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  thead.appendChild(headerRow);
-
-  // Fonction pour mapper les jours de JavaScript à ceux de la base de données
-  function mapDayToDatabase(day) {
-    return day === 0 ? 7 : day; // Si 0 (dimanche), renvoyer 7, sinon renvoyer le jour tel quel
-  }
-
-  // Regrouper les données par competence_id et horaire_id
-  const groupedData = {};
-  data.forEach((item) => {
-    const key = `${item.competence_id}-${item.horaire_id}`;
-    if (!groupedData[key]) {
-      groupedData[key] = {
-        competence: item.competence,
-        horaire_debut: item.horaire_debut,
-        horaire_fin: item.horaire_fin,
-        date_debut: item.date_debut,
-        date_fin: item.date_fin,
-        indisponibilite_debut: item.indisponibilite_debut,
-        indisponibilite_fin: item.indisponibilite_fin,
-        jours: {}, // Stocker les jours autorisés par compétence et horaire
-      };
-    }
-
-    // Ajouter les jours autorisés pour chaque compétence et horaire
-    const mappedDayOfWeek = mapDayToDatabase(item.jour_id);
-    groupedData[key].jours[mappedDayOfWeek] = true;
-  });
-
-  console.log("Données regroupées dans groupedData :", groupedData);
-
-  // Ajouter les lignes pour chaque combinaison compétence-horaire
-  Object.values(groupedData).forEach(
-    ({
-      competence,
-      horaire_debut,
-      horaire_fin,
-      date_debut,
-      date_fin,
-      indisponibilite_debut,
-      indisponibilite_fin,
-      jours,
-    }) => {
-      const row = document.createElement("tr");
-
-      // Colonne Compétence
-      const competenceCell = document.createElement("td");
-      competenceCell.textContent = competence;
-      row.appendChild(competenceCell);
-
-      // Colonne Horaires
-      const horairesCell = document.createElement("td");
-      horairesCell.textContent = `${horaire_debut} - ${horaire_fin}`;
-      row.appendChild(horairesCell);
-
-      // Colonnes dynamiques pour les dates
-      dateHeaders.forEach(({ date, jour_id }) => {
-        const dateCell = document.createElement("td");
-
-        // Mapper le jour de la semaine pour correspondre à la base de données
-        const mappedDayOfWeek = mapDayToDatabase(jour_id);
-
-        // Vérifier si la date est dans l'intervalle de la compétence
-        const isWithinDateRange = date >= date_debut && date <= date_fin;
-
-        // Vérifier si la date est dans une plage d'indisponibilité
-        const isWithinIndispoRange =
-          indisponibilite_debut &&
-          indisponibilite_fin &&
-          date >= indisponibilite_debut &&
-          date <= indisponibilite_fin;
-
-        // Vérifier si le jour est autorisé
-        const isDayAllowed = jours[mappedDayOfWeek];
-
-        if (isWithinDateRange && !isWithinIndispoRange && isDayAllowed) {
-          dateCell.textContent = "✔"; // Disponible
-        } else {
-          dateCell.textContent = "✘"; // Non disponible
-          dateCell.style.backgroundColor = "#d3d3d3"; // Griser la cellule
-        }
-
-        row.appendChild(dateCell);
-      });
-
-      tbody.appendChild(row);
-    }
-  );
-}
 
 // second planning
 
@@ -212,10 +53,10 @@ async function displayPlanningWithNames(data, startDate, endDate) {
   const currentDate = new Date(startDate);
   const endDateObj = new Date(endDate);
 
-  const dateHeaders = []; // Stocker les dates pour les utiliser dans les lignes
+  const dateHeaders = [];
   while (currentDate <= endDateObj) {
     const dateHeader = document.createElement("th");
-    const formattedDate = currentDate.toISOString().split("T")[0]; // Format YYYY-MM-DD
+    const formattedDate = currentDate.toISOString().slice(0, 10);
     dateHeader.textContent = currentDate.toLocaleDateString("fr-FR");
     headerRow.appendChild(dateHeader);
 
@@ -225,43 +66,51 @@ async function displayPlanningWithNames(data, startDate, endDate) {
 
   thead.appendChild(headerRow);
 
-  // Regrouper les données par competence_id et horaire_id
-  const groupedData = {};
-  data.forEach((item) => {
-    const key = `${item.competence_id}-${item.horaire_id}`;
-    if (!groupedData[key]) {
-      groupedData[key] = {
-        competence_id: item.competence_id,
-        horaire_id: item.horaire_id,
-        competence: item.competence,
-        horaire_debut: item.horaire_debut,
-        horaire_fin: item.horaire_fin,
-        dates: {}, // Stocker ouverture et noms par date
+  // Regrouper les données par competence_id, horaire_id, date
+  const cases = {};
+  data.forEach((row) => {
+    const key = `${row.competence_id}-${row.horaire_id}-${row.date}`;
+    if (!cases[key]) {
+      cases[key] = {
+        competence_id: row.competence_id,
+        horaire_id: row.horaire_id,
+        competence: row.competence,
+        horaire_debut: row.horaire_debut,
+        horaire_fin: row.horaire_fin,
+        date: row.date,
+        ouverture: 0,
+        noms: [],
       };
     }
-    if (item.date) {
-      // Toujours stocker ouverture pour chaque date
-      if (!groupedData[key].dates[item.date]) {
-        groupedData[key].dates[item.date] = {
-          ouverture: item.ouverture === 1 ? "oui" : "non",
-          noms: [],
-        };
-      }
-      // Ajouter le nom si présent
-      if (item.nom && item.nom_id) {
-        groupedData[key].dates[item.date].noms.push({
-          nom: item.nom,
-          nom_id: item.nom_id,
-        });
-      }
+    // Toujours garder la valeur max (1 si au moins une ligne ouverte)
+    cases[key].ouverture = Math.max(cases[key].ouverture, Number(row.ouverture));
+    if (row.nom && row.nom_id && !cases[key].noms.some(n => n.nom_id === row.nom_id)) {
+      cases[key].noms.push({ nom: row.nom, nom_id: row.nom_id });
     }
   });
 
-  console.log("Données reçues dans displayPlanningWithNames :", data);
+  console.log("cases[1-1-2025-05-05]", cases["1-1-2025-05-05"]);
 
-  // Ajouter les lignes pour chaque combinaison compétence-horaire
-  Object.values(groupedData).forEach((item) => {
-    const { competence, horaire_debut, horaire_fin, dates } = item;
+  // Regrouper par competence_id et horaire_id pour les lignes
+  const lignes = {};
+  Object.values(cases).forEach((cell) => {
+    const key = `${cell.competence_id}-${cell.horaire_id}`;
+    if (!lignes[key]) {
+      lignes[key] = {
+        competence: cell.competence,
+        horaire_debut: cell.horaire_debut,
+        horaire_fin: cell.horaire_fin,
+        cells: {},
+        competence_id: cell.competence_id,
+        horaire_id: cell.horaire_id,
+      };
+    }
+    lignes[key].cells[cell.date] = cell;
+  });
+
+  // Générer les lignes du tableau
+  Object.values(lignes).forEach((item) => {
+    const { competence, horaire_debut, horaire_fin, cells, competence_id, horaire_id } = item;
     const row = document.createElement("tr");
 
     // Colonne Compétence
@@ -277,17 +126,16 @@ async function displayPlanningWithNames(data, startDate, endDate) {
     // Colonnes dynamiques pour les dates
     dateHeaders.forEach((date) => {
       const dateCell = document.createElement("td");
-      dateCell.dataset.competenceId = item.competence_id;
-      dateCell.dataset.horaireId = item.horaire_id;
+      dateCell.dataset.competenceId = competence_id;
+      dateCell.dataset.horaireId = horaire_id;
       dateCell.dataset.date = date;
 
-      // Par défaut, fermé
       let ouverture = "non";
       let noms = [];
 
-      if (item.dates[date]) {
-        ouverture = item.dates[date].ouverture;
-        noms = item.dates[date].noms;
+      if (cells[date]) {
+        ouverture = Number(cells[date].ouverture) === 1 ? "oui" : "non";
+        noms = cells[date].noms;
       }
 
       dateCell.dataset.ouverture = ouverture;
@@ -381,9 +229,6 @@ applyDateFilterButton.addEventListener("click", async () => {
 
   console.log("Dates sélectionnées :", { startDate, endDate });
 
-  // Récupérer les compétences pour le premier tableau
-  const competences = await fetchCompetences(siteId, startDate, endDate);
-  displayCompetencesWithDates(competences, startDate, endDate);
 
   // Récupérer les compétences avec noms pour le deuxième tableau
   const competencesWithNames = await fetchCompetencesWithNames(
