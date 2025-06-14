@@ -236,22 +236,22 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         competence: item.competence,
         horaire_debut: item.horaire_debut,
         horaire_fin: item.horaire_fin,
-        dates: {}, // Stocker les noms par date
+        dates: {}, // Stocker ouverture et noms par date
       };
     }
-    // Ici, on stocke un tableau de noms par date
     if (item.date) {
+      // Toujours stocker ouverture pour chaque date
       if (!groupedData[key].dates[item.date]) {
-        groupedData[key].dates[item.date] = [];
+        groupedData[key].dates[item.date] = {
+          ouverture: item.ouverture === 1 ? "oui" : "non",
+          noms: [],
+        };
       }
+      // Ajouter le nom si présent
       if (item.nom && item.nom_id) {
-        const jsDay = new Date(item.date).getDay();
-        const jourPondere = jsDay === 0 ? 7 : jsDay; // CORRECTION ICI
-        groupedData[key].dates[item.date].push({ 
-          nom: item.nom, 
-          nom_id: item.nom_id, 
-          ouverture: item.ouverture,
-          jourPondere
+        groupedData[key].dates[item.date].noms.push({
+          nom: item.nom,
+          nom_id: item.nom_id,
         });
       }
     }
@@ -277,35 +277,33 @@ async function displayPlanningWithNames(data, startDate, endDate) {
     // Colonnes dynamiques pour les dates
     dateHeaders.forEach((date) => {
       const dateCell = document.createElement("td");
-
-      // Vérifiez que les données existent avant de les utiliser
-      if (item.competence_id && item.horaire_id) {
-        dateCell.dataset.competenceId = item.competence_id;
-        dateCell.dataset.horaireId = item.horaire_id;
-      } else {
-        console.warn(
-          "Données manquantes pour competence_id ou horaire_id :",
-          item
-        );
-        dateCell.dataset.competenceId = "inconnu";
-        dateCell.dataset.horaireId = "inconnu";
-      }
-
+      dateCell.dataset.competenceId = item.competence_id;
+      dateCell.dataset.horaireId = item.horaire_id;
       dateCell.dataset.date = date;
 
-      // Vérifier si un nom est associé à cette date
-      if (dates[date] && dates[date].length > 0) {
-        // Exemple sans commentaire (tu peux adapter)
-        dateCell.innerHTML = dates[date]
-          .map(
-            ({ nom, nom_id, ouverture }) => `
-      <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}" data-ouverture="${ouverture ? 'oui' : 'non'}">
-        <span class="nom-valeur">${nom}</span>
-        <span class="ouverture-info" style="font-size: 0.8em; margin-left: 5px;">${ouverture ? 'Ouverture : oui' : 'Ouverture : non'}</span>
-      </div>
-    `
-          )
-          .join("");
+      // Par défaut, fermé
+      let ouverture = "non";
+      let noms = [];
+
+      if (item.dates[date]) {
+        ouverture = item.dates[date].ouverture;
+        noms = item.dates[date].noms;
+      }
+
+      dateCell.dataset.ouverture = ouverture;
+      if (ouverture === "non") {
+        dateCell.style.backgroundColor = "#d3d3d3";
+      }
+
+      // Afficher les noms s'il y en a
+      if (noms.length > 0) {
+        noms.forEach(({ nom, nom_id }) => {
+          dateCell.innerHTML += `
+        <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
+          <span class="nom-valeur">${nom}</span>
+        </div>
+      `;
+        });
         dateCell.style.whiteSpace = "normal";
       } else {
         dateCell.textContent = "";

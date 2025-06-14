@@ -55,6 +55,13 @@ router.get('/datecompetencewithnames', authenticateToken, (req, res) => {
     }
 
     const query = `
+WITH RECURSIVE dates AS (
+  SELECT DATE(?) AS date
+  UNION ALL
+  SELECT DATE_ADD(date, INTERVAL 1 DAY)
+  FROM dates
+  WHERE date < DATE(?)
+)
 SELECT 
     hct.horaire_id,
     hct.competence_id,
@@ -63,46 +70,43 @@ SELECT
     c.competence,
     c.date_debut AS competence_date_debut,
     c.date_fin AS competence_date_fin,
-    p.date,
+    d.date,
     n.nom,
     n.nom_id,
     CASE 
-        WHEN p.date IS NOT NULL THEN 
-            CASE WHEN DAYOFWEEK(p.date) = 1 THEN 7 ELSE DAYOFWEEK(p.date) - 1 END
+        WHEN d.date IS NOT NULL THEN 
+            CASE WHEN DAYOFWEEK(d.date) = 1 THEN 7 ELSE DAYOFWEEK(d.date) - 1 END
         ELSE NULL
     END AS jour_id,
     CASE 
         WHEN 
             hcj.horaire_id IS NOT NULL
-            AND p.date >= c.date_debut
-            AND p.date <= c.date_fin
+            AND d.date >= c.date_debut
+            AND d.date <= c.date_fin
         THEN 1
         ELSE 0
     END AS ouverture
 FROM Thoraire_competence_Tsite hct
 JOIN Thoraire h ON hct.horaire_id = h.horaire_id
 JOIN Tcompetence c ON hct.competence_id = c.competence_id
+JOIN dates d
 LEFT JOIN Tplanningv2 p 
     ON hct.horaire_id = p.horaire_id 
     AND hct.competence_id = p.competence_id 
     AND hct.site_id = p.site_id
+    AND p.date = d.date
 LEFT JOIN Tnom n ON p.nom_id = n.nom_id
 LEFT JOIN Thoraire_competence_jour hcj
     ON hct.horaire_id = hcj.horaire_id
     AND hct.competence_id = hcj.competence_id
     AND hcj.site_id = hct.site_id
-    AND hcj.jour_id = 
-        CASE 
-            WHEN p.date IS NOT NULL THEN 
-                CASE WHEN DAYOFWEEK(p.date) = 1 THEN 7 ELSE DAYOFWEEK(p.date) - 1 END
-            ELSE NULL
-        END
-WHERE hct.site_id = 1
-  AND (p.date BETWEEN '2025-05-05' AND '2025-05-11' OR p.date IS NULL)
-ORDER BY hct.horaire_id, hct.competence_id, p.date;
+    AND hcj.jour_id = CASE WHEN DAYOFWEEK(d.date) = 1 THEN 7 ELSE DAYOFWEEK(d.date) - 1 END
+WHERE hct.site_id = ?
+  AND d.date BETWEEN ? AND ?
+ORDER BY hct.horaire_id, hct.competence_id, d.date;
     `;
 
-    connection.query(query, [site_id, start_date, end_date], (err, results) => {
+    connection.query(query, [start_date, end_date, site_id, start_date, end_date], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données :', err.message);
             return res.status(500).send('Erreur lors de la récupération des données.');
