@@ -228,4 +228,57 @@ router.post('/ajouter-vacance', authenticateToken, (req, res) => {
   });
 });
 
+
+//rotue tolltip vacs
+router.get('/available-vacance-names-multi', authenticateToken, (req, res) => {
+  const { site_id, start_date, end_date } = req.query;
+  if (!site_id || !start_date || !end_date) {
+    return res.status(400).send('Paramètres manquants');
+  }
+  const query = `
+    SELECT n.nom, n.nom_id
+    FROM Tnom n
+    INNER JOIN Tnom_Tsite nts ON n.nom_id = nts.nom_id
+    WHERE nts.site_id = ?
+      AND n.nom_id NOT IN (
+        SELECT v.nom_id
+        FROM Tvacancesv2 v
+        WHERE v.site_id = ?
+          AND v.date BETWEEN ? AND ?
+      )
+      AND n.nom_id NOT IN (
+        SELECT p.nom_id
+        FROM Tplanningv2 p
+        WHERE p.site_id = ? AND p.date BETWEEN ? AND ?
+      )
+    ORDER BY n.nom
+  `;
+  connection.query(query, [site_id, site_id, start_date, end_date, site_id, start_date, end_date], (err, results) => {
+    if (err) {
+      console.error('Erreur SQL available-vacance-names-multi:', err.message);
+      return res.status(500).send('Erreur lors de la récupération des noms disponibles');
+    }
+    res.json(results);
+  });
+});
+
+router.post('/ajouter-vacance-multi', authenticateToken, (req, res) => {
+  const { site_id, nom_id, dates } = req.body;
+  if (!site_id || !nom_id || !dates || !Array.isArray(dates)) {
+    return res.status(400).send('Paramètres manquants');
+  }
+  const values = dates.map(date => [date, nom_id, site_id]);
+  const sql = `
+    INSERT IGNORE INTO Tvacancesv2 (date, nom_id, site_id)
+    VALUES ?
+  `;
+  connection.query(sql, [values], (err) => {
+    if (err) {
+      console.error('Erreur SQL ajouter-vacance-multi:', err.message);
+      return res.status(500).send('Erreur lors de l\'ajout');
+    }
+    res.sendStatus(200);
+  });
+});
+
 module.exports = router;

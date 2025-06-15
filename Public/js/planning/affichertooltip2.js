@@ -459,3 +459,63 @@ async function showTooltipVacance(event, date) {
     };
   });
 }
+
+//toltip vacances
+async function showTooltipVacanceMulti(event, dateHeaders) {
+  const siteId = sessionStorage.getItem("selectedSite");
+  if (!siteId) {
+    alert("Aucun site sélectionné !");
+    return;
+  }
+  const token = localStorage.getItem("token");
+  // On prend la première et la dernière date affichée
+  const startDate = dateHeaders[0];
+  const endDate = dateHeaders[dateHeaders.length - 1];
+
+  // Appel à une route qui retourne les noms non en vacances sur toute la période
+  const res = await fetch(`/api/available-vacance-names-multi?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) {
+    alert("Erreur lors de la récupération des noms !");
+    return;
+  }
+  const noms = await res.json();
+
+  // Affiche le tooltip avec la liste des noms
+  let tooltip = document.getElementById("tooltip");
+  tooltip.innerHTML = `
+    <div style="position: relative; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #eee; text-align: right;">
+      <div class="tooltip-close" style="cursor: pointer;">&times;</div>
+    </div>
+    <div style="font-weight:bold; margin-bottom:6px;">Ajouter une personne en vacances sur toute la période :</div>
+    <ul style="list-style:none; padding:0; margin:0;">
+      ${noms.length === 0
+        ? `<li style="color:#888;">Aucun nom disponible</li>`
+        : noms.map(n => `<li style="cursor:pointer; padding:2px 0;" data-nom-id="${n.nom_id}">${n.nom}</li>`).join("")}
+    </ul>
+  `;
+  tooltip.style.display = "block";
+  tooltip.style.left = event.pageX + "px";
+  tooltip.style.top = event.pageY + "px";
+
+  tooltip.querySelector(".tooltip-close").onclick = () => tooltip.style.display = "none";
+
+  tooltip.querySelectorAll("li[data-nom-id]").forEach(li => {
+    li.onclick = async function() {
+      const nomId = li.dataset.nomId;
+      // Ajoute la personne dans Tvacancesv2 pour chaque date de la période
+      const res = await fetch('/api/ajouter-vacance-multi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ site_id: siteId, nom_id: nomId, dates: dateHeaders })
+      });
+      if (res.ok) {
+        tooltip.style.display = "none";
+        await refreshSecondTable();
+      } else {
+        alert("Erreur lors de l'ajout !");
+      }
+    };
+  });
+}

@@ -233,10 +233,37 @@ if (extraRow) extraRow.remove();
 const extraTr = document.createElement("tr");
 extraTr.id = "extra-vacance-row";
 
+// 1. Calculer les noms présents dans toutes les dates
+const allDates = dateHeaders;
+const nomsParDate = allDates.map(date => ((vacancesData && vacancesData[date]) || []).map(v => v.nom_id));
+const nomsDansToutesLesDates = nomsParDate.reduce((acc, noms) => acc.filter(nomId => noms.includes(nomId)), nomsParDate[0] || []);
+// nomsDansToutesLesDates = [nom_id, nom_id, ...] présents tous les jours
+
+// 2. Récupérer les objets {nom, nom_id} pour affichage
+let nomsDansToutesLesDatesObj = [];
+if (nomsDansToutesLesDates.length > 0) {
+  // On prend le premier jour pour récupérer les noms/nom_id
+  const refList = (vacancesData && vacancesData[allDates[0]]) || [];
+  nomsDansToutesLesDatesObj = refList.filter(v => nomsDansToutesLesDates.includes(v.nom_id));
+}
+
 // Cellule "Vacance" (titre)
 const tdVacanceTitle = document.createElement("td");
-tdVacanceTitle.textContent = "Vacance";
+tdVacanceTitle.style.cursor = "pointer";
+tdVacanceTitle.onclick = function(event) {
+  showTooltipVacanceMulti(event, dateHeaders); // On passe toutes les dates affichées
+};
 tdVacanceTitle.style.fontWeight = "bold";
+// Afficher les noms présents tous les jours ici
+if (nomsDansToutesLesDatesObj.length > 0) {
+  nomsDansToutesLesDatesObj.forEach(vacance => {
+    tdVacanceTitle.innerHTML += `<div class="nom-block" data-nom="${vacance.nom}" data-nom-id="${vacance.nom_id}">
+      <span class="nom-valeur">${vacance.nom}</span>
+    </div>`;
+  });
+} else {
+  tdVacanceTitle.textContent = "";
+}
 extraTr.appendChild(tdVacanceTitle);
 
 // Cellule "Autre" (titre ou "Congés")
@@ -252,17 +279,17 @@ dateHeaders.forEach(date => {
   td.style.cursor = "pointer";
   td.style.background = "#f8fcff";
 
-  // Affiche TOUS les noms en vacances pour cette date/site si existant
+  // Affiche les noms en vacances pour cette date/site, sauf ceux déjà dans la case "Vacance" (tous les jours)
   const vacanceList = (vacancesData && vacancesData[date]) || [];
-  if (vacanceList.length > 0) {
-    vacanceList.forEach(vacance => {
+  const vacanceListFiltered = vacanceList.filter(v => !nomsDansToutesLesDates.includes(v.nom_id));
+  if (vacanceListFiltered.length > 0) {
+    vacanceListFiltered.forEach(vacance => {
       td.innerHTML += `<div class="nom-block" data-nom="${vacance.nom}" data-nom-id="${vacance.nom_id}">
         <span class="nom-valeur">${vacance.nom}</span>
       </div>`;
     });
     td.style.whiteSpace = "normal";
   } else {
-    // Ne rien mettre du tout si pas de nom
     td.innerHTML = "";
     td.style.whiteSpace = "pre-line";
   }
