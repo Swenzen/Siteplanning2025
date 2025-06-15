@@ -429,6 +429,7 @@ document
     showTooltip(event, noms, { competenceId, horaireId, date, siteId });
   });
 
+  
 async function fetchVacancesData(siteId, startDate, endDate) {
   const token = localStorage.getItem("token");
   const res = await fetch(`/api/vacancesv2?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`, {
