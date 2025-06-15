@@ -156,27 +156,76 @@ router.post('/delete-planningv2', authenticateToken, (req, res) => {
     );
 });
 
-
-// Récupérer les noms disponibles pour Vacance
-router.get('/vacance-noms', authenticateToken, (req, res) => {
-    const { site_id } = req.query;
-    if (!site_id) return res.status(400).send('site_id requis');
-    const query = `SELECT nom, nom_id FROM Tnom WHERE site_id = ?`;
-    connection.query(query, [site_id], (err, results) => {
-        if (err) return res.status(500).send('Erreur SQL');
-        res.json(results);
-    });
+router.post('/delete-vacancev2', authenticateToken, (req, res) => {
+  const { date, nom_id, site_id } = req.body;
+  if (!date || !nom_id || !site_id) {
+    return res.status(400).send('Paramètres manquants');
+  }
+  const sql = `DELETE FROM Tvacancesv2 WHERE date = ? AND nom_id = ? AND site_id = ?`;
+  connection.query(sql, [date, nom_id, site_id], (err, result) => {
+    if (err) {
+      console.error('Erreur SQL delete-vacancev2:', err.message);
+      return res.status(500).send('Erreur lors de la suppression');
+    }
+    res.sendStatus(200);
+  });
 });
 
-// Ajouter un nom à Vacance (à adapter selon ta logique)
+router.get('/available-vacance-names', authenticateToken, (req, res) => {
+  const { site_id, date } = req.query;
+  if (!site_id || !date) {
+    return res.status(400).send('Paramètres site_id et date requis.');
+  }
+
+  const query = `
+    SELECT n.nom, n.nom_id
+    FROM Tnom n
+    INNER JOIN Tnom_Tsite nts ON n.nom_id = nts.nom_id
+    WHERE nts.site_id = ?
+      AND n.nom_id NOT IN (
+        SELECT v.nom_id
+        FROM Tvacancesv2 v
+        WHERE v.site_id = ? AND v.date = ?
+      )
+      AND n.nom_id NOT IN (
+        SELECT p.nom_id
+        FROM Tplanningv2 p
+        WHERE p.site_id = ? AND p.date = ?
+      )
+    ORDER BY n.nom
+  `;
+
+  connection.query(query, [site_id, site_id, date, site_id, date], (err, results) => {
+    if (err) {
+      console.error('Erreur SQL available-vacance-names:', err.message);
+      return res.status(500).send('Erreur lors de la récupération des noms disponibles');
+    }
+    res.json(results);
+  });
+});
+
 router.post('/ajouter-vacance', authenticateToken, (req, res) => {
-    const { site_id, nom_id } = req.body;
-    if (!site_id || !nom_id) return res.status(400).send('Paramètres manquants');
-    const query = `INSERT INTO Tvacances (site_id, nom_id) VALUES (?, ?)`;
-    connection.query(query, [site_id, nom_id], (err) => {
-        if (err) return res.status(500).send('Erreur SQL');
-        res.json({ success: true });
-    });
+  const { site_id, nom_id, date } = req.body;
+  if (!site_id || !nom_id || !date) {
+    return res.status(400).send('Paramètres manquants');
+  }
+
+  const sql = `
+    INSERT INTO Tvacancesv2 (site_id, nom_id, date)
+    VALUES (?, ?, ?)
+  `;
+
+  connection.query(sql, [site_id, nom_id, date], (err) => {
+    if (err) {
+      // Gestion du doublon (déjà en vacances ce jour-là)
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(409).send('Déjà en vacances ce jour-là');
+      }
+      console.error('Erreur SQL ajouter-vacance:', err.message);
+      return res.status(500).send('Erreur lors de l\'ajout');
+    }
+    res.sendStatus(200);
+  });
 });
 
 module.exports = router;

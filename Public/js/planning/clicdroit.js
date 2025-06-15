@@ -88,6 +88,13 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
     document.body.appendChild(tooltip);
   }
 
+  // Détection : est-ce une cellule de vacances (tfoot) ?
+  let isVacanceCell = false;
+  if (event.target.closest('td') && event.target.closest('td').classList.contains('vacance-cell')) {
+    // Si pas de competenceId/horaireId, c'est bien une cellule vacances du tfoot
+    isVacanceCell = !(competenceId && horaireId);
+  }
+
   tooltip.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 6px;">
       <span style="font-weight: bold;">${isCaseVide ? "Case vide" : nom}</span>
@@ -97,8 +104,8 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       </div>
     </div>
     <div style="font-size: 13px; color: #555;">
-      <div><b>Compétence ID :</b> ${competenceId}</div>
-      <div><b>Horaire ID :</b> ${horaireId}</div>
+      <div><b>Compétence ID :</b> ${competenceId ?? "-"}</div>
+      <div><b>Horaire ID :</b> ${horaireId ?? "-"}</div>
       <div><b>Date :</b> ${date}</div>
       <div><b>Site ID :</b> ${siteId}</div>
     </div>
@@ -129,11 +136,21 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       tooltip.style.display = "none";
       try {
         const token = localStorage.getItem("token");
-        await fetch('/api/delete-planningv2', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ date, nom_id, competence_id: competenceId, horaire_id: horaireId, site_id: siteId })
-        });
+        if (isVacanceCell) {
+          // Suppression dans Tvacancesv2 (ligne vacances)
+          await fetch('/api/delete-vacancev2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ date, nom_id, site_id: siteId })
+          });
+        } else {
+          // Suppression dans Tplanningv2 (tableau principal)
+          await fetch('/api/delete-planningv2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ date, nom_id, competence_id: competenceId, horaire_id: horaireId, site_id: siteId })
+          });
+        }
         await refreshSecondTable();
       } catch (err) {
         alert("Erreur lors de la suppression : " + err.message);

@@ -239,9 +239,9 @@ tdVacanceTitle.textContent = "Vacance";
 tdVacanceTitle.style.fontWeight = "bold";
 extraTr.appendChild(tdVacanceTitle);
 
-// Cellule "Autre" (titre ou vide)
+// Cellule "Autre" (titre ou "Congés")
 const tdAutre = document.createElement("td");
-tdAutre.textContent = "";
+tdAutre.textContent = "Congés";
 extraTr.appendChild(tdAutre);
 
 // Pour chaque date affichée, une cellule "vacance" TOUJOURS créée et cliquable

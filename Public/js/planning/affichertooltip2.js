@@ -411,9 +411,9 @@ async function showTooltipVacance(event, date) {
     alert("Aucun site sélectionné !");
     return;
   }
-  // Appelle une route qui retourne les noms disponibles pour ce site ET cette date
   const token = localStorage.getItem("token");
-  const res = await fetch(`/api/vacance-noms?site_id=${siteId}&date=${date}`, {
+  // Récupère tous les noms disponibles pour ce site (hors ceux déjà en vacances ce jour-là)
+  const res = await fetch(`/api/available-vacance-names?site_id=${siteId}&date=${date}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) {
@@ -422,16 +422,18 @@ async function showTooltipVacance(event, date) {
   }
   const noms = await res.json();
 
-  // Affiche le tooltip
+  // Affiche le tooltip avec la liste des noms
   let tooltip = document.getElementById("tooltip");
   tooltip.innerHTML = `
-    <div style="padding:8px;">
-      <div style="font-weight:bold; margin-bottom:6px;">Ajouter à Vacance :</div>
-      <ul style="list-style:none; padding:0; margin:0;">
-        ${noms.map(n => `<li style="cursor:pointer; padding:2px 0;" data-nom-id="${n.nom_id}">${n.nom}</li>`).join("")}
-      </ul>
-      <div class="tooltip-close" style="cursor:pointer; color:#888; margin-top:8px;">Fermer</div>
+    <div style="position: relative; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #eee; text-align: right;">
+      <div class="tooltip-close" style="cursor: pointer;">&times;</div>
     </div>
+    <div style="font-weight:bold; margin-bottom:6px;">Ajouter une personne en vacances :</div>
+    <ul style="list-style:none; padding:0; margin:0;">
+      ${noms.length === 0
+        ? `<li style="color:#888;">Aucun nom disponible</li>`
+        : noms.map(n => `<li style="cursor:pointer; padding:2px 0;" data-nom-id="${n.nom_id}">${n.nom}</li>`).join("")}
+    </ul>
   `;
   tooltip.style.display = "block";
   tooltip.style.left = event.pageX + "px";
@@ -439,7 +441,7 @@ async function showTooltipVacance(event, date) {
 
   tooltip.querySelector(".tooltip-close").onclick = () => tooltip.style.display = "none";
 
-  tooltip.querySelectorAll("li").forEach(li => {
+  tooltip.querySelectorAll("li[data-nom-id]").forEach(li => {
     li.onclick = async function() {
       const nomId = li.dataset.nomId;
       // Ajoute à la base pour cette date/site
@@ -450,7 +452,6 @@ async function showTooltipVacance(event, date) {
       });
       if (res.ok) {
         tooltip.style.display = "none";
-        // Mets à jour l'affichage du planning
         await refreshSecondTable();
       } else {
         alert("Erreur lors de l'ajout !");
