@@ -66,6 +66,7 @@ const planningsRoutes = require('./routes/bdd/plannings');
 const parametrageRoutes = require('./routes/parametrage/liaisonsite');
 const planningRoutes = require('./routes/planning/planning');
 const compordreRoutes = require('./routes/bdd/compordre');
+const commentaireRoutes = require('./routes/planning/commentaire');
 
 // Utiliser les routes
 app.use('/api', competencesRoutes);
@@ -83,6 +84,8 @@ app.use('/api', parametrageRoutes);
 app.use('/api', tooltipRoutes);
 app.use('/api', planningRoutes);
 app.use('/api', compordreRoutes);
+app.use('/api', commentaireRoutes);
+
 
 
 // Route par défaut pour servir "index2.html"
