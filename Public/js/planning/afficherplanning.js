@@ -411,22 +411,26 @@ document
       return;
     }
 
-    console.log("Cellule cliquée :", {
-      competenceId: cell.dataset.competenceId,
-      horaireId: cell.dataset.horaireId,
-      date: cell.dataset.date,
-    });
-
     const competenceId = cell.dataset.competenceId;
     const horaireId = cell.dataset.horaireId;
     const date = cell.dataset.date;
     const siteId = sessionStorage.getItem("selectedSite");
 
+    // Récupère le nom de la compétence affiché dans la colonne (première colonne de la ligne)
+    const nomDeLaCompetence = cell.parentElement.querySelector("td").textContent;
+
     // Récupérer les noms disponibles
     const noms = await fetchAvailableNames(competenceId, siteId, date);
 
-    // Afficher le tooltip
-    showTooltip(event, noms, { competenceId, horaireId, date, siteId });
+    // Afficher le tooltip en passant bien le nom de la compétence et la date cliquée
+    showTooltip(event, noms, {
+      competenceId,
+      horaireId,
+      date,
+      siteId,
+      clickedCompetence: nomDeLaCompetence, // <-- c'est le nom affiché dans la colonne
+      clickedDate: date
+    });
   });
 
   
