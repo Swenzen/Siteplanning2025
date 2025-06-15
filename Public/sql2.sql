@@ -287,6 +287,15 @@ CREATE TABLE Tcommentairev2 (
 );
 
 
+CREATE TABLE Tvacancesv2 (
+    vacances_id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATE NOT NULL,
+    nom_id INT NOT NULL,
+    site_id INT NOT NULL,
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);
+
 INSERT INTO Tnom (nom_id, nom, date_debut, date_fin) VALUES
 (1, 'Pierre', '2025-01-01', '2025-12-31'),
 (2, 'Max', '2025-02-01', '2025-11-30'),

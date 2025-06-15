@@ -404,3 +404,57 @@ async function updatePlanningV2({
     alert("Une erreur est survenue lors de la mise à jour du planning.");
   }
 }
+
+async function showTooltipVacance(event, date) {
+  const siteId = sessionStorage.getItem("selectedSite");
+  if (!siteId) {
+    alert("Aucun site sélectionné !");
+    return;
+  }
+  // Appelle une route qui retourne les noms disponibles pour ce site ET cette date
+  const token = localStorage.getItem("token");
+  const res = await fetch(`/api/vacance-noms?site_id=${siteId}&date=${date}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) {
+    alert("Erreur lors de la récupération des noms !");
+    return;
+  }
+  const noms = await res.json();
+
+  // Affiche le tooltip
+  let tooltip = document.getElementById("tooltip");
+  tooltip.innerHTML = `
+    <div style="padding:8px;">
+      <div style="font-weight:bold; margin-bottom:6px;">Ajouter à Vacance :</div>
+      <ul style="list-style:none; padding:0; margin:0;">
+        ${noms.map(n => `<li style="cursor:pointer; padding:2px 0;" data-nom-id="${n.nom_id}">${n.nom}</li>`).join("")}
+      </ul>
+      <div class="tooltip-close" style="cursor:pointer; color:#888; margin-top:8px;">Fermer</div>
+    </div>
+  `;
+  tooltip.style.display = "block";
+  tooltip.style.left = event.pageX + "px";
+  tooltip.style.top = event.pageY + "px";
+
+  tooltip.querySelector(".tooltip-close").onclick = () => tooltip.style.display = "none";
+
+  tooltip.querySelectorAll("li").forEach(li => {
+    li.onclick = async function() {
+      const nomId = li.dataset.nomId;
+      // Ajoute à la base pour cette date/site
+      const res = await fetch('/api/ajouter-vacance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ site_id: siteId, nom_id: nomId, date })
+      });
+      if (res.ok) {
+        tooltip.style.display = "none";
+        // Mets à jour l'affichage du planning
+        await refreshSecondTable();
+      } else {
+        alert("Erreur lors de l'ajout !");
+      }
+    };
+  });
+}

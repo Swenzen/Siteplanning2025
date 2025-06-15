@@ -156,4 +156,27 @@ router.post('/delete-planningv2', authenticateToken, (req, res) => {
     );
 });
 
+
+// Récupérer les noms disponibles pour Vacance
+router.get('/vacance-noms', authenticateToken, (req, res) => {
+    const { site_id } = req.query;
+    if (!site_id) return res.status(400).send('site_id requis');
+    const query = `SELECT nom, nom_id FROM Tnom WHERE site_id = ?`;
+    connection.query(query, [site_id], (err, results) => {
+        if (err) return res.status(500).send('Erreur SQL');
+        res.json(results);
+    });
+});
+
+// Ajouter un nom à Vacance (à adapter selon ta logique)
+router.post('/ajouter-vacance', authenticateToken, (req, res) => {
+    const { site_id, nom_id } = req.body;
+    if (!site_id || !nom_id) return res.status(400).send('Paramètres manquants');
+    const query = `INSERT INTO Tvacances (site_id, nom_id) VALUES (?, ?)`;
+    connection.query(query, [site_id, nom_id], (err) => {
+        if (err) return res.status(500).send('Erreur SQL');
+        res.json({ success: true });
+    });
+});
+
 module.exports = router;

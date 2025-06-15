@@ -81,5 +81,30 @@ ORDER BY co.display_order ASC, hct.horaire_id, d.date;
     });
 });
 
+// Récupérer les vacances par jour pour un site et une période
+router.get('/vacancesv2', authenticateToken, (req, res) => {
+    const { site_id, start_date, end_date } = req.query;
+    if (!site_id || !start_date || !end_date) {
+        return res.status(400).send('Paramètres manquants');
+    }
+
+    const query = `
+        SELECT v.date, n.nom, n.nom_id
+        FROM Tvacancesv2 v
+        JOIN Tnom n ON v.nom_id = n.nom_id
+        WHERE v.site_id = ?
+          AND v.date BETWEEN ? AND ?
+        ORDER BY v.date, n.nom
+    `;
+
+    connection.query(query, [site_id, start_date, end_date], (err, results) => {
+        if (err) {
+            console.error('Erreur SQL vacancesv2:', err.message);
+            return res.status(500).send('Erreur lors de la récupération des vacances');
+        }
+        res.json(results);
+    });
+});
+
 
 module.exports = router;

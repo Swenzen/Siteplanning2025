@@ -45,7 +45,7 @@ function generateFooterRows(dateHeaders) {
   return [vacanceRow, autreRow];
 }
 
-async function displayPlanningWithNames(data, startDate, endDate) {
+async function displayPlanningWithNames(data, startDate, endDate, vacancesData = {}) {
   const table = document.getElementById("planningTableWithNames");
   const tbody = table.querySelector("tbody");
   const thead = table.querySelector("thead");
@@ -226,6 +226,56 @@ async function displayPlanningWithNames(data, startDate, endDate) {
   });
 
   tfoot.appendChild(vacanceAutreDatesRow);
+
+let extraRow = document.getElementById("extra-vacance-row");
+if (extraRow) extraRow.remove();
+
+const extraTr = document.createElement("tr");
+extraTr.id = "extra-vacance-row";
+
+// Cellule "Vacance" (titre)
+const tdVacanceTitle = document.createElement("td");
+tdVacanceTitle.textContent = "Vacance";
+tdVacanceTitle.style.fontWeight = "bold";
+extraTr.appendChild(tdVacanceTitle);
+
+// Cellule "Autre" (titre ou vide)
+const tdAutre = document.createElement("td");
+tdAutre.textContent = "";
+extraTr.appendChild(tdAutre);
+
+// Pour chaque date affichée, une cellule "vacance" TOUJOURS créée et cliquable
+dateHeaders.forEach(date => {
+  const td = document.createElement("td");
+  td.classList.add("vacance-cell");
+  td.dataset.date = date;
+  td.style.cursor = "pointer";
+  td.style.background = "#f8fcff";
+
+  // Affiche TOUS les noms en vacances pour cette date/site si existant
+  const vacanceList = (vacancesData && vacancesData[date]) || [];
+  if (vacanceList.length > 0) {
+    vacanceList.forEach(vacance => {
+      td.innerHTML += `<div class="nom-block" data-nom="${vacance.nom}" data-nom-id="${vacance.nom_id}">
+        <span class="nom-valeur">${vacance.nom}</span>
+      </div>`;
+    });
+    td.style.whiteSpace = "normal";
+  } else {
+    // Ne rien mettre du tout si pas de nom
+    td.innerHTML = "";
+    td.style.whiteSpace = "pre-line";
+  }
+
+  // Clic pour afficher le tooltip vacances (siteId et date)
+  td.onclick = function(event) {
+    showTooltipVacance(event, date);
+  };
+
+  extraTr.appendChild(td);
+});
+
+tfoot.appendChild(extraTr);
 }
 
 async function fetchCompetencesWithNames(siteId, startDate, endDate) {
@@ -266,6 +316,8 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
     }
 }
 
+
+
 async function refreshSecondTable() {
   const startDate = document.getElementById("startDate").value;
   const endDate = document.getElementById("endDate").value;
@@ -276,7 +328,9 @@ async function refreshSecondTable() {
       startDate,
       endDate
     );
-    displayPlanningWithNames(competencesWithNames, startDate, endDate);
+    // Ajoute ici la récupération des vacances pour la période
+    const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
+    displayPlanningWithNames(competencesWithNames, startDate, endDate, vacancesData);
   }
 }
 applyDateFilterButton.addEventListener("click", async () => {
@@ -292,14 +346,16 @@ applyDateFilterButton.addEventListener("click", async () => {
 
   console.log("Dates sélectionnées :", { startDate, endDate });
 
-
   // Récupérer les compétences avec noms pour le deuxième tableau
   const competencesWithNames = await fetchCompetencesWithNames(
     siteId,
     startDate,
     endDate
   );
-  displayPlanningWithNames(competencesWithNames, startDate, endDate);
+  // Récupérer les vacances pour la période
+  const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
+
+  displayPlanningWithNames(competencesWithNames, startDate, endDate, vacancesData);
 });
 
 document
@@ -335,3 +391,19 @@ document
     // Afficher le tooltip
     showTooltip(event, noms, { competenceId, horaireId, date, siteId });
   });
+
+async function fetchVacancesData(siteId, startDate, endDate) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`/api/vacancesv2?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) return {};
+  const data = await res.json();
+  // Regroupe par date
+  const vacancesData = {};
+  data.forEach(v => {
+    if (!vacancesData[v.date]) vacancesData[v.date] = [];
+    vacancesData[v.date].push({ nom: v.nom, nom_id: v.nom_id });
+  });
+  return vacancesData;
+}
