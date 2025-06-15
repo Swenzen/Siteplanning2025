@@ -343,10 +343,27 @@ dateHeaders.forEach(date => {
   ).length;
 
   // Nombre de personnes disponibles ce jour
-  const dispo = availableCounts[date] ?? "-";
+  const dispo = availableCounts[date] ?? null;
+
+  // Calcul du delta
+  let delta = "";
+  let color = "#007bff";
+  if (dispo !== null && !isNaN(Number(dispo))) {
+    const d = Number(dispo) - count;
+    if (dispo !== 0 || count !== 0) {
+      delta = d > 0 ? `+${d}` : `${d}`;
+      color = d < 0 ? "#c00" : "#007bff";
+    } else {
+      delta = "0";
+      color = "#007bff";
+    }
+  }
 
   const tdElem = document.createElement("td");
-  tdElem.innerHTML = `${count} <span style="color:#007bff;font-size:11px;">/ ${dispo}</span>`;
+  tdElem.style.fontWeight = "bold";
+  tdElem.style.fontSize = "18px";
+  tdElem.style.textAlign = "center";
+  tdElem.innerHTML = `<span style="color:${color};">${delta}</span>`;
   compteurTr.appendChild(tdElem);
 });
 
