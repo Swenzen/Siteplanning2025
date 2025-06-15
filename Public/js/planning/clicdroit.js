@@ -32,10 +32,45 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
     });
     return;
   }
+
+  // Si clic droit sur une case (td) sans nom
+  const cell = event.target.closest('td');
+  if (
+    cell &&
+    cell.dataset.competenceId &&
+    cell.dataset.horaireId &&
+    cell.dataset.date
+  ) {
+    const competenceId = cell.dataset.competenceId;
+    const horaireId = cell.dataset.horaireId;
+    const date = cell.dataset.date;
+    const siteId = sessionStorage.getItem("selectedSite");
+
+    // Cherche le commentaire général (où nom_id est null)
+    let commentaireGeneral = "";
+    const commentaireBlock = Array.from(cell.querySelectorAll('.commentaire-block')).find(div => {
+      // On considère que le commentaire général n'est pas suivi d'un .nom-block
+      return !div.nextElementSibling || !div.nextElementSibling.classList.contains('nom-block');
+    });
+    if (commentaireBlock) {
+      commentaireGeneral = commentaireBlock.textContent;
+    }
+
+    tooltipClicDroit(event, {
+      nom: "", // pas de nom
+      nom_id: null,
+      competenceId,
+      horaireId,
+      date,
+      siteId,
+      commentaireNom: commentaireGeneral, // on passe le commentaire général
+      isCaseVide: true // pour adapter l'affichage dans le tooltip
+    });
+  }
 });
 
 // Tooltip clic droit qui affiche toutes les infos et le commentaire lié au nom
-function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, siteId, commentaireNom }) {
+function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, siteId, commentaireNom, isCaseVide }) {
   let tooltip = document.getElementById("tooltip-clicdroit");
   if (!tooltip) {
     tooltip = document.createElement("div");
@@ -55,9 +90,9 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
 
   tooltip.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 6px;">
-      <span style="font-weight: bold;">${nom}</span>
+      <span style="font-weight: bold;">${isCaseVide ? "Case vide" : nom}</span>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <button class="tooltip-delete" title="Supprimer" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer</button>
+        ${!isCaseVide ? `<button class="tooltip-delete" title="Supprimer" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer</button>` : ""}
         <span class="tooltip-close" style="cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
       </div>
     </div>
@@ -87,22 +122,24 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
     tooltip.style.display = "none";
   };
 
-  // Supprimer le nom
-  tooltip.querySelector(".tooltip-delete").onclick = async function(e) {
-    e.stopPropagation();
-    tooltip.style.display = "none";
-    try {
-      const token = localStorage.getItem("token");
-      await fetch('/api/delete-planningv2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ date, nom_id, competence_id: competenceId, horaire_id: horaireId, site_id: siteId })
-      });
-      await refreshSecondTable();
-    } catch (err) {
-      alert("Erreur lors de la suppression : " + err.message);
-    }
-  };
+  // Supprimer le nom (seulement si ce n'est pas une case vide)
+  if (!isCaseVide) {
+    tooltip.querySelector(".tooltip-delete").onclick = async function(e) {
+      e.stopPropagation();
+      tooltip.style.display = "none";
+      try {
+        const token = localStorage.getItem("token");
+        await fetch('/api/delete-planningv2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ date, nom_id, competence_id: competenceId, horaire_id: horaireId, site_id: siteId })
+        });
+        await refreshSecondTable();
+      } catch (err) {
+        alert("Erreur lors de la suppression : " + err.message);
+      }
+    };
+  }
 
   // Supprimer le commentaire
   const btnDeleteCommentaire = tooltip.querySelector(".tooltip-delete-commentaire");
@@ -115,7 +152,7 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
         await fetch('/api/delete-commentairev2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ date, nom_id, competence_id: competenceId, horaire_id: horaireId, site_id: siteId })
+          body: JSON.stringify({ date, nom_id: isCaseVide ? null : nom_id, competence_id: competenceId, horaire_id: horaireId, site_id: siteId })
         });
         await refreshSecondTable();
       } catch (err) {
@@ -129,7 +166,7 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
   if (btnAddCommentaire) {
     btnAddCommentaire.onclick = async function(e) {
       e.stopPropagation();
-      const commentaire = prompt("Écris le commentaire à ajouter pour ce nom :");
+      const commentaire = prompt("Écris le commentaire à ajouter pour cette case :");
       if (!commentaire) return;
       tooltip.style.display = "none";
       try {
@@ -137,7 +174,7 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
         await fetch('/api/add-commentairev2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ site_id: siteId, competence_id: competenceId, horaire_id: horaireId, date, nom_id, commentaire })
+          body: JSON.stringify({ site_id: siteId, competence_id: competenceId, horaire_id: horaireId, date, nom_id: isCaseVide ? null : nom_id, commentaire })
         });
         await refreshSecondTable();
       } catch (err) {
