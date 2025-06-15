@@ -27,6 +27,23 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
 // second planning
+//fonction creatioon tableau dessous
+function generateFooterRows(dateHeaders) {
+  const vacanceRow = document.createElement("tr");
+  const autreRow = document.createElement("tr");
+
+  // Première colonne
+  vacanceRow.appendChild(document.createElement("th")).textContent = "Vacance";
+  autreRow.appendChild(document.createElement("th")).textContent = "Autre";
+
+  // Colonnes jours
+  dateHeaders.forEach(date => {
+    vacanceRow.appendChild(document.createElement("td"));
+    autreRow.appendChild(document.createElement("td"));
+  });
+
+  return [vacanceRow, autreRow];
+}
 
 async function displayPlanningWithNames(data, startDate, endDate) {
   const table = document.getElementById("planningTableWithNames");
@@ -183,6 +200,32 @@ async function displayPlanningWithNames(data, startDate, endDate) {
 
     tbody.appendChild(row);
   });
+
+  // Générer dynamiquement le tfoot pour l'alignement parfait
+  const tfoot = table.querySelector("tfoot") || table.createTFoot();
+  tfoot.innerHTML = "";
+
+  // Ligne Vacance/Autre + dates
+  const vacanceAutreDatesRow = document.createElement("tr");
+
+  // 1ère colonne : Vacance
+  const vacanceTh = document.createElement("th");
+  vacanceTh.textContent = "Vacance";
+  vacanceAutreDatesRow.appendChild(vacanceTh);
+
+  // 2ème colonne : Autre
+  const autreTh = document.createElement("th");
+  autreTh.textContent = "Autre";
+  vacanceAutreDatesRow.appendChild(autreTh);
+
+  // Colonnes dates (même format que le thead)
+  dateHeaders.forEach(date => {
+    const th = document.createElement("th");
+    th.textContent = new Date(date).toLocaleDateString("fr-FR");
+    vacanceAutreDatesRow.appendChild(th);
+  });
+
+  tfoot.appendChild(vacanceAutreDatesRow);
 }
 
 async function fetchCompetencesWithNames(siteId, startDate, endDate) {
