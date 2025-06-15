@@ -26,4 +26,23 @@ router.post('/delete-commentairev2', authenticateToken, (req, res) => {
     });
 });
 
+
+router.post('/add-commentairev2', authenticateToken, (req, res) => {
+    const { site_id, competence_id, horaire_id, date, nom_id, commentaire } = req.body;
+    if (!site_id || !competence_id || !horaire_id || !date || !commentaire) {
+        return res.status(400).json({ error: 'Paramètres manquants' });
+    }
+    const sql = `
+        INSERT INTO Tcommentairev2 (site_id, competence_id, horaire_id, date, nom_id, commentaire)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    connection.query(sql, [site_id, competence_id, horaire_id, date, nom_id, commentaire], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Erreur lors de l\'ajout du commentaire' });
+        }
+        res.json({ success: true });
+    });
+});
+
 module.exports = router;

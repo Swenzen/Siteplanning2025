@@ -72,9 +72,9 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
         ? `<div style="margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
             <div style="font-weight:bold; color:#007bff; margin-bottom:4px;">Commentaire :</div>
             <div style="margin-bottom:6px;">${commentaireNom}</div>
-            <button class="tooltip-delete-commentaire" title="Supprimer le commentaire" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer le commentaire</button>
+            <button class="tooltip-delete-commentaire" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer le commentaire</button>
           </div>`
-        : ""
+        : `<button class="tooltip-add-commentaire" style="margin-top:10px; background: #fff; color: #007bff; border: 1px solid #007bff; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Ajouter un commentaire</button>`
     }
   `;
 
@@ -82,52 +82,29 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
   tooltip.style.top = event.pageY + "px";
   tooltip.style.display = "block";
 
+  // Fermer le tooltip
   tooltip.querySelector(".tooltip-close").onclick = function() {
     tooltip.style.display = "none";
   };
 
-  // Suppression du nom
+  // Supprimer le nom
   tooltip.querySelector(".tooltip-delete").onclick = async function(e) {
     e.stopPropagation();
     tooltip.style.display = "none";
-
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch('/api/delete-planningv2', {
+      await fetch('/api/delete-planningv2', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          date,
-          nom_id,
-          competence_id: competenceId,
-          horaire_id: horaireId,
-          site_id: siteId
-        })
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ date, nom_id, competence_id: competenceId, horaire_id: horaireId, site_id: siteId })
       });
-      if (!res.ok) throw new Error(await res.text());
-
-      // Suppression visuelle du bloc nom
-      const allCells = document.querySelectorAll('td[data-competence-id][data-horaire-id][data-date]');
-      for (const cell of allCells) {
-        if (
-          cell.dataset.competenceId === competenceId &&
-          cell.dataset.horaireId === horaireId &&
-          cell.dataset.date === date
-        ) {
-          const blocks = cell.querySelectorAll('.nom-block');
-          blocks.forEach(block => {
-            if (block.dataset.nomId === nom_id) block.remove();
-          });
-        }
-      }
+      await refreshSecondTable();
     } catch (err) {
-      console.error("Erreur lors de la suppression : " + err.message);    }
+      alert("Erreur lors de la suppression : " + err.message);
+    }
   };
 
-  // Suppression du commentaire lié au nom
+  // Supprimer le commentaire
   const btnDeleteCommentaire = tooltip.querySelector(".tooltip-delete-commentaire");
   if (btnDeleteCommentaire) {
     btnDeleteCommentaire.onclick = async function(e) {
@@ -135,48 +112,41 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       tooltip.style.display = "none";
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch('/api/delete-commentairev2', {
+        await fetch('/api/delete-commentairev2', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            date,
-            nom_id,
-            competence_id: competenceId,
-            horaire_id: horaireId,
-            site_id: siteId
-          })
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ date, nom_id, competence_id: competenceId, horaire_id: horaireId, site_id: siteId })
         });
-        if (!res.ok) throw new Error(await res.text());
-        // Suppression visuelle du commentaire
-        const allCells = document.querySelectorAll('td[data-competence-id][data-horaire-id][data-date]');
-        for (const cell of allCells) {
-          if (
-            cell.dataset.competenceId === competenceId &&
-            cell.dataset.horaireId === horaireId &&
-            cell.dataset.date === date
-          ) {
-            const blocks = cell.querySelectorAll('.commentaire-block');
-            blocks.forEach(block => {
-              // On supprime le commentaire juste avant le bon nom
-              if (
-                block.nextElementSibling &&
-                block.nextElementSibling.classList.contains('nom-block') &&
-                block.nextElementSibling.dataset.nomId === nom_id
-              ) {
-                block.remove();
-              }
-            });
-          }
-        }
+        await refreshSecondTable();
       } catch (err) {
-        console.error("Erreur lors de la suppression du commentaire : " + err.message);
+        alert("Erreur lors de la suppression du commentaire : " + err.message);
       }
     };
   }
 
+  // Ajouter un commentaire
+  const btnAddCommentaire = tooltip.querySelector(".tooltip-add-commentaire");
+  if (btnAddCommentaire) {
+    btnAddCommentaire.onclick = async function(e) {
+      e.stopPropagation();
+      const commentaire = prompt("Écris le commentaire à ajouter pour ce nom :");
+      if (!commentaire) return;
+      tooltip.style.display = "none";
+      try {
+        const token = localStorage.getItem("token");
+        await fetch('/api/add-commentairev2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ site_id: siteId, competence_id: competenceId, horaire_id: horaireId, date, nom_id, commentaire })
+        });
+        await refreshSecondTable();
+      } catch (err) {
+        alert("Erreur lors de l'ajout du commentaire : " + err.message);
+      }
+    };
+  }
+
+  // Fermer le tooltip si clic ailleurs
   document.addEventListener("click", function hideTooltip(e) {
     if (!tooltip.contains(e.target)) {
       tooltip.style.display = "none";
