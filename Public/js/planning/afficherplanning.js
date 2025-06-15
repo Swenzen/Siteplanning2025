@@ -97,15 +97,15 @@ async function displayPlanningWithNames(data, startDate, endDate, vacancesData =
         date: row.date,
         ouverture: 0,
         noms: [],
-        commentaires: [] // <-- Ajouté pour stocker les commentaires
+        commentaires: [],
+        competence_date_debut: row.competence_date_debut,
+        competence_date_fin: row.competence_date_fin
       };
     }
-    // Toujours garder la valeur max (1 si au moins une ligne ouverte)
     cases[key].ouverture = Math.max(cases[key].ouverture, Number(row.ouverture));
     if (row.nom && row.nom_id && !cases[key].noms.some(n => n.nom_id === row.nom_id)) {
       cases[key].noms.push({ nom: row.nom, nom_id: row.nom_id });
     }
-    // Ajout du commentaire si présent
     if (row.commentaire) {
       cases[key].commentaires.push({
         commentaire: row.commentaire,
@@ -113,8 +113,6 @@ async function displayPlanningWithNames(data, startDate, endDate, vacancesData =
       });
     }
   });
-
-  console.log("cases[1-1-2025-05-05]", cases["1-1-2025-05-05"]);
 
   // Regrouper par competence_id et horaire_id pour les lignes
   const lignes = {};
@@ -128,14 +126,24 @@ async function displayPlanningWithNames(data, startDate, endDate, vacancesData =
         cells: {},
         competence_id: cell.competence_id,
         horaire_id: cell.horaire_id,
+        competence_date_debut: cell.competence_date_debut,
+        competence_date_fin: cell.competence_date_fin
       };
     }
     lignes[key].cells[cell.date] = cell;
   });
 
-  // Générer les lignes du tableau
+  // FILTRAGE : n'afficher la ligne que si au moins une date affichée croise la période d'ouverture
   Object.values(lignes).forEach((item) => {
-    const { competence, horaire_debut, horaire_fin, cells, competence_id, horaire_id } = item;
+    const { competence, horaire_debut, horaire_fin, cells, competence_id, horaire_id, competence_date_debut, competence_date_fin } = item;
+
+    // NOUVEAU : vérifier si au moins une date affichée est dans la période d'ouverture
+    const ligneActivePourAuMoinsUneDate = dateHeaders.some(date =>
+      (!competence_date_debut || date >= competence_date_debut) &&
+      (!competence_date_fin || date <= competence_date_fin)
+    );
+    if (!ligneActivePourAuMoinsUneDate) return; // On saute cette ligne si aucune date n'est dans la période
+
     const row = document.createElement("tr");
 
     // Colonne Compétence
@@ -159,40 +167,50 @@ async function displayPlanningWithNames(data, startDate, endDate, vacancesData =
       let noms = [];
       let commentaires = [];
 
-      if (cells[date]) {
-        ouverture = Number(cells[date].ouverture) === 1 ? "oui" : "non";
-        noms = cells[date].noms;
-        commentaires = cells[date].commentaires || [];
-      }
+      // Afficher la case uniquement si la date est dans la période d'ouverture
+      if (
+        (!competence_date_debut || date >= competence_date_debut) &&
+        (!competence_date_fin || date <= competence_date_fin)
+      ) {
+        if (cells[date]) {
+          ouverture = Number(cells[date].ouverture) === 1 ? "oui" : "non";
+          noms = cells[date].noms;
+          commentaires = cells[date].commentaires || [];
+        }
+        dateCell.dataset.ouverture = ouverture;
+        if (ouverture === "non") {
+          dateCell.style.backgroundColor = "#d3d3d3";
+        }
 
-      dateCell.dataset.ouverture = ouverture;
-      if (ouverture === "non") {
+        // Afficher le commentaire général (case sans nom)
+        const commentaireGeneral = commentaires.find(c => !c.nom_id);
+        if (commentaireGeneral) {
+          dateCell.innerHTML += `<div class="commentaire-block">${commentaireGeneral.commentaire}</div>`;
+        }
+
+        // Afficher les noms et leur commentaire
+        if (noms.length > 0) {
+          noms.forEach(({ nom, nom_id }) => {
+            const commentaireNom = commentaires.find(c => c.nom_id == nom_id);
+            if (commentaireNom) {
+              dateCell.innerHTML += `<div class="commentaire-block">${commentaireNom.commentaire}</div>`;
+            }
+            dateCell.innerHTML += `
+              <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
+                <span class="nom-valeur">${nom}</span>
+              </div>
+            `;
+          });
+          dateCell.style.whiteSpace = "normal";
+        } else if (!commentaireGeneral) {
+          dateCell.textContent = "";
+          dateCell.style.whiteSpace = "pre-line";
+        }
+      } else {
+        // Hors période d'ouverture : case vide et grisée
+        dateCell.dataset.ouverture = "non";
         dateCell.style.backgroundColor = "#d3d3d3";
-      }
-
-      // Afficher le commentaire général (case sans nom)
-      const commentaireGeneral = commentaires.find(c => !c.nom_id);
-      if (commentaireGeneral) {
-        dateCell.innerHTML += `<div class="commentaire-block">${commentaireGeneral.commentaire}</div>`;
-      }
-
-      // Afficher les noms et leur commentaire
-      if (noms.length > 0) {
-        noms.forEach(({ nom, nom_id }) => {
-          const commentaireNom = commentaires.find(c => c.nom_id == nom_id);
-          if (commentaireNom) {
-            dateCell.innerHTML += `<div class="commentaire-block">${commentaireNom.commentaire}</div>`;
-          }
-          dateCell.innerHTML += `
-            <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
-              <span class="nom-valeur">${nom}</span>
-            </div>
-          `;
-        });
-        dateCell.style.whiteSpace = "normal";
-      } else if (!commentaireGeneral) {
         dateCell.textContent = "";
-        dateCell.style.whiteSpace = "pre-line";
       }
 
       row.appendChild(dateCell);

@@ -112,13 +112,14 @@ document.getElementById("saveDatesButton").addEventListener("click", async () =>
 
 async function addNom() {
     const nom = prompt("Entrez le nom :");
-    const dateDebut = prompt("Entrez la date de début (YYYY-MM-DD) :");
-    const dateFin = prompt("Entrez la date de fin (YYYY-MM-DD) :");
-
-    if (!nom || !dateDebut || !dateFin) {
-        alert('Tous les champs sont obligatoires.');
+    if (!nom) {
+        alert('Le nom est obligatoire.');
         return;
     }
+
+    // Date du jour au format YYYY-MM-DD
+    const dateDebut = new Date().toISOString().slice(0, 10);
+    const dateFin = "3000-01-01";
 
     const siteId = sessionStorage.getItem('selectedSite');
     const token = localStorage.getItem('token');

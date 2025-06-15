@@ -146,4 +146,30 @@ router.get('/available-count', authenticateToken, (req, res) => {
         res.json(obj);
     });
 });
+
+router.get('/competence-horaire-dates', authenticateToken, (req, res) => {
+    const { site_id } = req.query;
+    if (!site_id) {
+        return res.status(400).send('Paramètre site_id manquant');
+    }
+
+    const query = `
+        SELECT 
+            hct.competence_id,
+            hct.horaire_id,
+            c.date_debut,
+            c.date_fin
+        FROM Thoraire_competence_Tsite hct
+        JOIN Tcompetence c ON hct.competence_id = c.competence_id
+        WHERE hct.site_id = ?
+    `;
+
+    connection.query(query, [site_id], (err, results) => {
+        if (err) {
+            console.error('Erreur SQL competence-horaire-dates:', err.message);
+            return res.status(500).send('Erreur lors de la récupération des dates d\'ouverture');
+        }
+        res.json(results);
+    });
+});
 module.exports = router;
