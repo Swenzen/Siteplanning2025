@@ -85,11 +85,12 @@ router.get('/available-names', authenticateToken, (req, res) => {
               FROM Tvacancesv2 v
               WHERE v.date = ? AND v.site_id = ?
           )
+          AND ? BETWEEN n.date_debut AND n.date_fin
     `;
 
     connection.query(
         query,
-        [competence_id, site_id, date, site_id, date, site_id],
+        [competence_id, site_id, date, site_id, date, site_id, date],
         (err, results) => {
             if (err) {
                 console.error('Erreur lors de la récupération des noms disponibles :', err.message);
@@ -199,10 +200,11 @@ router.get('/available-vacance-names', authenticateToken, (req, res) => {
         FROM Tplanningv2 p
         WHERE p.site_id = ? AND p.date = ?
       )
+      AND ? BETWEEN n.date_debut AND n.date_fin
     ORDER BY n.nom
   `;
 
-  connection.query(query, [site_id, site_id, date, site_id, date], (err, results) => {
+  connection.query(query, [site_id, site_id, date, site_id, date, date], (err, results) => {
     if (err) {
       console.error('Erreur SQL available-vacance-names:', err.message);
       return res.status(500).send('Erreur lors de la récupération des noms disponibles');
@@ -258,9 +260,10 @@ router.get('/available-vacance-names-multi', authenticateToken, (req, res) => {
         FROM Tplanningv2 p
         WHERE p.site_id = ? AND p.date BETWEEN ? AND ?
       )
+      AND n.date_debut <= ? AND n.date_fin >= ?
     ORDER BY n.nom
   `;
-  connection.query(query, [site_id, site_id, start_date, end_date, site_id, start_date, end_date], (err, results) => {
+  connection.query(query, [site_id, site_id, start_date, end_date, site_id, start_date, end_date, start_date, end_date], (err, results) => {
     if (err) {
       console.error('Erreur SQL available-vacance-names-multi:', err.message);
       return res.status(500).send('Erreur lors de la récupération des noms disponibles');
