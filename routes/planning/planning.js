@@ -45,6 +45,7 @@ SELECT
 FROM Thoraire_competence_Tsite hct
 JOIN Thoraire h ON hct.horaire_id = h.horaire_id
 JOIN Tcompetence c ON hct.competence_id = c.competence_id
+JOIN Tcompetence_order co ON c.competence_id = co.competence_id
 JOIN dates d
 LEFT JOIN Tplanningv2 p 
     ON hct.horaire_id = p.horaire_id 
@@ -59,7 +60,7 @@ LEFT JOIN Thoraire_competence_jour hcj
     AND hcj.jour_id = CASE WHEN DAYOFWEEK(d.date) = 1 THEN 7 ELSE DAYOFWEEK(d.date) - 1 END
 WHERE hct.site_id = ?
   AND d.date BETWEEN ? AND ?
-ORDER BY hct.horaire_id, hct.competence_id, d.date;
+ORDER BY co.display_order ASC, hct.horaire_id, d.date;
     `;
 
     connection.query(query, [start_date, end_date, site_id, start_date, end_date], (err, results) => {
