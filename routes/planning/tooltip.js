@@ -307,4 +307,31 @@ router.post('/delete-vacance-multi', authenticateToken, (req, res) => {
     res.sendStatus(200);
   });
 });
+
+
+//tolltip plusieurs noms
+router.get('/affectations-nom-periode', authenticateToken, (req, res) => {
+  const { nom_id, site_id, start_date, end_date } = req.query;
+  if (!nom_id || !site_id || !start_date || !end_date) {
+    return res.status(400).send('Paramètres manquants');
+  }
+  const sql = `
+    SELECT p.date, c.competence AS nom_competence, h.horaire_debut, h.horaire_fin
+    FROM Tplanningv2 p
+    JOIN Tcompetence c ON p.competence_id = c.competence_id
+    JOIN Thoraire h ON p.horaire_id = h.horaire_id
+    WHERE p.nom_id = ? AND p.site_id = ? AND p.date BETWEEN ? AND ?
+    ORDER BY c.competence, p.date
+  `;
+  connection.query(sql, [nom_id, site_id, start_date, end_date], (err, results) => {
+    if (err) {
+      console.error('Erreur SQL affectations-nom-periode:', err.message);
+      return res.status(500).send('Erreur lors de la récupération des affectations');
+    }
+    res.json(results);
+  });
+});
+
+
+
 module.exports = router;

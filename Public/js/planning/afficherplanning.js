@@ -444,3 +444,12 @@ async function fetchVacancesData(siteId, startDate, endDate) {
   });
   return vacancesData;
 }
+
+// Sauvegarder les dates dans le localStorage lors de l'application du filtre
+applyDateFilterButton.addEventListener("click", () => {
+  const startDate = startDateInput.value;
+  const endDate = endDateInput.value;
+
+  localStorage.setItem("savedStartDate", startDate); // startDate = "2025-05-05"
+  localStorage.setItem("savedEndDate", endDate);     // endDate = "2025-05-11"
+});

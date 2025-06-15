@@ -47,12 +47,19 @@ async function fetchNomIds(competenceId, event) {
     const data = await response.json();
     console.log("Noms récupérés :", data);
 
+    const planningStartDate = localStorage.getItem("savedStartDate");
+    const planningEndDate = localStorage.getItem("savedEndDate");
+
+    console.log("planningStartDate", planningStartDate, "planningEndDate", planningEndDate);
+
     // Appeler showTooltip pour afficher les noms dans le tooltip
     showTooltip(event, data, {
       competenceId,
       horaireId: null, // ou la vraie valeur si tu l'as
       date: null, // ou la vraie valeur si tu l'as
       siteId,
+      planningStartDate,
+      planningEndDate
     });
   } catch (error) {
     console.error("Erreur lors de la récupération des noms :", error);
@@ -309,7 +316,7 @@ async function fetchAvailableNames(competenceId, siteId, date) {
   }
 }
 
-function showTooltip(event, noms, { competenceId, horaireId, date, siteId }) {
+function showTooltip(event, noms, { competenceId, horaireId, date, siteId, planningStartDate, planningEndDate }) {
   const tooltip = document.getElementById("tooltip");
 
   tooltip.innerHTML = `
@@ -318,15 +325,14 @@ function showTooltip(event, noms, { competenceId, horaireId, date, siteId }) {
     </div>
     <ul style="list-style: none; padding: 0; margin: 0;">
         ${noms.map(nomObj => {
-          // Si nomObj est une chaîne, on l'affiche et on ne met pas de data-nom-id
           if (typeof nomObj === "string") {
             return `<li style="cursor:pointer;" data-nom="${nomObj}">${nomObj}</li>`;
           } else {
-            // Sinon, on affiche comme avant
             return `<li style="cursor:pointer;" data-nom="${nomObj.nom}" data-nom-id="${nomObj.nom_id}">${nomObj.nom}</li>`;
           }
         }).join("")}
     </ul>
+    <div id="affectations-table-container"></div>
   `;
 
   tooltip.style.display = "block";
@@ -337,28 +343,67 @@ function showTooltip(event, noms, { competenceId, horaireId, date, siteId }) {
     tooltip.style.display = "none";
   });
 
-  // Ajoute le clic sur chaque nom pour updatePlanningV2
- 
-  tooltip.querySelectorAll("li").forEach(li => {
-  li.addEventListener("click", async () => {
-    tooltip.style.display = "none";
-    const nomId = li.dataset.nomId;
-    if (!nomId) {
-      console.error("Impossible d'ajouter ce nom : nom_id manquant.");
-      // Optionnel : affiche un message à l'utilisateur
-      // alert("Impossible d'ajouter ce nom (nom_id manquant).");
-      return;
-    }
-    await updatePlanningV2({
-      date,
-      nom_id: nomId,
-      competenceId,
-      horaireId,
-      siteId
+  tooltip.querySelectorAll("li[data-nom-id]").forEach(li => {
+    li.addEventListener("click", async () => {
+      tooltip.style.display = "none";
+      const nomId = li.dataset.nomId;
+      if (!nomId) {
+        console.error("Impossible d'ajouter ce nom : nom_id manquant.");
+        return;
+      }
+      await updatePlanningV2({
+        date,
+        nom_id: nomId,
+        competenceId,
+        horaireId,
+        siteId
+      });
+    });
+
+    // Survol pour afficher le tableau d'affectations
+    li.addEventListener("mouseenter", async function() {
+      const nom = li.dataset.nom;
+      const nomId = li.dataset.nomId;
+      let dateHeaders = Array.from(document.querySelectorAll("#planningTableWithNames thead th[data-date]"))
+        .map(th => th.dataset.date)
+        .filter(Boolean);
+
+      // Si pas de dates trouvées dans le DOM, on prend la période passée en paramètre OU on relit le localStorage
+      if ((!dateHeaders || !dateHeaders.length)) {
+        let start = planningStartDate, end = planningEndDate;
+        // fallback si non passés en paramètre
+        if (!start) start = localStorage.getItem("savedStartDate");
+        if (!end) end = localStorage.getItem("savedEndDate");
+        if (start && end) {
+          dateHeaders = [];
+          let current = new Date(start);
+          const endDateObj = new Date(end);
+          while (current <= endDateObj) {
+            dateHeaders.push(current.toISOString().slice(0, 10));
+            current.setDate(current.getDate() + 1);
+          }
+        }
+      }
+
+      // Log pour debug
+      console.log("dateHeaders utilisés :", dateHeaders);
+
+      const container = tooltip.querySelector("#affectations-table-container");
+      if (!dateHeaders.length) {
+        container.innerHTML = `<div style="color:#c00;">Erreur : aucune date trouvée</div>`;
+        return;
+      }
+      container.innerHTML = `<div style="color:#888; font-size:13px;">Chargement...</div>`;
+      await showNomAffectationsTableInTooltip(nom, nomId, dateHeaders, siteId, container);
+    });
+
+    li.addEventListener("mouseleave", function() {
+      const container = tooltip.querySelector("#affectations-table-container");
+      container.innerHTML = "";
     });
   });
-});
 }
+
 
 async function updatePlanningV2({
   date,
@@ -518,4 +563,56 @@ async function showTooltipVacanceMulti(event, dateHeaders) {
       }
     };
   });
+}
+
+// fonction pour le tableau 
+async function showNomAffectationsTableInTooltip(nom, nom_id, dateHeaders, siteId, container) {
+  // Vérification des dates
+  if (!Array.isArray(dateHeaders) || !dateHeaders.length || !dateHeaders[0] || !dateHeaders[dateHeaders.length - 1]) {
+    container.innerHTML = `<div style="color:#c00;">Erreur : période non définie</div>`;
+    return;
+  }
+  const startDate = dateHeaders[0];
+  const endDate = dateHeaders[dateHeaders.length - 1];
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch(`/api/affectations-nom-periode?nom_id=${nom_id}&site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      container.innerHTML = `<div style="color:#c00;">Erreur de chargement</div>`;
+      return;
+    }
+    const affectations = await res.json();
+
+    const compDates = {};
+    affectations.forEach(a => {
+      if (!compDates[a.nom_competence]) compDates[a.nom_competence] = {};
+      compDates[a.nom_competence][a.date] = `${a.horaire_debut.slice(0,5)}-${a.horaire_fin.slice(0,5)}`;
+    });
+    const competences = Object.keys(compDates);
+
+    if (competences.length === 0) {
+      container.innerHTML = `<div style="color:#888; font-size:13px;">Aucune affectation sur la période</div>`;
+      return;
+    }
+
+    let table = `<table style="border-collapse:collapse;width:100%;font-size:13px;">
+      <tr>
+        <th style="border-bottom:1px solid #ccc;"></th>
+        ${dateHeaders.map(date => `<th style="border-bottom:1px solid #ccc;padding:2px 4px;">${new Date(date).toLocaleDateString("fr-FR")}</th>`).join("")}
+      </tr>
+      ${competences.map(comp => `
+        <tr>
+          <td style="font-weight:bold;padding:2px 4px;">${comp}</td>
+          ${dateHeaders.map(date => `<td style="padding:2px 4px;text-align:center;">${compDates[comp][date] || ""}</td>`).join("")}
+        </tr>
+      `).join("")}
+    </table>`;
+
+    container.innerHTML = `<div style="font-weight:bold; margin-bottom:4px;">Affectations de ${nom} :</div>${table}`;
+  } catch (err) {
+    container.innerHTML = `<div style="color:#c00;">Erreur réseau ou serveur</div>`;
+  }
 }
