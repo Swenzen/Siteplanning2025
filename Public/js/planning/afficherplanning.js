@@ -257,9 +257,19 @@ tdVacanceTitle.style.fontWeight = "bold";
 // Afficher les noms présents tous les jours ici
 if (nomsDansToutesLesDatesObj.length > 0) {
   nomsDansToutesLesDatesObj.forEach(vacance => {
-    tdVacanceTitle.innerHTML += `<div class="nom-block" data-nom="${vacance.nom}" data-nom-id="${vacance.nom_id}">
-      <span class="nom-valeur">${vacance.nom}</span>
-    </div>`;
+    const div = document.createElement("div");
+    div.className = "nom-block";
+    div.dataset.nom = vacance.nom;
+    div.dataset.nomId = vacance.nom_id;
+    div.innerHTML = `<span class="nom-valeur">${vacance.nom}</span>`;
+    // Ajout du clic droit
+    div.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+      // SUPPRIMER cette ligne :
+      // showTooltipVacanceDeleteMulti(e, vacance.nom_id, dateHeaders, vacance.nom);
+      // Le clic droit est déjà géré globalement par clicdroit.js
+    });
+    tdVacanceTitle.appendChild(div);
   });
 } else {
   tdVacanceTitle.textContent = "";

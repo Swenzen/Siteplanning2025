@@ -281,4 +281,23 @@ router.post('/ajouter-vacance-multi', authenticateToken, (req, res) => {
   });
 });
 
+
+
+router.post('/delete-vacance-multi', authenticateToken, (req, res) => {
+  const { site_id, nom_id, dates } = req.body;
+  if (!site_id || !nom_id || !dates || !Array.isArray(dates)) {
+    return res.status(400).send('Paramètres manquants');
+  }
+  const sql = `
+    DELETE FROM Tvacancesv2
+    WHERE site_id = ? AND nom_id = ? AND date IN (?)
+  `;
+  connection.query(sql, [site_id, nom_id, dates], (err, result) => {
+    if (err) {
+      console.error('Erreur SQL delete-vacance-multi:', err.message);
+      return res.status(500).send('Erreur lors de la suppression');
+    }
+    res.sendStatus(200);
+  });
+});
 module.exports = router;
