@@ -177,11 +177,23 @@
                     <!-- Les lignes des noms et compétences seront ajoutées dynamiquement -->
                 </tbody>
             </table>
-        </div>
-
+        </div> 
         
-
-
+        <div class="section-container">
+    <h3>Compétences par nom</h3>
+    <table id="ordrecomptableau">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <!-- Les colonnes des compétences seront ajoutées dynamiquement -->
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Les lignes des noms et compétences seront ajoutées dynamiquement -->
+        </tbody>
+    </table>
+</div>
+        
         <!-- Conteneur pour les jours repos -->
         <div class="section-container">
             <h2>Jours repos</h2>
@@ -225,6 +237,8 @@
         </div>
     </div>
 
+
+    
     <!-- Fenêtre modale pour afficher et gérer les indisponibilités -->
     <div id="indisponibilitesModal" class="indisponibilites-modal">
         <div class="indisponibilites-modal-content">
@@ -253,5 +267,6 @@
     <script src="js/bdd/competenceshoraires.js"></script>
     <script src="js/bdd/tableaureposrttforma.js"></script>
     <script src="js/bdd/tableaunom.js"></script>
+    <script src="js/bdd/ordrecomp.js"></script>
 </body>
 </html>
