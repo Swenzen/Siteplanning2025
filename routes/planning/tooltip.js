@@ -80,11 +80,16 @@ router.get('/available-names', authenticateToken, (req, res) => {
               FROM Tplanningv2 p
               WHERE p.date = ? AND p.site_id = ?
           )
+          AND n.nom_id NOT IN (
+              SELECT v.nom_id
+              FROM Tvacancesv2 v
+              WHERE v.date = ? AND v.site_id = ?
+          )
     `;
 
     connection.query(
         query,
-        [competence_id, site_id, date, site_id],
+        [competence_id, site_id, date, site_id, date, site_id],
         (err, results) => {
             if (err) {
                 console.error('Erreur lors de la récupération des noms disponibles :', err.message);
@@ -94,6 +99,8 @@ router.get('/available-names', authenticateToken, (req, res) => {
         }
     );
 });
+
+
 router.post('/update-planningv2', authenticateToken, (req, res) => {
     const { date, nom_id, competence_id, horaire_id, site_id } = req.body;
 
