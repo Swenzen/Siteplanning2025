@@ -29,6 +29,8 @@ SELECT
     d.date,
     n.nom,
     n.nom_id,
+    comm.commentaire,
+    comm.nom_id AS commentaire_nom_id,
     CASE 
         WHEN d.date IS NOT NULL THEN 
             CASE WHEN DAYOFWEEK(d.date) = 1 THEN 7 ELSE DAYOFWEEK(d.date) - 1 END
@@ -58,6 +60,12 @@ LEFT JOIN Thoraire_competence_jour hcj
     AND hct.competence_id = hcj.competence_id
     AND hcj.site_id = hct.site_id
     AND hcj.jour_id = CASE WHEN DAYOFWEEK(d.date) = 1 THEN 7 ELSE DAYOFWEEK(d.date) - 1 END
+LEFT JOIN Tcommentairev2 comm
+    ON comm.site_id = hct.site_id
+    AND comm.competence_id = hct.competence_id
+    AND comm.horaire_id = hct.horaire_id
+    AND comm.date = d.date
+    AND (comm.nom_id = n.nom_id OR (comm.nom_id IS NULL AND n.nom_id IS NULL))
 WHERE hct.site_id = ?
   AND d.date BETWEEN ? AND ?
 ORDER BY co.display_order ASC, hct.horaire_id, d.date;

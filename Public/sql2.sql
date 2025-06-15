@@ -272,6 +272,21 @@ CREATE TABLE Tplanningv2 (
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE -- Clé étrangère vers Tsite
 );
 
+
+CREATE TABLE Tcommentairev2 (
+    commentaire_id INT AUTO_INCREMENT PRIMARY KEY,
+    site_id INT NOT NULL,
+    competence_id INT NOT NULL,
+    horaire_id INT NOT NULL,
+    date DATE NOT NULL,
+    nom_id INT DEFAULT NULL, -- NULL = commentaire sur la case, sinon sur le nom
+    commentaire TEXT NOT NULL,
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    auteur_id INT DEFAULT NULL, -- optionnel, si tu veux savoir qui a écrit
+    INDEX idx_case (site_id, competence_id, horaire_id, date, nom_id)
+);
+
+
 INSERT INTO Tnom (nom_id, nom, date_debut, date_fin) VALUES
 (1, 'Pierre', '2025-01-01', '2025-12-31'),
 (2, 'Max', '2025-02-01', '2025-11-30'),

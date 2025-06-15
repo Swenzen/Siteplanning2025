@@ -80,12 +80,20 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         date: row.date,
         ouverture: 0,
         noms: [],
+        commentaires: [] // <-- Ajouté pour stocker les commentaires
       };
     }
     // Toujours garder la valeur max (1 si au moins une ligne ouverte)
     cases[key].ouverture = Math.max(cases[key].ouverture, Number(row.ouverture));
     if (row.nom && row.nom_id && !cases[key].noms.some(n => n.nom_id === row.nom_id)) {
       cases[key].noms.push({ nom: row.nom, nom_id: row.nom_id });
+    }
+    // Ajout du commentaire si présent
+    if (row.commentaire) {
+      cases[key].commentaires.push({
+        commentaire: row.commentaire,
+        nom_id: row.commentaire_nom_id
+      });
     }
   });
 
@@ -132,10 +140,12 @@ async function displayPlanningWithNames(data, startDate, endDate) {
 
       let ouverture = "non";
       let noms = [];
+      let commentaires = [];
 
       if (cells[date]) {
         ouverture = Number(cells[date].ouverture) === 1 ? "oui" : "non";
         noms = cells[date].noms;
+        commentaires = cells[date].commentaires || [];
       }
 
       dateCell.dataset.ouverture = ouverture;
@@ -143,17 +153,27 @@ async function displayPlanningWithNames(data, startDate, endDate) {
         dateCell.style.backgroundColor = "#d3d3d3";
       }
 
-      // Afficher les noms s'il y en a
+      // Afficher le commentaire général (case sans nom)
+      const commentaireGeneral = commentaires.find(c => !c.nom_id);
+      if (commentaireGeneral) {
+        dateCell.innerHTML += `<div class="commentaire-block">${commentaireGeneral.commentaire}</div>`;
+      }
+
+      // Afficher les noms et leur commentaire
       if (noms.length > 0) {
         noms.forEach(({ nom, nom_id }) => {
+          const commentaireNom = commentaires.find(c => c.nom_id == nom_id);
+          if (commentaireNom) {
+            dateCell.innerHTML += `<div class="commentaire-block">${commentaireNom.commentaire}</div>`;
+          }
           dateCell.innerHTML += `
-        <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
-          <span class="nom-valeur">${nom}</span>
-        </div>
-      `;
+            <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
+              <span class="nom-valeur">${nom}</span>
+            </div>
+          `;
         });
         dateCell.style.whiteSpace = "normal";
-      } else {
+      } else if (!commentaireGeneral) {
         dateCell.textContent = "";
         dateCell.style.whiteSpace = "pre-line";
       }
