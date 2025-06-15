@@ -107,4 +107,43 @@ router.get('/vacancesv2', authenticateToken, (req, res) => {
 });
 
 
+router.get('/available-count', authenticateToken, (req, res) => {
+    const { site_id, dates } = req.query;
+    if (!site_id || !dates) {
+        return res.status(400).send('Paramètres manquants');
+    }
+    const dateList = dates.split(',');
+
+    const dateSelect = dateList.map(() => 'SELECT ? AS date').join(' UNION ALL ');
+    const allParams = [...dateList, site_id, site_id, site_id];
+
+    const query = `
+      SELECT d.date, COUNT(n.nom_id) AS dispo
+      FROM (
+        ${dateSelect}
+      ) d
+      JOIN Tnom_Tsite nts ON nts.site_id = ?
+      JOIN Tnom n ON n.nom_id = nts.nom_id
+      WHERE n.nom_id NOT IN (
+        SELECT nom_id FROM Tplanningv2 WHERE date = d.date AND site_id = ?
+        UNION
+        SELECT nom_id FROM Tvacancesv2 WHERE date = d.date AND site_id = ?
+      )
+      AND d.date BETWEEN n.date_debut AND n.date_fin
+      GROUP BY d.date
+    `;
+
+    connection.query(query, allParams, (err, results) => {
+        if (err) {
+            console.error('Erreur SQL available-count:', err.message);
+            return res.status(500).send('Erreur lors du comptage des personnes disponibles');
+        }
+        const obj = {};
+        dateList.forEach(date => obj[date] = 0);
+        results.forEach(row => {
+            obj[row.date] = row.dispo;
+        });
+        res.json(obj);
+    });
+});
 module.exports = router;

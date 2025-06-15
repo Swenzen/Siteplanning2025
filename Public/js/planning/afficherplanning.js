@@ -313,6 +313,44 @@ dateHeaders.forEach(date => {
 });
 
 tfoot.appendChild(extraTr);
+
+const compteurTr = document.createElement("tr");
+compteurTr.id = "compteur-row";
+
+// Première colonne : "Compteur"
+const compteurTh = document.createElement("th");
+compteurTh.textContent = "Compteur";
+compteurTr.appendChild(compteurTh);
+
+// Deuxième colonne : vide
+const emptyTd = document.createElement("td");
+emptyTd.textContent = "";
+compteurTr.appendChild(emptyTd);
+
+// Colonnes dates : compter les cases non grisées ET vides (pas de nom, pas de commentaire)
+const siteId = sessionStorage.getItem("selectedSite");
+const availableCounts = await fetchAvailableCount(siteId, dateHeaders);
+
+dateHeaders.forEach(date => {
+  // Sélectionne toutes les cases du tbody pour cette date
+  const cells = Array.from(document.querySelectorAll(`#planningTableWithNames tbody td[data-date="${date}"]`));
+  // Compte celles qui sont ouvertes ET vides (pas de nom-block, pas de commentaire-block)
+  const count = cells.filter(td =>
+    td.dataset.ouverture === "oui" &&
+    !td.querySelector(".nom-block") &&
+    !td.querySelector(".commentaire-block") &&
+    td.textContent.trim() === ""
+  ).length;
+
+  // Nombre de personnes disponibles ce jour
+  const dispo = availableCounts[date] ?? "-";
+
+  const tdElem = document.createElement("td");
+  tdElem.innerHTML = `${count} <span style="color:#007bff;font-size:11px;">/ ${dispo}</span>`;
+  compteurTr.appendChild(tdElem);
+});
+
+tfoot.appendChild(compteurTr);
 }
 
 async function fetchCompetencesWithNames(siteId, startDate, endDate) {
@@ -458,3 +496,15 @@ applyDateFilterButton.addEventListener("click", () => {
   localStorage.setItem("savedStartDate", startDate); // startDate = "2025-05-05"
   localStorage.setItem("savedEndDate", endDate);     // endDate = "2025-05-11"
 });
+
+
+async function fetchAvailableCount(siteId, dates) {
+  const token = localStorage.getItem("token");
+  // On suppose que tu as une route qui retourne un objet { "2025-05-05": 3, ... }
+  const res = await fetch(`/api/available-count?site_id=${siteId}&dates=${dates.join(",")}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) return {};
+  return await res.json();
+}
+
