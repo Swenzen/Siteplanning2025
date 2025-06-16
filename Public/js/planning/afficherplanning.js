@@ -5,21 +5,15 @@ const applyDateFilterButton = document.getElementById("applyDateFilter");
 
 // Restaurer les dates depuis le localStorage
 window.addEventListener("DOMContentLoaded", () => {
-  const savedStartDate = localStorage.getItem("startDate");
-  const savedEndDate = localStorage.getItem("endDate");
+  const savedStartDate = sessionStorage.getItem("startDate");
+  const savedEndDate = sessionStorage.getItem("endDate");
 
   if (savedStartDate) {
     startDateInput.value = savedStartDate;
   }
-
   if (savedEndDate) {
     endDateInput.value = savedEndDate;
   }
-
-  console.log("Dates restaurées depuis le localStorage :", {
-    savedStartDate,
-    savedEndDate,
-  });
 });
 
 // second planning
@@ -585,8 +579,8 @@ applyDateFilterButton.addEventListener("click", () => {
   const startDate = startDateInput.value;
   const endDate = endDateInput.value;
 
-  localStorage.setItem("savedStartDate", startDate); // startDate = "2025-05-05"
-  localStorage.setItem("savedEndDate", endDate); // endDate = "2025-05-11"
+  sessionStorage.setItem("startDate", startDate);
+  sessionStorage.setItem("endDate", endDate);
 });
 
 async function fetchAvailableCount(siteId, dates) {
