@@ -14,10 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 </ul>
             </nav>
             <div id="user-section">
-                <div id="user-info-container">
-                    <span id="user-info"></span>
-                    <select id="siteSelector" style="display: none;"></select> <!-- Menu déroulant pour les sites -->
-                </div>
+                <span id="user-info"></span>
+                <select id="siteSelector" style="display: none;"></select>
                 <button id="logoutButton" style="display: none;">Se déconnecter</button>
             </div>
         </div>

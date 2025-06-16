@@ -196,4 +196,24 @@ router.delete('/delete-site-link', authenticateToken, (req, res) => {
     });
 });
 
+
+// Ajoute cette route dans liaisonsite.js
+router.get('/site', authenticateToken, (req, res) => {
+    const userId = req.user.userId;
+    const query = `
+        SELECT s.site_id, s.site_name
+        FROM Tsite s
+        JOIN Tuser_Tsite uts ON s.site_id = uts.site_id
+        WHERE uts.user_id = ?
+        ORDER BY s.site_name
+    `;
+    connection.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des sites :', err.message);
+            return res.status(500).send('Erreur interne');
+        }
+        res.json({ site: results });
+    });
+});
+
 module.exports = router;

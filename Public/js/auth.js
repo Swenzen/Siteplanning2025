@@ -48,3 +48,16 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         loginButton.disabled = false; // Réactive le bouton après la requête
     }
 });
+
+// Masquer la section auth si connecté
+function hideAuthSectionIfConnected() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        const authSection = document.getElementById('auth-section');
+        if (authSection) authSection.style.display = 'none';
+        // Ici tu peux aussi afficher le contenu réservé aux utilisateurs connectés
+    }
+}
+
+// Appelle la fonction au chargement de la page
+window.addEventListener('DOMContentLoaded', hideAuthSectionIfConnected);
