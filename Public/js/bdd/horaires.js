@@ -52,44 +52,7 @@ async function fetchHoraires() {
     }
 }
 
-async function addHoraire() {
-    const horaireDebut = prompt("Entrez l'horaire de début (HH:MM)");
-    const horaireFin = prompt("Entrez l'horaire de fin (HH:MM)");
-    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
 
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
-        return;
-    }
-
-    if (horaireDebut && horaireFin) {
-        try {
-            const response = await fetch('/api/add-horaires', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    horaire_debut: horaireDebut,
-                    horaire_fin: horaireFin,
-                    site_id: siteId
-                })
-            });
-
-            if (response.ok) {
-                console.log('Horaire ajouté avec succès');
-                fetchHoraires(); // Rafraîchir le tableau des horaires
-                fetchHorairesCompetences(); // Rafraîchir le tableau des horaires par compétence
-            } else {
-                console.error('Erreur lors de l\'ajout de l\'horaire');
-            }
-        } catch (error) {
-            console.error('Erreur lors de la requête :', error);
-        }
-    }
-}
 
 async function deleteHoraire(horaire_id) {
     const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
@@ -123,6 +86,61 @@ async function deleteHoraire(horaire_id) {
         }
     }
 }
+
+
+
+function openHoraireModal() {
+    document.getElementById('horaireModal').style.display = 'block';
+}
+function closeHoraireModal() {
+    document.getElementById('horaireModal').style.display = 'none';
+    document.getElementById('horaireDebutInput').value = '';
+    document.getElementById('horaireFinInput').value = '';
+}
+
+document.getElementById("addHoraireButton").addEventListener("click", openHoraireModal);
+document.getElementById("closeHoraireModal").addEventListener("click", closeHoraireModal);
+
+// Quand on clique sur "Ajouter" dans la modale
+document.getElementById("confirmAddHoraire").addEventListener("click", async function() {
+    const horaireDebut = document.getElementById('horaireDebutInput').value;
+    const horaireFin = document.getElementById('horaireFinInput').value;
+    const token = localStorage.getItem('token');
+    const siteId = sessionStorage.getItem('selectedSite');
+    if (!horaireDebut || !horaireFin) {
+        alert("Veuillez renseigner les deux horaires.");
+        return;
+    }
+    if (!token || !siteId) {
+        alert("Erreur d'authentification ou de site.");
+        return;
+    }
+    try {
+        const response = await fetch('/api/add-horaires', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                horaire_debut: horaireDebut,
+                horaire_fin: horaireFin,
+                site_id: siteId
+            })
+        });
+        if (response.ok) {
+            fetchHoraires();
+            if (typeof fetchHorairesCompetences === "function") fetchHorairesCompetences();
+            closeHoraireModal();
+        } else {
+            alert("Erreur lors de l'ajout de l'horaire.");
+        }
+    } catch (error) {
+        alert("Erreur lors de la requête.");
+    }
+});
+
+
 
 // Appeler la fonction pour récupérer les horaires lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', fetchHoraires);

@@ -251,7 +251,39 @@ header #user-section #logoutButton:hover {
 }
 
 
+.scrollable-container {
+    max-height: 400px;      /* Ajuste la hauteur selon ton besoin */
+    overflow-y: auto;
+    overflow-x: auto;       /* Ajoute aussi un scroll horizontal si besoin */
+    padding-right: 8px;     /* Pour éviter que la barre de scroll ne cache le contenu */
+}
 
+
+
+
+
+/* ========================= */
+/* modal horaires      */
+/* ========================= */
+
+
+
+
+.modalh {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.3);
+}
+.modalh-content {
+  background: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  position: relative;
+}
 
 
 /* ========================= */

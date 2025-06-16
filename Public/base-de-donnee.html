@@ -117,7 +117,7 @@
         </div>
 
         <!-- Horaires par compétence et jours -->
-        <div class="section-container collapsible-section">
+        <div class="section-container collapsible-section scrollable-container">
             <div class="collapsible-header">Horaires par compétence et jours</div>
             <div class="collapsible-content">
                 <table id="horaireCompetenceDaysTable">
@@ -248,6 +248,21 @@
             </table>
             <button id="addIndisponibiliteButton">Ajouter une indisponibilité</button>
         </div>
+    </div>
+
+    <!-- Modale pour ajouter un horaire -->
+    <div id="horaireModal" class="modalh" style="display:none;">
+      <div class="modalh-content">
+        <span id="closeHoraireModal" style="float:right;cursor:pointer;">&times;</span>
+        <h3>Ajouter un horaire</h3>
+        <label for="horaireDebutInput">Début :</label>
+        <input type="time" id="horaireDebutInput" required>
+        <br>
+        <label for="horaireFinInput">Fin :</label>
+        <input type="time" id="horaireFinInput" required>
+        <br><br>
+        <button id="confirmAddHoraire">Ajouter</button>
+      </div>
     </div>
 
     <!-- Inclure les fichiers JavaScript -->
