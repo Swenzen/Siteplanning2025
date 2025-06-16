@@ -1,125 +1,72 @@
-// Fonction pour créer une table de repos
-async function createReposTable(nomRepos) {
+async function fetchCompetencesRepos() {
     const token = localStorage.getItem('token');
     const siteId = sessionStorage.getItem('selectedSite');
+    if (!token || !siteId) return [];
 
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/create-repos-table', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ nomRepos, site_id: siteId })
-        });
-
-        if (!response.ok) {
-            throw new Error('Erreur lors de la création de la table de repos');
-        }
-
-        const result = await response.text();
-        console.log('Résultat de la création de la table de repos :', result);
-        alert('Table de repos créée avec succès');
-        loadReposTables(); // Recharger les tables de repos après la création
-    } catch (error) {
-        console.error('Erreur lors de la création de la table de repos :', error);
-    }
+    const res = await fetch(`/api/competences-repos?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return [];
+    return await res.json();
 }
 
-async function loadReposTables() {
-    const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-    const siteId = sessionStorage.getItem('selectedSite'); // Récupérer le site_id depuis le sessionStorage
+async function updateReposCompetence(competence_id, repos) {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/update-repos', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ competence_id, repos })
+    });
+    return res.ok;
+}
 
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
-        return;
-    }
+async function displayReposTable() {
+    const table = document.getElementById('joursrepos');
+    const tbody = table.querySelector('tbody');
+    const thead = table.querySelector('thead');
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
 
-    try {
-        const response = await fetch(`/api/get-repos?site_id=${siteId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+    // En-tête
+    const headerRow = document.createElement('tr');
+    const thCompetence = document.createElement('th');
+    thCompetence.textContent = 'Compétence';
+    headerRow.appendChild(thCompetence);
+
+    const thRepos = document.createElement('th');
+    thRepos.textContent = 'Repos';
+    headerRow.appendChild(thRepos);
+
+    thead.appendChild(headerRow);
+
+    // Données
+    const competences = await fetchCompetencesRepos();
+    competences.forEach(comp => {
+        const row = document.createElement('tr');
+        const tdCompetence = document.createElement('td');
+        tdCompetence.textContent = comp.competence;
+        row.appendChild(tdCompetence);
+
+        const tdRepos = document.createElement('td');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = !!comp.repos;
+        checkbox.addEventListener('change', async function() {
+            const success = await updateReposCompetence(comp.competence_id, this.checked);
+            if (!success) {
+                alert('Erreur lors de la mise à jour');
+                this.checked = !this.checked; // revert
             }
         });
+        tdRepos.appendChild(checkbox);
+        row.appendChild(tdRepos);
 
-        if (!response.ok) {
-            const error = await response.text();
-            throw new Error(`Erreur lors de la récupération des repos : ${error}`);
-        }
-
-        const repos = await response.json();
-        console.log('Repos récupérés :', repos);
-
-        const tableBody = document.querySelector('#joursrepos tbody');
-        tableBody.innerHTML = ''; // Vider le tableau avant d'ajouter les nouveaux repos
-
-        repos.forEach(reposItem => {
-            const row = document.createElement('tr');
-
-            const nameCell = document.createElement('td');
-            nameCell.textContent = reposItem.repos;
-            row.appendChild(nameCell);
-
-            const actionCell = document.createElement('td');
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Supprimer';
-            deleteButton.addEventListener('click', () => deleteRepos(reposItem.repos_id));
-            actionCell.appendChild(deleteButton);
-            row.appendChild(actionCell);
-
-            tableBody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('Erreur lors de la récupération des repos :', error);
-    }
+        tbody.appendChild(row);
+    });
 }
 
-// Fonction pour supprimer un repos
-async function deleteRepos(reposId) {
-    const token = localStorage.getItem('token');
-    const siteId = sessionStorage.getItem('selectedSite');
-
-    if (!token || !siteId) {
-        console.error('Erreur : le token ou le site_id est introuvable.');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/delete-repos-table', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ repos_id: reposId, site_id: siteId })
-        });
-
-        if (!response.ok) {
-            throw new Error('Erreur lors de la suppression du repos');
-        }
-
-        const result = await response.text();
-        console.log('Résultat de la suppression du repos :', result);
-        alert('Repos supprimé avec succès');
-        loadReposTables(); // Recharger les tables de repos après la suppression
-    } catch (error) {
-        console.error('Erreur lors de la suppression du repos :', error);
-    }
-}
-
-// Charger les tables de repos lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', loadReposTables);
-
-document.getElementById('ajouterjoursrepos').addEventListener('click', () => {
-    const nomRepos = prompt('Entrez le nom du jour de repos :');
-    if (nomRepos) {
-        createReposTable(nomRepos); // Appelle la fonction pour créer un jour de repos
-    }
-});
+// Afficher le tableau au chargement de la page
+document.addEventListener('DOMContentLoaded', displayReposTable);
