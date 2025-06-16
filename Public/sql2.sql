@@ -435,3 +435,5 @@ INSERT INTO Tcompetence_jour (competence_id, jour_id) VALUES
 (2, 6), -- IRM indisponible le samedi
 (2, 7); -- IRM indisponible le dimanche
 
+ALTER TABLE Tcompetence
+ADD COLUMN repos BOOLEAN NOT NULL DEFAULT 0;

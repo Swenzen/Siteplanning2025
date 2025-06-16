@@ -26,6 +26,7 @@ SELECT
     c.competence,
     c.date_debut AS competence_date_debut,
     c.date_fin AS competence_date_fin,
+    c.repos,
     d.date,
     n.nom,
     n.nom_id,
