@@ -84,7 +84,7 @@ router.get('/competence-groupes', authenticateToken, (req, res) => {
     if (!site_id) return res.status(400).json({ error: "site_id manquant" });
 
     const sql = `
-        SELECT g.groupe_id, g.nom_groupe, c.competence
+        SELECT g.groupe_id, g.nom_groupe, l.competence_id, c.competence
         FROM Tcompetence_groupe g
         LEFT JOIN Tcompetence_groupe_liaison l ON g.groupe_id = l.groupe_id
         LEFT JOIN Tcompetence c ON l.competence_id = c.competence_id
@@ -103,12 +103,45 @@ router.get('/competence-groupes', authenticateToken, (req, res) => {
         const groupes = {};
         rows.forEach(row => {
             if (!groupes[row.groupe_id]) {
-                groupes[row.groupe_id] = { nom_groupe: row.nom_groupe, competences: [] };
+                groupes[row.groupe_id] = { groupe_id: row.groupe_id, nom_groupe: row.nom_groupe, competences: [] };
             }
-            if (row.competence) groupes[row.groupe_id].competences.push(row.competence);
+            if (row.competence_id && row.competence) {
+                groupes[row.groupe_id].competences.push({
+                    competence_id: row.competence_id,
+                    competence: row.competence
+                });
+            }
         });
         res.json(Object.values(groupes));
     });
+});
+
+// Lier une compétence à un groupe
+router.post('/competence-groupe/liaison', authenticateToken, (req, res) => {
+    const { groupe_id, competence_id } = req.body;
+    if (!groupe_id || !competence_id) return res.status(400).json({ error: "Paramètres manquants" });
+    connection.query(
+        "INSERT IGNORE INTO Tcompetence_groupe_liaison (competence_id, groupe_id) VALUES (?, ?)",
+        [competence_id, groupe_id],
+        (err) => {
+            if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
+// Délier une compétence d'un groupe
+router.delete('/competence-groupe/liaison', authenticateToken, (req, res) => {
+    const { groupe_id, competence_id } = req.body;
+    if (!groupe_id || !competence_id) return res.status(400).json({ error: "Paramètres manquants" });
+    connection.query(
+        "DELETE FROM Tcompetence_groupe_liaison WHERE competence_id = ? AND groupe_id = ?",
+        [competence_id, groupe_id],
+        (err) => {
+            if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+            res.json({ success: true });
+        }
+    );
 });
 
 module.exports = router;

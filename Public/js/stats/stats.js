@@ -141,6 +141,30 @@ document.getElementById("btn-creer-groupe").onclick = async function() {
     }
 };
 
+// Affiche les compétences disponibles (non liées à un groupe)
+async function afficherCompetencesDisponibles() {
+    const token = localStorage.getItem("token");
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (!token || !siteId) return;
+    const res = await fetch(`/api/all-competences?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const competences = await res.json();
+    // Récupère toutes les compétences déjà liées à un groupe
+    const groupes = await fetch(`/api/competence-groupes?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.ok ? r.json() : []);
+    const liees = new Set(groupes.flatMap(g => g.competences.map(c => c.competence_id)));
+    const ul = document.getElementById("liste-competences");
+    ul.innerHTML = competences
+        .filter(c => !liees.has(c.competence_id))
+        .map(c => `<li class="draggable-competence" draggable="true" data-id="${c.competence_id}">${c.competence}</li>`)
+        .join("");
+    addDragEvents();
+}
+
+// Affiche les groupes et leurs compétences
 async function afficherGroupesCompetence() {
     const token = localStorage.getItem("token");
     const siteId = sessionStorage.getItem("selectedSite");
@@ -148,35 +172,111 @@ async function afficherGroupesCompetence() {
     const res = await fetch(`/api/competence-groupes?site_id=${siteId}`, {
         headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) {
-        document.getElementById("tbody-groupes").innerHTML = "<tr><td colspan='2'>Erreur lors du chargement</td></tr>";
-        return;
-    }
+    if (!res.ok) return;
     const groupes = await res.json();
-    const tbody = document.getElementById("tbody-groupes");
-    tbody.innerHTML = groupes.map(g =>
-        `<tr>
-            <td>${g.nom_groupe}</td>
-            <td>${g.competences.length ? g.competences.join(", ") : "<i>Aucune compétence</i>"}</td>
-        </tr>`
+    const container = document.getElementById("groupes-container");
+    container.innerHTML = groupes.map(g =>
+        `<div class="groupe-dropzone" data-groupe="${g.groupe_id}" style="min-width:180px; min-height:120px; border:1px solid #aaa; border-radius:8px; padding:8px; margin-bottom:16px;">
+            <div style="font-weight:bold; margin-bottom:8px;">${g.nom_groupe}</div>
+            <ul class="competence-groupe-list" style="min-height:60px;">
+                ${g.competences.map(c => `<li class="draggable-competence" draggable="true" data-id="${c.competence_id}">${c.competence}</li>`).join("")}
+            </ul>
+        </div>`
     ).join("");
+    addDropEvents();
+    addDragEvents();
 }
 
-// Appel au chargement de la page
-document.addEventListener("DOMContentLoaded", afficherGroupesCompetence);
+// Drag & Drop events
+function addDragEvents() {
+    document.querySelectorAll('.draggable-competence').forEach(el => {
+        el.ondragstart = e => {
+            e.dataTransfer.setData("competence_id", el.dataset.id);
+            e.dataTransfer.effectAllowed = "move";
+            setTimeout(() => el.classList.add("dragging"), 0);
+        };
+        el.ondragend = e => el.classList.remove("dragging");
+    });
+}
+function addDropEvents() {
+    // Drop sur un groupe
+    document.querySelectorAll('.groupe-dropzone').forEach(zone => {
+        zone.ondragover = e => { e.preventDefault(); zone.classList.add("over"); };
+        zone.ondragleave = e => zone.classList.remove("over");
+        zone.ondrop = async e => {
+            e.preventDefault();
+            zone.classList.remove("over");
+            const competence_id = e.dataTransfer.getData("competence_id");
+            const groupe_id = zone.dataset.groupe;
+            await fetch('/api/competence-groupe/liaison', {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+                body: JSON.stringify({ groupe_id, competence_id })
+            });
+            await afficherCompetencesDisponibles();
+            await afficherGroupesCompetence();
+        };
+    });
+    // Drop sur la liste de gauche (pour retirer d'un groupe)
+    const ul = document.getElementById("liste-competences");
+    ul.ondragover = e => { e.preventDefault(); ul.classList.add("over"); };
+    ul.ondragleave = e => ul.classList.remove("over");
+    ul.ondrop = async e => {
+        e.preventDefault();
+        ul.classList.remove("over");
+        const competence_id = e.dataTransfer.getData("competence_id");
+        // Trouve le groupe d'origine
+        const token = localStorage.getItem("token");
+        const siteId = sessionStorage.getItem("selectedSite");
+        const groupes = await fetch(`/api/competence-groupes?site_id=${siteId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(r => r.ok ? r.json() : []);
+        let groupe_id = null;
+        groupes.forEach(g => {
+            if (g.competences.some(c => c.competence_id == competence_id)) groupe_id = g.groupe_id;
+        });
+        if (groupe_id) {
+            await fetch('/api/competence-groupe/liaison', {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ groupe_id, competence_id })
+            });
+            await afficherCompetencesDisponibles();
+            await afficherGroupesCompetence();
+        }
+    };
+}
 
-// Appel après création d'un groupe
+// Création de groupe
 document.getElementById("btn-creer-groupe").onclick = async function() {
-    // ... ton code existant ...
+    const token = localStorage.getItem("token");
+    const nomGroupe = document.getElementById("nom-nouveau-groupe").value.trim();
+    const siteId = sessionStorage.getItem("selectedSite");
+    const msgDiv = document.getElementById("message-groupe");
+    msgDiv.textContent = "";
+    if (!token || !siteId || !nomGroupe) {
+        msgDiv.textContent = "Veuillez saisir un nom de groupe.";
+        return;
+    }
+    const res = await fetch('/api/competence-groupe', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ nom_groupe: nomGroupe, competences: [] })
+    });
     if (res.ok) {
         msgDiv.textContent = "Groupe créé !";
         document.getElementById("nom-nouveau-groupe").value = "";
-        document.querySelectorAll("#liste-competences input[type=checkbox]").forEach(cb => cb.checked = false);
-        await afficherGroupesCompetence(); // <-- recharge la liste des groupes
+        await afficherGroupesCompetence();
     } else {
         msgDiv.textContent = "Erreur lors de la création du groupe.";
     }
 };
 
-// Appel automatique au chargement de la page
-document.addEventListener("DOMContentLoaded", afficherCompetencesGroupe);
+// Initialisation
+document.addEventListener("DOMContentLoaded", async () => {
+    await afficherCompetencesDisponibles();
+    await afficherGroupesCompetence();
+});
