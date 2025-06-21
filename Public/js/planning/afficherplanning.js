@@ -392,13 +392,20 @@ async function displayPlanningWithNames(
       )
     );
     // Compte celles qui sont ouvertes ET vides (pas de nom-block, pas de commentaire-block)
-    const count = cells.filter(
-      (td) =>
-        td.dataset.ouverture === "oui" &&
-        !td.querySelector(".nom-block") &&
-        !td.querySelector(".commentaire-block") &&
-        td.textContent.trim() === ""
-    ).length;
+    const count = cells.filter(td => {
+      if (td.dataset.ouverture !== "oui") return false;
+      if (td.querySelector(".nom-block")) return false;
+
+      // Cherche un commentaire "Fermée"
+      const commentaireBlocks = td.querySelectorAll(".commentaire-block");
+      for (const cb of commentaireBlocks) {
+        if (cb.textContent.trim().toLowerCase() === "fermée") {
+          return false; // case pleine si commentaire = Fermée
+        }
+      }
+      // Sinon, case vide même s'il y a un autre commentaire
+      return true;
+    }).length;
 
     // Nombre de personnes disponibles ce jour
     const dispo = availableCounts[date] ?? null;
