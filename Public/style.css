@@ -628,6 +628,127 @@ header #user-section #logoutButton:hover {
   background: #c62828;
 }
 
+/* ========================= */
+/* SECTION groupe compétence stats  */
+/* ========================= */
+
+
+
+/* --- Groupes de compétences --- */
+.group-card {
+    min-width: 220px;
+    min-height: 120px;
+    border: 1.5px solid #1976d2;
+    border-radius: 12px;
+    padding: 12px 14px 14px 14px;
+    margin-bottom: 18px;
+    background: #f7fbff;
+    box-shadow: 0 2px 8px #1976d233;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+}
+.group-card:hover {
+    box-shadow: 0 4px 16px #1976d244;
+    border-color: #125ea8;
+}
+.group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.group-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #1976d2;
+}
+.delete-group-btn {
+    background: #e57373;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 1.1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.delete-group-btn:hover {
+    background: #c62828;
+}
+.competence-groupe-list {
+    min-height: 60px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+.competence-groupe-list li {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 8px;
+    margin: 4px 0;
+    padding: 6px 10px;
+    font-size: 1em;
+    cursor: grab;
+    transition: background 0.2s;
+}
+.competence-groupe-list li.dragging {
+    opacity: 0.5;
+}
+.groupe-dropzone.over {
+    background: #e3f2fd;
+    border-color: #42a5f5;
+}
+
+
+
+
+
+
+
+
+/* Container compétences disponibles */
+#liste-competences.competence-list {
+    min-height: 200px;
+    border: 1.5px solid #1976d2;
+    border-radius: 12px;
+    background: #f7fbff;
+    box-shadow: 0 2px 8px #1976d233;
+    padding: 14px 10px;
+    margin-bottom: 18px;
+    list-style: none;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+#liste-competences.competence-list.over {
+    background: #e3f2fd;
+    border-color: #42a5f5;
+}
+#liste-competences.competence-list li,
+.draggable-competence {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 8px;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 1em;
+    cursor: grab;
+    transition: background 0.2s;
+    box-shadow: 0 1px 3px #1976d211;
+}
+#liste-competences.competence-list li.dragging,
+.draggable-competence.dragging {
+    opacity: 0.5;
+}
+
+
+
+
 
 
 /* ========================= */

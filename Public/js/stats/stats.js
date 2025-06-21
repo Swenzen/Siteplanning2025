@@ -176,15 +176,31 @@ async function afficherGroupesCompetence() {
     const groupes = await res.json();
     const container = document.getElementById("groupes-container");
     container.innerHTML = groupes.map(g =>
-        `<div class="groupe-dropzone" data-groupe="${g.groupe_id}" style="min-width:180px; min-height:120px; border:1px solid #aaa; border-radius:8px; padding:8px; margin-bottom:16px;">
-            <div style="font-weight:bold; margin-bottom:8px;">${g.nom_groupe}</div>
-            <ul class="competence-groupe-list" style="min-height:60px;">
+        `<div class="groupe-dropzone group-card" data-groupe="${g.groupe_id}">
+            <div class="group-header">
+                <span class="group-title">${g.nom_groupe}</span>
+                <button class="delete-group-btn" data-groupe="${g.groupe_id}" title="Supprimer ce groupe">🗑️</button>
+            </div>
+            <ul class="competence-groupe-list">
                 ${g.competences.map(c => `<li class="draggable-competence" draggable="true" data-id="${c.competence_id}">${c.competence}</li>`).join("")}
             </ul>
         </div>`
     ).join("");
     addDropEvents();
     addDragEvents();
+    // Ajoute l'event sur les boutons supprimer
+    document.querySelectorAll('.delete-group-btn').forEach(btn => {
+        btn.onclick = async function() {
+            if (!confirm("Supprimer ce groupe ?")) return;
+            const groupe_id = btn.dataset.groupe;
+            await fetch(`/api/competence-groupe/${groupe_id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            await afficherGroupesCompetence();
+            await afficherCompetencesDisponibles();
+        };
+    });
 }
 
 // Drag & Drop events
@@ -264,7 +280,7 @@ document.getElementById("btn-creer-groupe").onclick = async function() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ nom_groupe: nomGroupe, competences: [] })
+        body: JSON.stringify({ nom_groupe: nomGroupe, competences: [], site_id: siteId })
     });
     if (res.ok) {
         msgDiv.textContent = "Groupe créé !";

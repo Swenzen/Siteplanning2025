@@ -78,14 +78,18 @@ router.post('/competence-groupe', authenticateToken, (req, res) => {
 });
 
 router.get('/competence-groupes', authenticateToken, (req, res) => {
+    const site_id = req.query.site_id;
+    if (!site_id) return res.status(400).json({ error: "site_id manquant" });
+
     const sql = `
         SELECT g.groupe_id, g.nom_groupe, l.competence_id, c.competence
         FROM Tcompetence_groupe g
         LEFT JOIN Tcompetence_groupe_liaison l ON g.groupe_id = l.groupe_id
         LEFT JOIN Tcompetence c ON l.competence_id = c.competence_id
+        WHERE g.site_id = ?
         ORDER BY g.nom_groupe, c.competence
     `;
-    connection.query(sql, [], (err, rows) => {
+    connection.query(sql, [site_id], (err, rows) => {
         if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
         // Regroupe par groupe
         const groupes = {};
@@ -128,6 +132,27 @@ router.delete('/competence-groupe/liaison', authenticateToken, (req, res) => {
         (err) => {
             if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
             res.json({ success: true });
+        }
+    );
+});
+
+router.delete('/competence-groupe/:groupe_id', authenticateToken, (req, res) => {
+    const groupe_id = req.params.groupe_id;
+    if (!groupe_id) return res.status(400).json({ error: "groupe_id manquant" });
+    // Supprime d'abord les liaisons, puis le groupe
+    connection.query(
+        "DELETE FROM Tcompetence_groupe_liaison WHERE groupe_id = ?",
+        [groupe_id],
+        (err) => {
+            if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+            connection.query(
+                "DELETE FROM Tcompetence_groupe WHERE groupe_id = ?",
+                [groupe_id],
+                (err2) => {
+                    if (err2) return res.status(500).json({ error: "Erreur serveur", details: err2.message });
+                    res.json({ success: true });
+                }
+            );
         }
     );
 });
