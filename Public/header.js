@@ -10,7 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <li><a href="index.html" class="${window.location.pathname.includes('index.html') ? 'active' : ''}">Index</a></li>
                     <li><a href="base-de-donnee.html" class="${window.location.pathname.includes('base-de-donnee.html') ? 'active' : ''}">Base de donnée</a></li>
                     <li><a href="planning.html" class="${window.location.pathname.includes('planning.html') ? 'active' : ''}">Planning</a></li>
-                    <li><a href="parametrage.html" class="${window.location.pathname.includes('parametrage.html') ? 'active' : ''}">Paramétrage</a></li> <!-- Nouveau lien -->
+                    <li><a href="parametrage.html" class="${window.location.pathname.includes('parametrage.html') ? 'active' : ''}">Paramétrage</a></li>
+                    <li><a href="stats.html" class="${window.location.pathname.includes('stats.html') ? 'active' : ''}">Stats</a></li> <!-- Nouveau lien -->
                 </ul>
             </nav>
             <div id="user-section">

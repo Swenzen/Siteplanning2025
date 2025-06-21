@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Statistiques du planning</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="header.js" defer></script>
+</head>
+<body>
+    <div class="section-container">
+        <h2>Statistiques du planning</h2>
+        <p>Cette page affichera bientôt les statistiques et critères personnalisés pour chaque personne.</p>
+        <form id="periode-stats-form" style="margin-bottom:24px;">
+            <label for="statsStartDate">Début :</label>
+            <input type="date" id="statsStartDate" name="statsStartDate" required>
+            <label for="statsEndDate">Fin :</label>
+            <input type="date" id="statsEndDate" name="statsEndDate" required>
+            <button type="submit">Afficher les stats</button>
+        </form>
+        <div id="stats-results"></div>
+    </div>
+</body>
+<script src="js/stats/stats.js"></script>
+</html>

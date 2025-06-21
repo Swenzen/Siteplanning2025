@@ -551,10 +551,82 @@ header #user-section #logoutButton:hover {
 }
 
 
+/* ========================= */
+/* SECTION STATS  */
+/* ========================= */
 
 
 
 
+/* Ajoute ceci dans style.css */
+.group-manager {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin: 40px 0;
+}
+.group-section {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 24px 32px;
+  box-shadow: 0 2px 8px #0001;
+  min-width: 340px;
+}
+.group-list {
+  margin-bottom: 16px;
+}
+.group-creator {
+  border-top: 1px solid #ddd;
+  padding-top: 16px;
+}
+.group-creator input[type="text"] {
+  width: 70%;
+  margin-bottom: 10px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+.group-creator button {
+  margin-top: 10px;
+  padding: 6px 18px;
+  border-radius: 6px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.group-creator button:hover {
+  background: #125ea8;
+}
+.group-badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 16px;
+  padding: 4px 12px;
+  margin: 2px 4px;
+  font-size: 0.95em;
+}
+.group-list .group-item {
+  margin-bottom: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+.group-list .group-item:last-child {
+  border-bottom: none;
+}
+.group-item .delete-btn {
+  background: #e57373;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 2px 10px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+.group-item .delete-btn:hover {
+  background: #c62828;
+}
 
 
 

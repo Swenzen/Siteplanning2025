@@ -296,6 +296,40 @@ CREATE TABLE Tvacancesv2 (
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
 
+
+
+
+-- Table des groupes de compétences
+CREATE TABLE Tcompetence_groupe (
+    groupe_id INT AUTO_INCREMENT PRIMARY KEY,
+    nom_groupe VARCHAR(255) NOT NULL
+);
+
+-- Table de liaison entre compétence et groupe
+CREATE TABLE Tcompetence_groupe_liaison (
+    competence_id INT NOT NULL,
+    groupe_id INT NOT NULL,
+    PRIMARY KEY (competence_id, groupe_id),
+    FOREIGN KEY (competence_id) REFERENCES Tcompetence(competence_id) ON DELETE CASCADE,
+    FOREIGN KEY (groupe_id) REFERENCES Tcompetence_groupe(groupe_id) ON DELETE CASCADE
+);
+
+
+-- Table des groupes d’horaires
+CREATE TABLE Thoraire_groupe (
+    groupe_id INT AUTO_INCREMENT PRIMARY KEY,
+    nom_groupe VARCHAR(255) NOT NULL
+);
+
+-- Table de liaison entre horaire et groupe
+CREATE TABLE Thoraire_groupe_liaison (
+    horaire_id INT NOT NULL,
+    groupe_id INT NOT NULL,
+    PRIMARY KEY (horaire_id, groupe_id),
+    FOREIGN KEY (horaire_id) REFERENCES Thoraire(horaire_id) ON DELETE CASCADE,
+    FOREIGN KEY (groupe_id) REFERENCES Thoraire_groupe(groupe_id) ON DELETE CASCADE
+);
+
 INSERT INTO Tnom (nom_id, nom, date_debut, date_fin) VALUES
 (1, 'Pierre', '2025-01-01', '2025-12-31'),
 (2, 'Max', '2025-02-01', '2025-11-30'),

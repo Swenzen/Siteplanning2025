@@ -575,3 +575,169 @@ async function showTooltipVacanceMulti(event, dateHeaders) {
   });
 }
 
+async function autoFillPlanningTable() {
+  const siteId = sessionStorage.getItem("selectedSite");
+  if (!siteId) {
+    alert("Aucun site sélectionné !");
+    return;
+  }
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Non authentifié !");
+    return;
+  }
+
+  // Récupère toutes les cases du tbody à remplir
+  let cells = Array.from(document.querySelectorAll(
+    "#planningTableWithNames tbody td[data-ouverture='oui']"
+  )).filter(td => !td.querySelector(".nom-block"));
+
+  // Prépare pour chaque case la liste des noms dispo (et leur nombre)
+  let casesWithChoices = [];
+  for (const td of cells) {
+    const competenceId = td.dataset.competenceId;
+    const horaireId = td.dataset.horaireId;
+    const date = td.dataset.date;
+    const res = await fetch(`/api/available-names?competence_id=${competenceId}&site_id=${siteId}&date=${date}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) continue;
+    const noms = await res.json();
+    casesWithChoices.push({
+      td,
+      competenceId,
+      horaireId,
+      date,
+      noms,
+      nbNoms: noms.length
+    });
+  }
+
+  // Regroupe les cases par date
+  const casesByDate = {};
+  for (const c of casesWithChoices) {
+    if (!casesByDate[c.date]) casesByDate[c.date] = [];
+    casesByDate[c.date].push(c);
+  }
+
+  // Prépare les compteurs d'affectations et d'affectations par jour
+  const affectationCounts = {};
+  const affectationsParJour = {};
+  Array.from(document.querySelectorAll("#planningTableWithNames tbody .nom-block")).forEach(div => {
+    const nomId = div.dataset.nomId;
+    const td = div.closest("td");
+    const date = td.dataset.date;
+    if (!affectationCounts[nomId]) affectationCounts[nomId] = 0;
+    affectationCounts[nomId]++;
+    if (!affectationsParJour[nomId]) affectationsParJour[nomId] = new Set();
+    affectationsParJour[nomId].add(date);
+  });
+
+  // Pour chaque jour, traite d'abord les cases critiques (nom dispo unique pour cette case)
+  const allDates = Object.keys(casesByDate).sort();
+  for (const date of allDates) {
+    const cases = casesByDate[date];
+
+    // 1. Pour chaque nom dispo ce jour, compte dans combien de cases il apparaît
+    const nomUsage = {};
+    for (const c of cases) {
+      for (const nom of c.noms) {
+        if (!nomUsage[nom.nom_id]) nomUsage[nom.nom_id] = 0;
+        nomUsage[nom.nom_id]++;
+      }
+    }
+
+    // 2. Marque les cases où un nom n'est dispo que pour cette case (priorité absolue)
+    cases.forEach(c => {
+      c.hasUniqueNom = false;
+      c.uniqueNomId = null;
+      for (const nom of c.noms) {
+        if (nomUsage[nom.nom_id] === 1) {
+          c.hasUniqueNom = true;
+          c.uniqueNomId = nom.nom_id;
+          break;
+        }
+      }
+    });
+
+    // 3. Trie : d'abord les cases avec un nom unique, puis par rareté
+    cases.sort((a, b) => {
+      if (a.hasUniqueNom && !b.hasUniqueNom) return -1;
+      if (!a.hasUniqueNom && b.hasUniqueNom) return 1;
+      return a.nbNoms - b.nbNoms;
+    });
+
+    for (const c of cases) {
+      const {td, competenceId, horaireId, noms, hasUniqueNom, uniqueNomId} = c;
+      // Filtrer les noms déjà affectés ce jour-là
+      const nomsDispo = noms.filter(nom => !((affectationsParJour[nom.nom_id] || new Set()).has(date)));
+      if (!nomsDispo.length) continue;
+
+      let chosenNom = null;
+      if (hasUniqueNom) {
+        // Prend le nom unique pour cette case
+        chosenNom = nomsDispo.find(nom => nom.nom_id == uniqueNomId);
+      }
+      if (!chosenNom) {
+        // Sinon, équilibré
+        let minCount = Infinity;
+        for (const nom of nomsDispo) {
+          const count = affectationCounts[nom.nom_id] || 0;
+          if (count < minCount) {
+            minCount = count;
+            chosenNom = nom;
+          }
+        }
+      }
+      if (!chosenNom) continue;
+
+      // Affecter ce nom à la case
+      await fetch("/api/update-planningv2", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          date,
+          nom_id: chosenNom.nom_id,
+          competence_id: competenceId,
+          horaire_id: horaireId,
+          site_id: siteId
+        })
+      });
+
+      // Mettre à jour les compteurs
+      affectationCounts[chosenNom.nom_id] = (affectationCounts[chosenNom.nom_id] || 0) + 1;
+      if (!affectationsParJour[chosenNom.nom_id]) affectationsParJour[chosenNom.nom_id] = new Set();
+      affectationsParJour[chosenNom.nom_id].add(date);
+      // Optionnel : petit délai pour voir le remplissage
+      // await new Promise(r => setTimeout(r, 30));
+    }
+  }
+
+  await refreshSecondTable && refreshSecondTable();
+  alert("Remplissage automatique terminé !");
+}
+
+// Ajoute un bouton pour lancer l'automatisation
+(function() {
+  if (document.getElementById("auto-fill-btn")) return;
+  const btn = document.createElement("button");
+  btn.id = "auto-fill-btn";
+  btn.textContent = "Remplir automatiquement le planning";
+  btn.style.position = "fixed";
+  btn.style.bottom = "20px";
+  btn.style.right = "20px";
+  btn.style.zIndex = 2000;
+  btn.style.padding = "10px 18px";
+  btn.style.background = "#007bff";
+  btn.style.color = "#fff";
+  btn.style.border = "none";
+  btn.style.borderRadius = "5px";
+  btn.style.fontWeight = "bold";
+  btn.style.cursor = "pointer";
+  btn.onclick = autoFillPlanningTable;
+  document.body.appendChild(btn);
+})();
+
