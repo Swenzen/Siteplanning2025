@@ -53,18 +53,16 @@ router.get('/all-competences', authenticateToken, (req, res) => {
 });
 
 router.post('/competence-groupe', authenticateToken, (req, res) => {
-    const { nom_groupe, competences } = req.body;
-    if (!nom_groupe || !Array.isArray(competences)) {
+    const { nom_groupe, competences, site_id } = req.body;
+    if (!nom_groupe || !Array.isArray(competences) || !site_id) {
         return res.status(400).json({ error: "Paramètres manquants" });
     }
-    // 1. Créer le groupe
     connection.query(
-        "INSERT INTO Tcompetence_groupe (nom_groupe) VALUES (?)",
-        [nom_groupe],
+        "INSERT INTO Tcompetence_groupe (nom_groupe, site_id) VALUES (?, ?)",
+        [nom_groupe, site_id],
         (err, result) => {
             if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
             const groupe_id = result.insertId;
-            // 2. Ajouter les liaisons si besoin
             if (!competences.length) return res.json({ groupe_id });
             const values = competences.map(cid => [cid, groupe_id]);
             connection.query(
@@ -80,24 +78,14 @@ router.post('/competence-groupe', authenticateToken, (req, res) => {
 });
 
 router.get('/competence-groupes', authenticateToken, (req, res) => {
-    const site_id = req.query.site_id;
-    if (!site_id) return res.status(400).json({ error: "site_id manquant" });
-
     const sql = `
         SELECT g.groupe_id, g.nom_groupe, l.competence_id, c.competence
         FROM Tcompetence_groupe g
         LEFT JOIN Tcompetence_groupe_liaison l ON g.groupe_id = l.groupe_id
         LEFT JOIN Tcompetence c ON l.competence_id = c.competence_id
-        WHERE g.groupe_id IN (
-            SELECT g2.groupe_id
-            FROM Tcompetence_groupe g2
-            JOIN Tcompetence_groupe_liaison l2 ON g2.groupe_id = l2.groupe_id
-            JOIN Tcompetence_Tsite ct ON l2.competence_id = ct.competence_id
-            WHERE ct.site_id = ?
-        )
         ORDER BY g.nom_groupe, c.competence
     `;
-    connection.query(sql, [site_id], (err, rows) => {
+    connection.query(sql, [], (err, rows) => {
         if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
         // Regroupe par groupe
         const groupes = {};

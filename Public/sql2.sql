@@ -299,13 +299,15 @@ CREATE TABLE Tvacancesv2 (
 
 
 
--- Table des groupes de compétences
+-- Recréer la table des groupes de compétences avec site_id
 CREATE TABLE Tcompetence_groupe (
     groupe_id INT AUTO_INCREMENT PRIMARY KEY,
-    nom_groupe VARCHAR(255) NOT NULL
+    nom_groupe VARCHAR(255) NOT NULL,
+    site_id INT NOT NULL,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
 );
 
--- Table de liaison entre compétence et groupe
+-- Recréer la table de liaison
 CREATE TABLE Tcompetence_groupe_liaison (
     competence_id INT NOT NULL,
     groupe_id INT NOT NULL,
