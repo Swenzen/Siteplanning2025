@@ -681,12 +681,18 @@ async function autoFillPlanningTable() {
       if (!chosenNom) {
         // Sinon, équilibré
         let minCount = Infinity;
+        let candidats = [];
         for (const nom of nomsDispo) {
           const count = affectationCounts[nom.nom_id] || 0;
           if (count < minCount) {
             minCount = count;
-            chosenNom = nom;
+            candidats = [nom];
+          } else if (count === minCount) {
+            candidats.push(nom);
           }
+        }
+        if (candidats.length > 0) {
+          chosenNom = candidats[Math.floor(Math.random() * candidats.length)];
         }
       }
       if (!chosenNom) continue;
