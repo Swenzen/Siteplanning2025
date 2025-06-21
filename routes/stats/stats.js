@@ -79,4 +79,36 @@ router.post('/competence-groupe', authenticateToken, (req, res) => {
     );
 });
 
+router.get('/competence-groupes', authenticateToken, (req, res) => {
+    const site_id = req.query.site_id;
+    if (!site_id) return res.status(400).json({ error: "site_id manquant" });
+
+    const sql = `
+        SELECT g.groupe_id, g.nom_groupe, c.competence
+        FROM Tcompetence_groupe g
+        LEFT JOIN Tcompetence_groupe_liaison l ON g.groupe_id = l.groupe_id
+        LEFT JOIN Tcompetence c ON l.competence_id = c.competence_id
+        WHERE g.groupe_id IN (
+            SELECT g2.groupe_id
+            FROM Tcompetence_groupe g2
+            JOIN Tcompetence_groupe_liaison l2 ON g2.groupe_id = l2.groupe_id
+            JOIN Tcompetence_Tsite ct ON l2.competence_id = ct.competence_id
+            WHERE ct.site_id = ?
+        )
+        ORDER BY g.nom_groupe, c.competence
+    `;
+    connection.query(sql, [site_id], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+        // Regroupe par groupe
+        const groupes = {};
+        rows.forEach(row => {
+            if (!groupes[row.groupe_id]) {
+                groupes[row.groupe_id] = { nom_groupe: row.nom_groupe, competences: [] };
+            }
+            if (row.competence) groupes[row.groupe_id].competences.push(row.competence);
+        });
+        res.json(Object.values(groupes));
+    });
+});
+
 module.exports = router;

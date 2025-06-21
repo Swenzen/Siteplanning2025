@@ -141,5 +141,42 @@ document.getElementById("btn-creer-groupe").onclick = async function() {
     }
 };
 
+async function afficherGroupesCompetence() {
+    const token = localStorage.getItem("token");
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (!token || !siteId) return;
+    const res = await fetch(`/api/competence-groupes?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        document.getElementById("tbody-groupes").innerHTML = "<tr><td colspan='2'>Erreur lors du chargement</td></tr>";
+        return;
+    }
+    const groupes = await res.json();
+    const tbody = document.getElementById("tbody-groupes");
+    tbody.innerHTML = groupes.map(g =>
+        `<tr>
+            <td>${g.nom_groupe}</td>
+            <td>${g.competences.length ? g.competences.join(", ") : "<i>Aucune compétence</i>"}</td>
+        </tr>`
+    ).join("");
+}
+
+// Appel au chargement de la page
+document.addEventListener("DOMContentLoaded", afficherGroupesCompetence);
+
+// Appel après création d'un groupe
+document.getElementById("btn-creer-groupe").onclick = async function() {
+    // ... ton code existant ...
+    if (res.ok) {
+        msgDiv.textContent = "Groupe créé !";
+        document.getElementById("nom-nouveau-groupe").value = "";
+        document.querySelectorAll("#liste-competences input[type=checkbox]").forEach(cb => cb.checked = false);
+        await afficherGroupesCompetence(); // <-- recharge la liste des groupes
+    } else {
+        msgDiv.textContent = "Erreur lors de la création du groupe.";
+    }
+};
+
 // Appel automatique au chargement de la page
 document.addEventListener("DOMContentLoaded", afficherCompetencesGroupe);
