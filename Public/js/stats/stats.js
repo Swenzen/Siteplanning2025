@@ -92,3 +92,23 @@ const allHoraires = [
 let competenceGroups = [];
 let horaireGroups = [];
 
+async function afficherCompetencesGroupe() {
+    const token = localStorage.getItem("token");
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (!token || !siteId) return;
+    const res = await fetch(`/api/all-competences?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        document.getElementById("liste-competences").innerHTML = "<li>Erreur lors du chargement</li>";
+        return;
+    }
+    const competences = await res.json();
+    const ul = document.getElementById("liste-competences");
+    ul.innerHTML = competences.map(c =>
+        `<li>${c.competence}</li>`
+    ).join("");
+}
+
+// Appel automatique au chargement de la page
+document.addEventListener("DOMContentLoaded", afficherCompetencesGroupe);

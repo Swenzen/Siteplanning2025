@@ -31,4 +31,26 @@ router.get('/planning-stats', authenticateToken, (req, res) => {
 });
 
 
+
+router.get('/all-competences', authenticateToken, (req, res) => {
+    const site_id = req.query.site_id; // <-- récupère dans la query, comme planning-stats !
+    if (!site_id) return res.status(400).json({ error: "site_id manquant" });
+
+    const query = `
+        SELECT c.competence_id, c.competence
+        FROM Tcompetence c
+        JOIN Tcompetence_Tsite ct ON c.competence_id = ct.competence_id
+        WHERE ct.site_id = ?
+        ORDER BY c.competence
+    `;
+    connection.query(query, [site_id], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des compétences :', err.message);
+            return res.status(500).json({ error: "Erreur lors de la récupération des compétences" });
+        }
+        res.json(results);
+    });
+});
+
+
 module.exports = router;
