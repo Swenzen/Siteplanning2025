@@ -106,9 +106,40 @@ async function afficherCompetencesGroupe() {
     const competences = await res.json();
     const ul = document.getElementById("liste-competences");
     ul.innerHTML = competences.map(c =>
-        `<li>${c.competence}</li>`
+        `<li><label><input type="checkbox" value="${c.competence_id}"> ${c.competence}</label></li>`
     ).join("");
 }
+
+document.getElementById("btn-creer-groupe").onclick = async function() {
+    const token = localStorage.getItem("token");
+    const nomGroupe = document.getElementById("nom-nouveau-groupe").value.trim();
+    const msgDiv = document.getElementById("message-groupe");
+    // Récupère les compétences cochées
+    const competences = Array.from(document.querySelectorAll("#liste-competences input[type=checkbox]:checked")).map(cb => cb.value);
+
+    msgDiv.textContent = "";
+    if (!token || !nomGroupe) {
+        msgDiv.textContent = "Veuillez saisir un nom de groupe.";
+        return;
+    }
+
+    const res = await fetch('/api/competence-groupe', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ nom_groupe: nomGroupe, competences })
+    });
+
+    if (res.ok) {
+        msgDiv.textContent = "Groupe créé !";
+        document.getElementById("nom-nouveau-groupe").value = "";
+        document.querySelectorAll("#liste-competences input[type=checkbox]").forEach(cb => cb.checked = false);
+    } else {
+        msgDiv.textContent = "Erreur lors de la création du groupe.";
+    }
+};
 
 // Appel automatique au chargement de la page
 document.addEventListener("DOMContentLoaded", afficherCompetencesGroupe);

@@ -52,5 +52,31 @@ router.get('/all-competences', authenticateToken, (req, res) => {
     });
 });
 
+router.post('/competence-groupe', authenticateToken, (req, res) => {
+    const { nom_groupe, competences } = req.body;
+    if (!nom_groupe || !Array.isArray(competences)) {
+        return res.status(400).json({ error: "Paramètres manquants" });
+    }
+    // 1. Créer le groupe
+    connection.query(
+        "INSERT INTO Tcompetence_groupe (nom_groupe) VALUES (?)",
+        [nom_groupe],
+        (err, result) => {
+            if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+            const groupe_id = result.insertId;
+            // 2. Ajouter les liaisons si besoin
+            if (!competences.length) return res.json({ groupe_id });
+            const values = competences.map(cid => [cid, groupe_id]);
+            connection.query(
+                "INSERT INTO Tcompetence_groupe_liaison (competence_id, groupe_id) VALUES ?",
+                [values],
+                (err2) => {
+                    if (err2) return res.status(500).json({ error: "Erreur serveur", details: err2.message });
+                    res.json({ groupe_id });
+                }
+            );
+        }
+    );
+});
 
 module.exports = router;
