@@ -581,6 +581,8 @@ applyDateFilterButton.addEventListener("click", () => {
 
   sessionStorage.setItem("startDate", startDate);
   sessionStorage.setItem("endDate", endDate);
+  sessionStorage.setItem("planningStartDate", startDate);
+  sessionStorage.setItem("planningEndDate", endDate);
 });
 
 async function fetchAvailableCount(siteId, dates) {

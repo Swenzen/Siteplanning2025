@@ -320,9 +320,8 @@ function showTooltip(event, noms, { competenceId, horaireId, date, siteId, plann
         .filter(Boolean);
 
       if ((!dateHeaders || !dateHeaders.length)) {
-        let start = planningStartDate, end = planningEndDate;
-        if (!start) start = localStorage.getItem("savedStartDate");
-        if (!end) end = localStorage.getItem("savedEndDate");
+        let start = sessionStorage.getItem("planningStartDate");
+        let end = sessionStorage.getItem("planningEndDate");
         if (start && end) {
           dateHeaders = [];
           let current = new Date(start);
