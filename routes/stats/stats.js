@@ -32,6 +32,17 @@ router.get('/planning-stats', authenticateToken, (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+// En dessous = groupe pour stats
+
 router.get('/all-competences', authenticateToken, (req, res) => {
     const site_id = req.query.site_id; // <-- récupère dans la query, comme planning-stats !
     if (!site_id) return res.status(400).json({ error: "site_id manquant" });

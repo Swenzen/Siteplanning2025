@@ -18,6 +18,7 @@ document.getElementById("periode-stats-form").addEventListener("submit", async f
         return;
     }
 
+    // Récupère les stats brutes
     const res = await fetch(`/api/planning-stats?site_id=${siteId}&start=${start}&end=${end}`, {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -29,15 +30,24 @@ document.getElementById("periode-stats-form").addEventListener("submit", async f
         return;
     }
     const data = await res.json(); // [{nom, competence, horaire_id, ...}, ...]
+
+    // Récupère les groupes de compétences
+    const groupes = await getCompetenceGroups();
+
+    // Modalités horaires
     const modalites = {
         "Matin": [1],
         "Après-midi": [2],
         "Soir": [3],
         "Journée": [4]
     };
-    // Récupère toutes les compétences et modalites présentes
-    const allCompetences = [...new Set(data.map(d => d.competence))];
     const allModalites = Object.keys(modalites);
+
+    // Toutes les compétences individuelles
+    const allCompetences = [...new Set(data.map(d => d.competence))];
+
+    // Toutes les personnes
+    const allNoms = [...new Set(data.map(d => d.nom))];
 
     // Stats par personne
     const stats = {};
@@ -52,27 +62,33 @@ document.getElementById("periode-stats-form").addEventListener("submit", async f
         stats[d.nom].total++;
     });
 
-    // Exemple pour les compétences
-    const competenceGroups = [
-      { name: "Maison+Jardin", competences: ["Maison", "Jardin"] },
-      { name: "Scanner", competences: ["Scanner"] }
-    ];
-    // Pour les horaires
-    const horaireGroups = [
-      { name: "Matin", horaires: [1, 4] },
-      { name: "Après-midi", horaires: [2] }
-    ];
+    // Stats par groupe de compétences
+    // Pour chaque groupe, additionne les stats de toutes les compétences du groupe
+    function getGroupeStat(nom, groupe) {
+        if (!stats[nom]) return 0;
+        return groupe.competences.reduce((sum, c) => sum + (stats[nom].competences[c.competence] || 0), 0);
+    }
 
     // Génère le tableau HTML
     let html = `<table><thead><tr><th>Nom</th>`;
+
+    // Colonnes compétences individuelles
     allCompetences.forEach(c => html += `<th>${c}</th>`);
+    // Colonnes groupes
+    groupes.forEach(g => html += `<th style="background:#e3f2fd">${g.nom_groupe}</th>`);
+    // Colonnes horaires
     allModalites.forEach(m => html += `<th>${m}</th>`);
     html += `<th>Total</th></tr></thead><tbody>`;
-    for (const [nom, s] of Object.entries(stats)) {
+
+    for (const nom of allNoms) {
         html += `<tr><td>${nom}</td>`;
-        allCompetences.forEach(c => html += `<td>${s.competences[c] || 0}</td>`);
-        allModalites.forEach(m => html += `<td>${s.modalites[m] || 0}</td>`);
-        html += `<td>${s.total}</td></tr>`;
+        // Compétences individuelles
+        allCompetences.forEach(c => html += `<td>${stats[nom]?.competences[c] || 0}</td>`);
+        // Groupes
+        groupes.forEach(g => html += `<td style="background:#e3f2fd">${getGroupeStat(nom, g)}</td>`);
+        // Horaires
+        allModalites.forEach(m => html += `<td>${stats[nom]?.modalites[m] || 0}</td>`);
+        html += `<td>${stats[nom]?.total || 0}</td></tr>`;
     }
     html += `</tbody></table>`;
     document.getElementById("stats-results").innerHTML = html;
@@ -296,3 +312,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     await afficherCompetencesDisponibles();
     await afficherGroupesCompetence();
 });
+
+// Ajoute cette fonction dans ton stats.js (frontend)
+async function getCompetenceGroups() {
+    const token = localStorage.getItem("token");
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (!token || !siteId) return [];
+    const res = await fetch(`/api/competence-groupes?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return [];
+    return await res.json(); // [{groupe_id, nom_groupe, competences: [{competence_id, competence}, ...]}, ...]
+}
