@@ -982,25 +982,9 @@ function startSwitchEvolution(planningInitial, competencesParNom) {
   // Affichage initial
   renderPlanningSwitchTable(generations[0], dates);
 
-  // Bouton suivant
-  document.getElementById("nextGen").onclick = () => {
-    const { planning, switched, dates: newDates } = nextGeneration(generations[currentGen], competencesParNom);
-    generations.push(planning);
-    currentGen++;
-    lastSwitch = switched;
-    renderPlanningSwitchTable(planning, newDates, switched);
-    document.getElementById("genLabel").textContent = `Génération ${currentGen + 1}/${generations.length}`;
-  };
-
-  // Bouton précédent
-  document.getElementById("prevGen").onclick = () => {
-    if (currentGen > 0) {
-      currentGen--;
-      const { lignes, dates } = buildLignesEtDates(generations[currentGen]);
-      renderPlanningSwitchTable(generations[currentGen], dates);
-      document.getElementById("genLabel").textContent = `Génération ${currentGen + 1}/${generations.length}`;
-    }
-  };
+  // Désactive la navigation classique pour éviter le conflit avec les 10 meilleurs
+  document.getElementById("nextGen").onclick = () => {};
+  document.getElementById("prevGen").onclick = () => {};
 }
 
 // Exemple d'appel à faire après avoir récupéré tes données planning (data)

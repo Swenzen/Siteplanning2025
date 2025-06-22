@@ -632,3 +632,150 @@ async function fetchCompetencesParNom() {
   return map;
 }
 
+
+
+
+
+
+
+// === Génération de 100 plannings aléatoires et navigation dans les 10 meilleurs ===
+
+// 1. Générer 100 plannings aléatoires (1000 mutations chacun)
+async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000) {
+  const startDate = startDateInput.value;
+  const endDate = endDateInput.value;
+  const siteId = sessionStorage.getItem("selectedSite");
+  if (!startDate || !endDate || !siteId) {
+    alert("Sélectionne d'abord un site et une période !");
+    return [];
+  }
+  const planningInitial = await fetchCompetencesWithNames(siteId, startDate, endDate);
+  const competencesParNom = await fetchCompetencesParNom();
+
+  let plannings = [];
+  for (let i = 0; i < nbPlannings; i++) {
+    let planning = JSON.parse(JSON.stringify(planningInitial));
+    for (let j = 0; j < nbMutations; j++) {
+      const res = nextGeneration(planning, competencesParNom);
+      planning = res.planning;
+    }
+    // Ajoute ce log pour voir si les plannings sont différents
+    console.log("Planning généré n°" + i, planning.map(c => c.nom).join(","));
+    plannings.push(planning);
+  }
+  return plannings;
+}
+
+// 2. Calcul des stats pour un planning
+function computeStats(planning) {
+  const stats = {};
+  planning.forEach(cell => {
+    if (!cell.nom) return;
+    if (!stats[cell.nom]) stats[cell.nom] = { total: 0, IRM: 0, Perso: 0, Matin: 0, ApresMidi: 0 };
+    if (cell.competence && cell.competence.toLowerCase().includes("irm")) stats[cell.nom].IRM++;
+    if (cell.competence && cell.competence.toLowerCase().includes("perso")) stats[cell.nom].Perso++;
+    if (cell.horaire_debut && cell.horaire_debut.startsWith("08")) stats[cell.nom].Matin++;
+    if (cell.horaire_debut && cell.horaire_debut.startsWith("12")) stats[cell.nom].ApresMidi++;
+    stats[cell.nom].total++;
+  });
+  return stats;
+}
+
+// 3. Score d'équilibre (plus c'est bas, mieux c'est)
+function computeEquilibreScore(stats) {
+  function ecartType(arr) {
+    const moy = arr.reduce((a, b) => a + b, 0) / arr.length;
+    return Math.sqrt(arr.reduce((a, b) => a + Math.pow(b - moy, 2), 0) / arr.length);
+  }
+  const noms = Object.keys(stats);
+  if (noms.length === 0) return 99999;
+  const irm = noms.map(n => stats[n].IRM || 0);
+  const perso = noms.map(n => stats[n].Perso || 0);
+  const matin = noms.map(n => stats[n].Matin || 0);
+  const apm = noms.map(n => stats[n].ApresMidi || 0);
+  return ecartType(irm) + ecartType(perso) + ecartType(matin) + ecartType(apm);
+}
+
+// 4. Affichage du panneau stats
+function renderStatsPanel(stats) {
+  let html = `<table border="1" style="border-collapse:collapse;"><thead>
+    <tr><th>Nom</th><th>IRM</th><th>Perso</th><th>Matin</th><th>Après-midi</th><th>Total</th></tr></thead><tbody>`;
+  Object.entries(stats).forEach(([nom, s]) => {
+    html += `<tr>
+      <td>${nom}</td>
+      <td>${s.IRM || 0}</td>
+      <td>${s.Perso || 0}</td>
+      <td>${s.Matin || 0}</td>
+      <td>${s.ApresMidi || 0}</td>
+      <td>${s.total || 0}</td>
+    </tr>`;
+  });
+  html += "</tbody></table>";
+  document.getElementById("stats-results").innerHTML = html;
+}
+
+// 5. Génération et navigation dans les 10 meilleurs plannings
+let bestPlannings = [];
+let bestStats = [];
+let currentBestIdx = 0;
+
+async function launchBestPlannings() {
+  document.getElementById("stats-results").innerHTML = "Calcul en cours...";
+  const plannings = await generateRandomPlannings(20, 1000);
+  let statsPlannings = plannings.map(planning => ({
+    planning,
+    stats: computeStats(planning),
+    score: computeEquilibreScore(computeStats(planning))
+  }));
+  statsPlannings.sort((a, b) => a.score - b.score);
+  bestPlannings = statsPlannings.slice(0, 10).map(x => x.planning);
+  bestStats = statsPlannings.slice(0, 10).map(x => x.stats);
+  currentBestIdx = 0;
+  showBestPlanning(0);
+  setupBestPlanningNav();
+}
+
+function showBestPlanning(idx) {
+  console.log("Affichage du planning n°", idx + 1, bestPlannings[idx].map(c => c.nom).join(","));
+  const { lignes, dates } = buildLignesEtDates(bestPlannings[idx]);
+  renderPlanningSwitchTable(bestPlannings[idx], dates);
+  renderStatsPanel(bestStats[idx]);
+  document.getElementById("genLabel").textContent = `Planning ${idx + 1}/10`;
+}
+
+// 6. Navigation boutons (remplace la navigation classique)
+function setupBestPlanningNav() {
+  // Supprime tous les anciens listeners en remplaçant les boutons par des clones
+  const nextBtn = document.getElementById("nextGen");
+  const prevBtn = document.getElementById("prevGen");
+  const newNext = nextBtn.cloneNode(true);
+  const newPrev = prevBtn.cloneNode(true);
+  nextBtn.parentNode.replaceChild(newNext, nextBtn);
+  prevBtn.parentNode.replaceChild(newPrev, prevBtn);
+
+  // Ajoute les nouveaux listeners pour la navigation des 10 meilleurs
+  newNext.addEventListener("click", () => {
+    if (currentBestIdx < bestPlannings.length - 1) {
+      currentBestIdx++;
+      showBestPlanning(currentBestIdx);
+    }
+  });
+  newPrev.addEventListener("click", () => {
+    if (currentBestIdx > 0) {
+      currentBestIdx--;
+      showBestPlanning(currentBestIdx);
+    }
+  });
+}
+
+// 7. Ajoute un bouton pour lancer la génération
+window.addEventListener("DOMContentLoaded", () => {
+  if (!document.getElementById("btnBestPlannings")) {
+    const btn = document.createElement("button");
+    btn.id = "btnBestPlannings";
+    btn.textContent = "Générer 100 plannings équilibrés";
+    btn.onclick = launchBestPlannings;
+    document.body.insertBefore(btn, document.getElementById("evolution-nav"));
+    setupBestPlanningNav();
+  }
+});
