@@ -465,10 +465,15 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
 
     const data = await response.json();
     console.log("Données récupérées pour le tableau avec noms :", data);
-      renderPlanningRemplissageTable(data);
-      startSwitchEvolution(data);
+
+    renderPlanningRemplissageTable(data);
+
+    // Ajoute ces deux lignes ici :
+    const competencesParNom = await fetchCompetencesParNom();
+    startSwitchEvolution(data, competencesParNom);
+
     return data;
-  
+
   } catch (error) {
     console.error("Erreur lors de la récupération des données :", error);
     alert("Une erreur est survenue lors de la récupération des données.");
@@ -608,5 +613,22 @@ async function fetchAvailableCount(siteId, dates) {
   return await res.json();
 }
 
+async function fetchCompetencesParNom() {
+  const token = localStorage.getItem('token');
+  const siteId = sessionStorage.getItem('selectedSite');
+  if (!token || !siteId) return {};
 
+  const res = await fetch(`/api/competences-personnes?site_id=${siteId}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!res.ok) return {};
+
+  const personnes = await res.json();
+  // On veut un mapping { nom_id: [liste_competence_id] }
+  const map = {};
+  personnes.forEach(p => {
+    map[p.nom_id] = p.competences;
+  });
+  return map;
+}
 

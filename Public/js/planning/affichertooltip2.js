@@ -936,14 +936,10 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
 
 // Génère la prochaine génération avec un échange
 function nextGeneration(prevPlanning, competencesParNom) {
-  // Reconstruire lignes/dates à partir du planning courant
   const { lignes, dates } = buildLignesEtDates(prevPlanning);
-  // Copie profonde
   const planning = JSON.parse(JSON.stringify(prevPlanning));
-  // On tente de trouver un échange valide
   for (let essais = 0; essais < 20; essais++) {
     const date = dates[Math.floor(Math.random() * dates.length)];
-    // Cases à remplir avec un nom ce jour-là
     const casesJour = [];
     lignes.forEach(ligne => {
       const cell = ligne.cells[date];
@@ -957,12 +953,11 @@ function nextGeneration(prevPlanning, competencesParNom) {
     do { idx2 = Math.floor(Math.random() * casesJour.length); } while (idx2 === idx1);
     const c1 = casesJour[idx1];
     const c2 = casesJour[idx2];
-    // Vérifie la compatibilité croisée
+    // Vérifie la compatibilité croisée sur competence_id
     if (
-      competencesParNom[c1.nom_id] && competencesParNom[c1.nom_id].includes(lignes.find(l=>l.competence_id==c2.competence_id && l.horaire_id==c2.horaire_id).competence) &&
-      competencesParNom[c2.nom_id] && competencesParNom[c2.nom_id].includes(lignes.find(l=>l.competence_id==c1.competence_id && l.horaire_id==c1.horaire_id).competence)
+      competencesParNom[c1.nom_id] && competencesParNom[c1.nom_id].includes(c2.competence_id) &&
+      competencesParNom[c2.nom_id] && competencesParNom[c2.nom_id].includes(c1.competence_id)
     ) {
-      // Échange les noms dans la copie
       planning.forEach(l => {
         if (l.competence_id == c1.competence_id && l.horaire_id == c1.horaire_id && l.date == c1.date) {
           l.nom = c2.nom; l.nom_id = c2.nom_id;
@@ -971,22 +966,18 @@ function nextGeneration(prevPlanning, competencesParNom) {
           l.nom = c1.nom; l.nom_id = c1.nom_id;
         }
       });
-      // On note les deux cases échangées pour la surbrillance
       return { planning, switched: [c1, c2], dates };
     }
   }
-  // Si pas d'échange possible, retourne la même génération
   return { planning: prevPlanning, switched: [], dates };
 }
 
 // Initialisation de l'évolution
-function startSwitchEvolution(planningInitial) {
+function startSwitchEvolution(planningInitial, competencesParNom) {
   const { lignes, dates } = buildLignesEtDates(planningInitial);
   generations = [JSON.parse(JSON.stringify(planningInitial))];
   currentGen = 0;
   lastSwitch = [];
-
-  const competencesParNom = buildCompetencesParNom(planningInitial);
 
   // Affichage initial
   renderPlanningSwitchTable(generations[0], dates);
