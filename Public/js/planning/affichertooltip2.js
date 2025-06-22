@@ -851,6 +851,171 @@ function mutationEchange(planning, competencesParNom) {
   return planning;
 }
 
+// Stockage des générations et de la surbrillance
+let generations = [];
+let currentGen = 0;
+let lastSwitch = null;
+let evolutionDates = [];
+let evolutionLignes = [];
+
+// Construction de la map des compétences par nom
+function buildCompetencesParNom(planning) {
+  const map = {};
+  planning.forEach(l => {
+    if (l.nom_id && l.competence) {
+      if (!map[l.nom_id]) map[l.nom_id] = [];
+      if (!map[l.nom_id].includes(l.competence)) map[l.nom_id].push(l.competence);
+    }
+  });
+  return map;
+}
+
+// Génère la structure lignes/dates pour affichage
+function buildLignesEtDates(data) {
+  const lignes = {};
+  const datesSet = new Set();
+  data.forEach(row => {
+    const key = `${row.competence_id}||${row.horaire_id}`;
+    if (!lignes[key]) {
+      lignes[key] = {
+        competence: row.competence,
+        horaire_debut: row.horaire_debut,
+        horaire_fin: row.horaire_fin,
+        competence_id: row.competence_id,
+        horaire_id: row.horaire_id,
+        cells: {}
+      };
+    }
+    lignes[key].cells[row.date] = {
+      ouverture: row.ouverture,
+      nom: row.nom,
+      nom_id: row.nom_id,
+      date: row.date
+    };
+    datesSet.add(row.date);
+  });
+  return { lignes: Object.values(lignes), dates: Array.from(datesSet).sort() };
+}
+
+// Affiche le tableau évolution avec surbrillance
+function renderPlanningSwitchTable(data, dates, switched = []) {
+  const { lignes } = buildLignesEtDates(data);
+
+  let html = '<table border="1" style="border-collapse:collapse;"><tr>';
+  html += '<th>Compétence</th><th>Horaires</th>';
+  dates.forEach(date => html += `<th>${date}</th>`);
+  html += '</tr>';
+
+  lignes.forEach(ligne => {
+    html += `<tr>
+      <td>${ligne.competence}</td>
+      <td>${ligne.horaire_debut} - ${ligne.horaire_fin}</td>`;
+    dates.forEach(date => {
+      const cell = ligne.cells[date];
+      let highlight = '';
+      if (cell && switched.some(sw =>
+        sw.competence_id == ligne.competence_id &&
+        sw.horaire_id == ligne.horaire_id &&
+        sw.date == date
+      )) {
+        highlight = ' class="highlight-switch"';
+      }
+      if (!cell) {
+        html += `<td style="background:#eee"></td>`;
+      } else if (cell.ouverture == 1) {
+        html += `<td${highlight}>${cell.nom ? `<b>${cell.nom}</b>` : ''}</td>`;
+      } else {
+        html += `<td style="background:#d3d3d3"></td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  document.getElementById("planning-evolution-content").innerHTML = html;
+}
+
+// Génère la prochaine génération avec un échange
+function nextGeneration(prevPlanning, competencesParNom) {
+  // Reconstruire lignes/dates à partir du planning courant
+  const { lignes, dates } = buildLignesEtDates(prevPlanning);
+  // Copie profonde
+  const planning = JSON.parse(JSON.stringify(prevPlanning));
+  // On tente de trouver un échange valide
+  for (let essais = 0; essais < 20; essais++) {
+    const date = dates[Math.floor(Math.random() * dates.length)];
+    // Cases à remplir avec un nom ce jour-là
+    const casesJour = [];
+    lignes.forEach(ligne => {
+      const cell = ligne.cells[date];
+      if (cell && cell.ouverture == 1 && cell.nom_id) {
+        casesJour.push({ ...cell, competence_id: ligne.competence_id, horaire_id: ligne.horaire_id });
+      }
+    });
+    if (casesJour.length < 2) continue;
+    let idx1 = Math.floor(Math.random() * casesJour.length);
+    let idx2;
+    do { idx2 = Math.floor(Math.random() * casesJour.length); } while (idx2 === idx1);
+    const c1 = casesJour[idx1];
+    const c2 = casesJour[idx2];
+    // Vérifie la compatibilité croisée
+    if (
+      competencesParNom[c1.nom_id] && competencesParNom[c1.nom_id].includes(lignes.find(l=>l.competence_id==c2.competence_id && l.horaire_id==c2.horaire_id).competence) &&
+      competencesParNom[c2.nom_id] && competencesParNom[c2.nom_id].includes(lignes.find(l=>l.competence_id==c1.competence_id && l.horaire_id==c1.horaire_id).competence)
+    ) {
+      // Échange les noms dans la copie
+      planning.forEach(l => {
+        if (l.competence_id == c1.competence_id && l.horaire_id == c1.horaire_id && l.date == c1.date) {
+          l.nom = c2.nom; l.nom_id = c2.nom_id;
+        }
+        if (l.competence_id == c2.competence_id && l.horaire_id == c2.horaire_id && l.date == c2.date) {
+          l.nom = c1.nom; l.nom_id = c1.nom_id;
+        }
+      });
+      // On note les deux cases échangées pour la surbrillance
+      return { planning, switched: [c1, c2], dates };
+    }
+  }
+  // Si pas d'échange possible, retourne la même génération
+  return { planning: prevPlanning, switched: [], dates };
+}
+
+// Initialisation de l'évolution
+function startSwitchEvolution(planningInitial) {
+  const { lignes, dates } = buildLignesEtDates(planningInitial);
+  generations = [JSON.parse(JSON.stringify(planningInitial))];
+  currentGen = 0;
+  lastSwitch = [];
+
+  const competencesParNom = buildCompetencesParNom(planningInitial);
+
+  // Affichage initial
+  renderPlanningSwitchTable(generations[0], dates);
+
+  // Bouton suivant
+  document.getElementById("nextGen").onclick = () => {
+    const { planning, switched, dates: newDates } = nextGeneration(generations[currentGen], competencesParNom);
+    generations.push(planning);
+    currentGen++;
+    lastSwitch = switched;
+    renderPlanningSwitchTable(planning, newDates, switched);
+    document.getElementById("genLabel").textContent = `Génération ${currentGen + 1}/${generations.length}`;
+  };
+
+  // Bouton précédent
+  document.getElementById("prevGen").onclick = () => {
+    if (currentGen > 0) {
+      currentGen--;
+      const { lignes, dates } = buildLignesEtDates(generations[currentGen]);
+      renderPlanningSwitchTable(generations[currentGen], dates);
+      document.getElementById("genLabel").textContent = `Génération ${currentGen + 1}/${generations.length}`;
+    }
+  };
+}
+
+// Exemple d'appel à faire après avoir récupéré tes données planning (data)
+// startSwitchEvolution(data);
+
+
 function renderPlanningRemplissageTable(data) {
   // Regroupe les compétences et horaires
   const lignes = {};

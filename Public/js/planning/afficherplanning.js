@@ -466,6 +466,7 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
     const data = await response.json();
     console.log("Données récupérées pour le tableau avec noms :", data);
       renderPlanningRemplissageTable(data);
+      startSwitchEvolution(data);
     return data;
   
   } catch (error) {
@@ -606,4 +607,6 @@ async function fetchAvailableCount(siteId, dates) {
   if (!res.ok) return {};
   return await res.json();
 }
+
+
 
