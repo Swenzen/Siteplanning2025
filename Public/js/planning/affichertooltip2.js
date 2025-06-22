@@ -747,3 +747,159 @@ async function autoFillPlanningTable() {
   document.body.appendChild(btn);
 })();
 
+
+
+
+
+
+
+
+
+
+// Suppose que tu as déjà une fonction renderPlanningRawTable(data)
+
+function simulateEvolution(planningInitial, startDate, endDate, vacancesData = {}, competencesParNom = {}) {
+  const generations = [];
+  let current = JSON.parse(JSON.stringify(planningInitial));
+  generations.push(current);
+
+  for (let i = 1; i < 5; i++) {
+    let nextGen = mutationEchange(current, competencesParNom);
+    generations.push(nextGen);
+    current = nextGen;
+  }
+
+  let currentGen = 0;
+
+  function showCurrentGen() {
+    renderPlanningTableGrouped(generations[currentGen]);
+    const genLabel = document.getElementById("genLabel");
+    if (genLabel) genLabel.textContent = `Génération ${currentGen + 1}/${generations.length}`;
+  }
+
+  // Les boutons existent déjà dans le HTML, donc on ne les recrée pas
+  document.getElementById("prevGen").onclick = () => {
+    if (currentGen > 0) {
+      currentGen--;
+      showCurrentGen();
+    }
+  };
+  document.getElementById("nextGen").onclick = () => {
+    if (currentGen < generations.length - 1) {
+      currentGen++;
+      showCurrentGen();
+    }
+  };
+
+  showCurrentGen();
+}
+
+
+
+
+
+/**
+ * Fait une mutation par échange sur une journée :
+ * - Tire au hasard un jour
+ * - Tire deux cases différentes (compétence/horaire) ce jour-là
+ * - Si chaque personne peut faire la compétence de l'autre, échange-les
+ * - Ne fait rien si ce n'est pas possible
+ * @param {Array} planning Génération courante (copie profonde)
+ * @param {Object} competencesParNom { nom_id: [liste_competences_autorisées] }
+ * @returns {Array} Nouveau planning muté
+ */
+function mutationEchange(planning, competencesParNom) {
+  // 1. Liste des dates
+  const dates = [...new Set(planning.map(l => l.date))];
+  const date = dates[Math.floor(Math.random() * dates.length)];
+
+  // 2. Cases de ce jour avec une personne affectée
+  const casesJour = planning.filter(l => l.date === date && l.nom_id);
+
+  // 3. Tire deux cases différentes au hasard
+  if (casesJour.length < 2) return planning;
+  let idx1 = Math.floor(Math.random() * casesJour.length);
+  let idx2;
+  do { idx2 = Math.floor(Math.random() * casesJour.length); } while (idx2 === idx1);
+
+  const c1 = casesJour[idx1];
+  const c2 = casesJour[idx2];
+
+  // 4. Vérifie la compatibilité croisée
+  const nom1 = c1.nom_id, nom2 = c2.nom_id;
+  const comp1 = c1.competence, comp2 = c2.competence;
+
+  if (
+    competencesParNom[nom1] && competencesParNom[nom1].includes(comp2) &&
+    competencesParNom[nom2] && competencesParNom[nom2].includes(comp1)
+  ) {
+    // 5. Vérifie que chaque personne n'est pas déjà affectée ailleurs ce jour-là
+    if (
+      !planning.some(l => l.date === date && l.nom_id === nom1 && l !== c1 && l !== c2) &&
+      !planning.some(l => l.date === date && l.nom_id === nom2 && l !== c1 && l !== c2)
+    ) {
+      // 6. Échange les noms
+      const newPlanning = planning.map(l => {
+        if (l === c1) return { ...l, nom: c2.nom, nom_id: c2.nom_id };
+        if (l === c2) return { ...l, nom: c1.nom, nom_id: c1.nom_id };
+        return l;
+      });
+      return newPlanning;
+    }
+  }
+  // Sinon, pas de mutation
+  return planning;
+}
+
+function renderPlanningRemplissageTable(data) {
+  // Regroupe les compétences et horaires
+  const lignes = {};
+  const datesSet = new Set();
+  data.forEach(row => {
+    const key = `${row.competence}||${row.horaire_debut}||${row.horaire_fin}||${row.competence_id}||${row.horaire_id}`;
+    if (!lignes[key]) {
+      lignes[key] = {
+        competence: row.competence,
+        horaire_debut: row.horaire_debut,
+        horaire_fin: row.horaire_fin,
+        competence_id: row.competence_id,
+        horaire_id: row.horaire_id,
+        cells: {}
+      };
+    }
+    lignes[key].cells[row.date] = {
+      ouverture: row.ouverture,
+      nom: row.nom,
+      nom_id: row.nom_id,
+      date: row.date
+    };
+    datesSet.add(row.date);
+  });
+  const dates = Array.from(datesSet).sort();
+
+  let html = '<table border="1" style="border-collapse:collapse;"><tr>';
+  html += '<th>Compétence</th><th>Horaires</th>';
+  dates.forEach(date => html += `<th>${date}</th>`);
+  html += '</tr>';
+
+  Object.values(lignes).forEach(ligne => {
+    html += `<tr>
+      <td>${ligne.competence}</td>
+      <td>${ligne.horaire_debut} - ${ligne.horaire_fin}</td>`;
+    dates.forEach(date => {
+      const cell = ligne.cells[date];
+      if (!cell) {
+        html += `<td style="background:#eee"></td>`;
+      } else if (cell.ouverture == 1) {
+        // Case à remplir
+        html += `<td style="background:#ffe082;font-weight:bold;">À remplir</td>`;
+      } else {
+        // Case fermée ou hors période
+        html += `<td style="background:#d3d3d3"></td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  document.getElementById("planning-evolution-content").innerHTML = html;
+}

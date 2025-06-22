@@ -465,7 +465,9 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
 
     const data = await response.json();
     console.log("Données récupérées pour le tableau avec noms :", data);
+      renderPlanningRemplissageTable(data);
     return data;
+  
   } catch (error) {
     console.error("Erreur lors de la récupération des données :", error);
     alert("Une erreur est survenue lors de la récupération des données.");
@@ -604,3 +606,4 @@ async function fetchAvailableCount(siteId, dates) {
   if (!res.ok) return {};
   return await res.json();
 }
+
