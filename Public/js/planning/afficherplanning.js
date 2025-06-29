@@ -2,6 +2,9 @@
 const startDateInput = document.getElementById("startDate");
 const endDateInput = document.getElementById("endDate");
 const applyDateFilterButton = document.getElementById("applyDateFilter");
+let generationCounter = 1;
+
+
 
 // Restaurer les dates depuis le localStorage
 window.addEventListener("DOMContentLoaded", () => {
@@ -768,6 +771,125 @@ function setupBestPlanningNav() {
   });
 }
 
+
+function crossoverWithFixedCommons(parentA, parentB) {
+  // On suppose que les deux plannings sont des tableaux de même taille et même ordre
+  return parentA.map((cellA, i) => {
+    const cellB = parentB[i];
+    // Si tout est identique, on fige
+    if (
+      cellA.nom === cellB.nom &&
+      cellA.nom_id === cellB.nom_id &&
+      cellA.competence_id === cellB.competence_id &&
+      cellA.horaire_id === cellB.horaire_id &&
+      cellA.date === cellB.date
+    ) {
+      return { ...cellA }; // point commun figé
+    } else {
+      // Sinon, on prend au hasard l'un des deux parents
+      return Math.random() < 0.5 ? { ...cellA } : { ...cellB };
+    }
+  });
+}
+
+let crossMutatePlannings = [];
+let crossMutateStats = [];
+let currentCrossIdx = 0;
+
+async function launchCrossMutateCycle() {
+  
+  if (bestPlannings.length < 10) {
+    alert("Il faut d'abord générer les 10 meilleurs plannings !");
+    return;
+  }
+  document.getElementById("stats-results").innerHTML = "Croisement et mutations en cours...";
+
+  const competencesParNom = await fetchCompetencesParNom();
+  const pairs = [[0,1],[2,3],[4,5],[6,7],[8,9]];
+  let enfants = [];
+
+  for (const [i1, i2] of pairs) {
+    let parentA = bestPlannings[i1];
+    let parentB = bestPlannings[i2];
+    // Pour chaque paire, génère 10 enfants indépendants
+    for (let k = 0; k < 10; k++) {
+      // 1. Croisement avec points communs figés
+      let enfant = crossoverWithFixedCommons(parentA, parentB);
+      // 2. 100 mutations sur l'enfant
+      for (let j = 0; j < 100; j++) {
+        const res = nextGeneration(enfant, competencesParNom);
+        enfant = res.planning;
+      }
+      enfants.push(enfant);
+    }
+  }
+
+    // 3. Pour chaque enfant, calcule les stats et le score
+  let statsEnfants = enfants.map(planning => ({
+    planning,
+    stats: computeStats(planning),
+    score: computeEquilibreScore(computeStats(planning))
+  }));
+  statsEnfants.sort((a, b) => a.score - b.score);
+
+  crossMutatePlannings = statsEnfants.slice(0, 10).map(x => x.planning);
+  crossMutateStats = statsEnfants.slice(0, 10).map(x => x.stats);
+  currentCrossIdx = 0;
+  showCrossMutatePlanning(0);
+  setupCrossMutateNav();
+}
+
+function showCrossMutatePlanning(idx) {
+  const { lignes, dates } = buildLignesEtDates(crossMutatePlannings[idx]);
+  renderPlanningSwitchTable(crossMutatePlannings[idx], dates);
+  renderStatsPanel(crossMutateStats[idx]);
+  document.getElementById("genLabel").textContent =
+    `Enfant ${idx + 1}/10 (Génération ${generationCounter})`;
+}
+
+
+function setupCrossMutateNav() {
+  const nextBtn = document.getElementById("nextGen");
+  const prevBtn = document.getElementById("prevGen");
+  const newNext = nextBtn.cloneNode(true);
+  const newPrev = prevBtn.cloneNode(true);
+  nextBtn.parentNode.replaceChild(newNext, nextBtn);
+  prevBtn.parentNode.replaceChild(newPrev, prevBtn);
+
+  newNext.addEventListener("click", () => {
+    if (currentCrossIdx < crossMutatePlannings.length - 1) {
+      currentCrossIdx++;
+      showCrossMutatePlanning(currentCrossIdx);
+    }
+  });
+  newPrev.addEventListener("click", () => {
+    if (currentCrossIdx > 0) {
+      currentCrossIdx--;
+      showCrossMutatePlanning(currentCrossIdx);
+    }
+  });
+}
+
+async function nextEvolutionGeneration() {
+  generationCounter++; // Incrémente à chaque nouvelle génération
+
+  // Classe les 50 enfants et garde les 10 meilleurs
+  let statsEnfants = crossMutatePlannings.map(planning => ({
+    planning,
+    stats: computeStats(planning),
+    score: computeEquilibreScore(computeStats(planning))
+  }));
+  statsEnfants.sort((a, b) => a.score - b.score);
+
+  // Met à jour bestPlannings avec les 10 meilleurs enfants
+  bestPlannings = statsEnfants.slice(0, 10).map(x => x.planning);
+  bestStats = statsEnfants.slice(0, 10).map(x => x.stats);
+
+  // Relance un cycle de croisement/mutation sur ces nouveaux parents
+  await launchCrossMutateCycle();
+}
+
+
 // 7. Ajoute un bouton pour lancer la génération
 window.addEventListener("DOMContentLoaded", () => {
   if (!document.getElementById("btnBestPlannings")) {
@@ -777,5 +899,22 @@ window.addEventListener("DOMContentLoaded", () => {
     btn.onclick = launchBestPlannings;
     document.body.insertBefore(btn, document.getElementById("evolution-nav"));
     setupBestPlanningNav();
+  }
+  if (!document.getElementById("btnCrossMutate")) {
+    const btn = document.createElement("button");
+    btn.id = "btnCrossMutate";
+    btn.textContent = "Croiser et muter les meilleurs plannings";
+    btn.style.marginTop = "16px";
+    btn.onclick = launchCrossMutateCycle;
+    // Ajoute le bouton sous le tableau d'évolution
+    document.getElementById("evolution-visualization").after(btn);
+  }
+  if (!document.getElementById("btnNextGen")) {
+    const btn = document.createElement("button");
+    btn.id = "btnNextGen";
+    btn.textContent = "Nouvelle génération (croiser/muter les enfants)";
+    btn.style.marginTop = "16px";
+    btn.onclick = nextEvolutionGeneration;
+    document.getElementById("evolution-visualization").after(btn);
   }
 });
