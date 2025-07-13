@@ -795,10 +795,17 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000) {
 // =======================
 
 // Croisement avec points communs figés
-function crossoverWithFixedCommons(parentA, parentB) {
-  // On suppose que les deux plannings sont des tableaux de même taille et même ordre
-  return parentA.map((cellA, i) => {
+
+function crossoverByExchange(parentA, parentB) {
+  // On suppose que parentA et parentB sont des tableaux de cases, même ordre
+  const enfant = [];
+  const casesParDate = {};
+
+  // 1. Repère les points communs et prépare les cases à échanger
+  parentA.forEach((cellA, i) => {
     const cellB = parentB[i];
+    const key = cellA.date;
+    if (!casesParDate[key]) casesParDate[key] = [];
     // Si tout est identique, on fige
     if (
       cellA.nom === cellB.nom &&
@@ -807,12 +814,50 @@ function crossoverWithFixedCommons(parentA, parentB) {
       cellA.horaire_id === cellB.horaire_id &&
       cellA.date === cellB.date
     ) {
-      return { ...cellA }; // point commun figé
+      enfant.push({ ...cellA }); // point commun figé
     } else {
-      // Sinon, on prend au hasard l'un des deux parents
-      return Math.random() < 0.5 ? { ...cellA } : { ...cellB };
+      casesParDate[key].push({ idx: i, cellA, cellB });
+      enfant.push(null); // à remplir plus tard
     }
   });
+
+  // 2. Pour chaque jour, fait des échanges entre les cases non communes
+  Object.values(casesParDate).forEach(cases => {
+    // Liste des noms à échanger ce jour
+    const nomsA = cases.map(c => c.cellA.nom_id).filter(Boolean);
+    const nomsB = cases.map(c => c.cellB.nom_id).filter(Boolean);
+
+    // On mélange les deux listes et on répartit sans doublon
+    const nomsDispo = Array.from(new Set([...nomsA, ...nomsB]));
+    let used = new Set();
+
+    cases.forEach(c => {
+      // On prend un nom qui n'a pas encore été utilisé ce jour
+      let nom_id = null, nom = null;
+      for (let id of nomsDispo) {
+        if (!used.has(id)) {
+          // Cherche le nom dans cellA ou cellB
+          if (c.cellA.nom_id === id) {
+            nom_id = c.cellA.nom_id;
+            nom = c.cellA.nom;
+          } else if (c.cellB.nom_id === id) {
+            nom_id = c.cellB.nom_id;
+            nom = c.cellB.nom;
+          }
+          used.add(id);
+          break;
+        }
+      }
+      enfant[c.idx] = {
+        ...c.cellA,
+        nom,
+        nom_id
+      };
+    });
+  });
+
+  // Remplit les cases null (si jamais)
+  return enfant.map((cell, i) => cell ? cell : { ...parentA[i], nom: null, nom_id: null });
 }
 
 let crossMutatePlannings = [];
@@ -994,7 +1039,7 @@ async function launchCrossMutateCycle() {
     // Pour chaque paire, génère 20 enfants indépendants
     for (let k = 0; k < 20; k++) {
       // 1. Croisement avec points communs figés
-      let enfant = crossoverWithFixedCommons(parentA, parentB);
+      let enfant = crossoverByExchange(parentA, parentB);
       // 2. 3 mutations sur l'enfant
       for (let j = 0; j < 3; j++) {
         const res = nextGeneration(enfant, competencesParNom);
