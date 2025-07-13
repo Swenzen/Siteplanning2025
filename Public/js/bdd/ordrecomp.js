@@ -1,13 +1,25 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const siteId = window.siteId || 1;
     const tableau = document.getElementById('ordrecomptableau').querySelector('tbody');
     let competences = [];
 
+    function getSiteId() {
+        return sessionStorage.getItem('selectedSite');
+    }
+    function getToken() {
+        return localStorage.getItem('token');
+    }
+
     async function fetchOrdreCompetences() {
+        const siteId = getSiteId();
+        const token = getToken();
+        if (!siteId || !token) {
+            console.error('Erreur : siteId ou token manquant');
+            return [];
+        }
         try {
             const response = await fetch(`/api/ordrecompetences?site_id=${siteId}`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
             if (!response.ok) throw new Error('Erreur serveur');
@@ -19,11 +31,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function swapOrdreCompetence(id1, id2) {
+        const token = getToken();
+        if (!token) {
+            console.error('Erreur : token manquant');
+            return { error: true };
+        }
         try {
             const response = await fetch('/api/swap-ordrecompetence', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ id1, id2 })
