@@ -9,7 +9,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 <ul>
                     <li><a href="index.html" class="${window.location.pathname.includes('index.html') ? 'active' : ''}">Index</a></li>
                     <li><a href="base-de-donnee.html" class="${window.location.pathname.includes('base-de-donnee.html') ? 'active' : ''}">Base de donnée</a></li>
-                    <li><a href="planning.html" class="${window.location.pathname.includes('planning.html') ? 'active' : ''}">Planning</a></li>
+                    <li class="has-dropdown">
+                        <a href="planning.html" class="${window.location.pathname.includes('planning.html') ? 'active' : ''}">Planning</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="planning-planning automatique.html">Planning automatique</a></li>
+                            <!-- Ajoute d'autres sous-pages ici si besoin -->
+                        </ul>
+                    </li>
                     <li><a href="parametrage.html" class="${window.location.pathname.includes('parametrage.html') ? 'active' : ''}">Paramétrage</a></li>
                     <li><a href="stats.html" class="${window.location.pathname.includes('stats.html') ? 'active' : ''}">Stats</a></li> <!-- Nouveau lien -->
                 </ul>
