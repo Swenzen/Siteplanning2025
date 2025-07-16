@@ -9,6 +9,13 @@ const siteId = sessionStorage.getItem("selectedSite");
 let groupesCache = {};
 
 
+const groupePriorites = {
+  "Radiopharmacie": 4, // priorité 1 (plus important)
+  "EFF": 3,            // priorité 2
+  "TEP": 2,            // priorité 3
+  "Scinti": 1          // priorité 4 (moins important)
+};
+
 window.addEventListener("DOMContentLoaded", () => {
   if (!document.getElementById("auto-fill-btn")) {
     const btn = document.createElement("button");
@@ -232,7 +239,7 @@ async function computeStats(planning) {
 
 // Calcule le score d’équilibre
 // Calcule le score d’équilibre (somme des écarts types sur les groupes)
-function computeEquilibreScore(stats) {
+function computeEquilibreScore(stats, priorites = {}) {
   function ecartType(arr) {
     const moy = arr.reduce((a, b) => a + b, 0) / arr.length;
     return Math.sqrt(
@@ -245,7 +252,10 @@ function computeEquilibreScore(stats) {
   let score = 0;
   groupes.forEach(groupe => {
     const vals = noms.map(nom => stats[nom][groupe.nom_groupe] || 0);
-    score += ecartType(vals);
+    const poids = priorites[groupe.nom_groupe] || 1;
+    const et = ecartType(vals);
+    console.log(groupe.nom_groupe, "écart-type:", et, "poids:", poids, "score partiel:", et * poids);
+    score += et * poids;
   });
   return score;
 }
@@ -271,6 +281,11 @@ function renderStatsPanel(stats) {
     html += `<td>${total}</td></tr>`;
   });
   html += "</tbody></table>";
+
+  // Ajoute le score global d'équilibre
+  const score = computeEquilibreScore(stats, groupePriorites);
+  html = `<div style="margin-bottom:8px;"><b>Score d'équilibre : ${score.toFixed(3)}</b></div>` + html;
+
   document.getElementById("stats-results").innerHTML = html;
 }
 
@@ -587,7 +602,7 @@ async function launchBestPlannings() {
   let statsPlannings = plannings.map((planning) => ({
     planning,
     stats: computeStats(planning),
-    score: computeEquilibreScore(computeStats(planning)),
+    score: computeEquilibreScore(computeStats(planning), groupePriorites),
   }));
   statsPlannings.sort((a, b) => a.score - b.score);
   bestPlannings = statsPlannings.slice(0, 10).map((x) => x.planning);
@@ -624,7 +639,7 @@ async function launchCrossMutateCycle() {
       // 1. Croisement avec points communs figés
       let enfant = crossoverByExchange(parentA, parentB);
       // 2. 3 mutations sur l'enfant
-      for (let j = 0; j < 3; j++) {
+      for (let j = 0; j < 1; j++) { // au lieu de 3
         const res = nextGeneration(enfant, competencesParNom);
         enfant = res.planning;
       }
@@ -633,12 +648,24 @@ async function launchCrossMutateCycle() {
   }
 
   // 3. Pour chaque enfant, calcule les stats et le score
-  let statsEnfants = enfants.map((planning) => ({
-    planning,
-    stats: computeStats(planning),
-    score: computeEquilibreScore(computeStats(planning)),
-  }));
-  statsEnfants.sort((a, b) => a.score - b.score);
+  let statsEnfants = enfants.map((planning) => {
+    const stats = computeStats(planning);
+    const groupes = stats._groupes || [];
+    const noms = Object.keys(stats).filter(n => n !== "_groupes");
+    const radiopharma = groupes.find(g => g.nom_groupe === "Radiopharmacie");
+    let etRadiopharma = 0;
+    if (radiopharma) {
+      const vals = noms.map(nom => stats[nom][radiopharma.nom_groupe] || 0);
+      etRadiopharma = ecartType(vals);
+    }
+    return {
+      planning,
+      stats,
+      score: computeEquilibreScore(stats, groupePriorites),
+      etRadiopharma
+    };
+  });
+  statsEnfants.sort((a, b) => a.etRadiopharma - b.etRadiopharma || a.score - b.score);
 
   crossMutatePlannings = statsEnfants.slice(0, 10).map((x) => x.planning);
   crossMutateStats = statsEnfants.slice(0, 10).map((x) => x.stats);
@@ -662,21 +689,87 @@ async function nextEvolutionGeneration() {
   if (btn) btn.disabled = true;
   generationCounter++;
 
-  // Classe les 50 enfants et garde les 10 meilleurs
-  let statsEnfants = crossMutatePlannings.map((planning) => ({
-    planning,
-    stats: computeStats(planning),
-    score: computeEquilibreScore(computeStats(planning)),
-  }));
-  statsEnfants.sort((a, b) => a.score - b.score);
+  // 1. Conserve l'élite
+  const elitePlanning = crossMutatePlannings[0];
+  const eliteStats = await computeStats(elitePlanning);
+  const eliteScore = computeEquilibreScore(eliteStats, groupePriorites);
 
-  // Met à jour bestPlannings avec les 10 meilleurs enfants
+  // 2. Génère de nouveaux enfants à partir des meilleurs plannings actuels
+  const competencesParNom = await fetchCompetencesParNom();
+  const pairs = [
+    [0, 1], [2, 3], [4, 5], [6, 7], [8, 9]
+  ];
+  let enfants = [];
+  for (const [i1, i2] of pairs) {
+    let parentA = crossMutatePlannings[i1];
+    let parentB = crossMutatePlannings[i2];
+    for (let k = 0; k < 20; k++) {
+      let enfant = crossoverByExchange(parentA, parentB);
+      for (let j = 0; j < 1; j++) {
+        const res = nextGeneration(enfant, competencesParNom);
+        enfant = res.planning;
+      }
+      enfants.push(enfant);
+    }
+  }
+
+  // 3. Calcule les scores des enfants
+  let statsEnfants = await Promise.all(enfants.map(async (planning) => {
+    const stats = await computeStats(planning);
+    const groupes = stats._groupes || [];
+    const noms = Object.keys(stats).filter(n => n !== "_groupes");
+    const radiopharma = groupes.find(g => g.nom_groupe === "Radiopharmacie");
+    let etRadiopharma = 0;
+    if (radiopharma) {
+      const vals = noms.map(nom => stats[nom][radiopharma.nom_groupe] || 0);
+      etRadiopharma = ecartType(vals);
+    }
+    return {
+      planning,
+      stats,
+      score: computeEquilibreScore(stats, groupePriorites),
+      etRadiopharma
+    };
+  }));
+
+  // 4. Ajoute l'élite dans la sélection
+  statsEnfants.push({
+    planning: elitePlanning,
+    stats: eliteStats,
+    score: eliteScore,
+    etRadiopharma: (() => {
+      const groupes = eliteStats._groupes || [];
+      const noms = Object.keys(eliteStats).filter(n => n !== "_groupes");
+      const radiopharma = groupes.find(g => g.nom_groupe === "Radiopharmacie");
+      if (radiopharma) {
+        const vals = noms.map(nom => eliteStats[nom][radiopharma.nom_groupe] || 0);
+        return ecartType(vals);
+      }
+      return 0;
+    })()
+  });
+
+  // 5. Trie et sélectionne les 10 meilleurs (élite incluse)
+  statsEnfants.sort((a, b) => a.etRadiopharma - b.etRadiopharma || a.score - b.score);
   bestPlannings = statsEnfants.slice(0, 10).map((x) => x.planning);
   bestStats = statsEnfants.slice(0, 10).map((x) => x.stats);
+  crossMutatePlannings = bestPlannings;
+  crossMutateStats = bestStats;
 
-  // Relance un cycle de croisement/mutation sur ces nouveaux parents
-  await launchCrossMutateCycle();
+  // 6. Affiche le résultat
+  currentCrossIdx = 0;
+  await showCrossMutatePlanning(0);
+  setupCrossMutateNav();
+
   if (btn) btn.disabled = false;
+}
+
+// Fonction utilitaire pour l'écart-type (à placer en haut si besoin)
+function ecartType(arr) {
+  const moy = arr.reduce((a, b) => a + b, 0) / arr.length;
+  return Math.sqrt(
+    arr.reduce((a, b) => a + Math.pow(b - moy, 2), 0) / arr.length
+  );
 }
 
 // Ajoute les boutons à la page
