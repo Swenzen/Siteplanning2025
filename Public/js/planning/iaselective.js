@@ -41,8 +41,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
 // Remplissage automatique du planning simulé (pas de BDD)
 async function autoFillPlanningSimulatedTable(planningData) {
+  const site_id = sessionStorage.getItem("selectedSite");
   let planning = planningData.map(cell => ({
     ...cell,
+    site_id, // <-- AJOUT ICI
     locked: cell.locked === true,
     nom: cell.locked === true ? cell.nom : null,
     nom_id: cell.locked === true ? cell.nom_id : null
@@ -422,6 +424,12 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, pla
   }
   const competencesParNom = await fetchCompetencesParNom();
 
+  // Affiche la barre de progression
+  const progressBarContainer = document.getElementById("progressBarContainer");
+  const progressBar = document.getElementById("progressBar");
+  if (progressBarContainer) progressBarContainer.style.display = "block";
+  if (progressBar) progressBar.style.width = "0%";
+
   let plannings = [];
   for (let i = 0; i < nbPlannings; i++) {
     let planning = JSON.parse(JSON.stringify(planningInitial));
@@ -430,7 +438,18 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, pla
       planning = res.planning;
     }
     plannings.push(planning);
+
+    // Mise à jour de la barre de progression
+    if (progressBar) {
+      progressBar.style.width = `${((i + 1) / nbPlannings) * 100}%`;
+    }
+    // Pour laisser le temps d'afficher la progression (optionnel)
+    await new Promise(r => setTimeout(r, 1));
   }
+
+  // Cache la barre à la fin
+  if (progressBarContainer) setTimeout(() => { progressBarContainer.style.display = "none"; }, 500);
+
   return plannings;
 }
 
@@ -858,6 +877,47 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+async function applySimuPlanningToDB(planningSimule) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Aucun token trouvé !");
+    return;
+  }
+  // Filtre uniquement les cases à appliquer (pas locked)
+  const toSend = planningSimule.filter(cell =>
+    cell.nom_id &&
+    cell.competence_id &&
+    cell.horaire_id &&
+    cell.date &&
+    cell.site_id &&
+    cell.locked !== true // <-- n'applique pas les cases simulockées
+  );
+  let ok = 0, fail = 0;
+  for (const cell of toSend) {
+    try {
+      const res = await fetch("/api/update-planningv2", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          date: cell.date,
+          nom_id: cell.nom_id,
+          competence_id: cell.competence_id,
+          horaire_id: cell.horaire_id,
+          site_id: cell.site_id
+        })
+      });
+      if (res.ok) ok++;
+      else fail++;
+    } catch (e) {
+      fail++;
+    }
+  }
+  alert(`Planning appliqué !\nSuccès : ${ok}\nErreurs : ${fail}`);
+  if (typeof fetchPlanningData === "function") fetchPlanningData();
+}
 
 
 
@@ -908,6 +968,55 @@ window.addEventListener("DOMContentLoaded", () => {
     btn.textContent = "Nouvelle génération (croiser/muter les enfants)";
     btn.style.marginTop = "16px";
     btn.onclick = nextEvolutionGeneration;
+    document.getElementById("evolution-visualization").after(btn);
+  }
+  if (!document.getElementById("progressBarContainer")) {
+    const container = document.createElement("div");
+    container.id = "progressBarContainer";
+    container.style.width = "100%";
+    container.style.background = "#eee";
+    container.style.margin = "12px 0";
+    container.style.height = "18px";
+    container.style.borderRadius = "8px";
+    container.style.overflow = "hidden";
+    container.style.display = "none";
+    const bar = document.createElement("div");
+    bar.id = "progressBar";
+    bar.style.height = "100%";
+    bar.style.width = "0%";
+    bar.style.background = "#007bff";
+    bar.style.transition = "width 0.2s";
+    container.appendChild(bar);
+    document.body.insertBefore(container, document.getElementById("evolution-nav"));
+  }
+  if (!document.getElementById("btnApplySimuPlanning")) {
+    const btn = document.createElement("button");
+    btn.id = "btnApplySimuPlanning";
+    btn.textContent = "Appliquer ce planning";
+    btn.style.marginTop = "16px";
+    btn.onclick = async function() {
+      let toApply = planningData;
+      // Si on est dans la navigation des meilleurs plannings
+      if (typeof currentBestIdx !== "undefined" && bestPlannings && bestPlannings.length > 0) {
+        const genLabel = document.getElementById("genLabel");
+        if (genLabel && genLabel.textContent.startsWith("Planning")) {
+          toApply = bestPlannings[currentBestIdx];
+        }
+      }
+      // Si on est dans la navigation des enfants croisés/mutés
+      if (typeof currentCrossIdx !== "undefined" && crossMutatePlannings && crossMutatePlannings.length > 0) {
+        const genLabel = document.getElementById("genLabel");
+        if (genLabel && genLabel.textContent.startsWith("Enfant")) {
+          toApply = crossMutatePlannings[currentCrossIdx];
+        }
+      }
+      if (!toApply || toApply.length === 0) {
+        alert("Aucun planning simulé à appliquer !");
+        return;
+      }
+      if (!confirm("Voulez-vous vraiment appliquer ce planning ? Cela va écraser les affectations existantes pour cette période.")) return;
+      await applySimuPlanningToDB(toApply);
+    };
     document.getElementById("evolution-visualization").after(btn);
   }
 });
