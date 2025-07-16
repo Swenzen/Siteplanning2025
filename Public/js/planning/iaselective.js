@@ -41,7 +41,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
 // Remplissage automatique du planning simulé (pas de BDD)
 async function autoFillPlanningSimulatedTable(planningData) {
-  // Clone profond en gardant locked et les fermetures
   let planning = planningData.map(cell => ({
     ...cell,
     locked: cell.locked === true,
@@ -49,45 +48,82 @@ async function autoFillPlanningSimulatedTable(planningData) {
     nom_id: cell.locked === true ? cell.nom_id : null
   }));
 
-  const affectationCounts = {};
-  const affectationsParJour = {};
-
-  for (const cell of planning) {
-    if (cell.nom_id) {
-      if (!affectationCounts[cell.nom_id]) affectationCounts[cell.nom_id] = 0;
-      affectationCounts[cell.nom_id]++;
-      if (!affectationsParJour[cell.nom_id]) affectationsParJour[cell.nom_id] = new Set();
-      affectationsParJour[cell.nom_id].add(cell.date);
+  // Regroupe les cases par date
+  const casesParDate = {};
+  planning.forEach(cell => {
+    if (
+      cell.ouverture == 1 &&
+      !cell.nom &&
+      !cell.locked &&
+      cell.repos !== 1
+    ) {
+      if (!casesParDate[cell.date]) casesParDate[cell.date] = [];
+      casesParDate[cell.date].push(cell);
     }
-  }
+  });
 
-  for (const cell of planning) {
-    // NE PAS toucher aux cases verrouillées ou fermées
-    if (cell.ouverture == 1 && !cell.nom && !cell.locked) {
-      const nomsDispo = await fetchAvailableNames(cell.competence_id, siteId, cell.date);
-      const nomsFiltrés = nomsDispo.filter(nom => !(affectationsParJour[nom.nom_id] || new Set()).has(cell.date));
-      if (nomsFiltrés.length) {
-        let minCount = Infinity;
-        let candidats = [];
-        nomsFiltrés.forEach(nom => {
-          const count = affectationCounts[nom.nom_id] || 0;
-          if (count < minCount) {
-            minCount = count;
-            candidats = [nom];
-          } else if (count === minCount) {
-            candidats.push(nom);
+  // Pour chaque date, tente de remplir toutes les cases ouvertes de la journée
+  for (const date of Object.keys(casesParDate)) {
+    let essais = 0;
+    let rempli = false;
+    let backup = JSON.parse(JSON.stringify(planning)); // Pour restaurer si échec
+
+    while (essais < 20 && !rempli) {
+      essais++;
+      // On travaille sur une copie temporaire du planning pour ce jour
+      let tempPlanning = JSON.parse(JSON.stringify(planning));
+      const cases = tempPlanning.filter(cell =>
+        cell.date === date &&
+        cell.ouverture == 1 &&
+        !cell.nom &&
+        !cell.locked &&
+        cell.repos !== 1
+      );
+
+      const personnesPossiblesParCase = await Promise.all(cases.map(async cell => {
+        const nomsDispo = await fetchAvailableNames(cell.competence_id, siteId, cell.date);
+        return { cell, nomsDispo };
+      }));
+
+      personnesPossiblesParCase.sort((a, b) => a.nomsDispo.length - b.nomsDispo.length);
+
+      const personnesUtilisees = new Set(
+        tempPlanning.filter(c => c.date === date && c.nom_id).map(c => c.nom_id)
+      );
+
+      for (const { cell, nomsDispo } of personnesPossiblesParCase) {
+        const nomsFiltres = nomsDispo.filter(nom => !personnesUtilisees.has(nom.nom_id));
+        if (nomsFiltres.length) {
+          const choisi = nomsFiltres[Math.floor(Math.random() * nomsFiltres.length)];
+          cell.nom = choisi.nom;
+          cell.nom_id = choisi.nom_id;
+          cell.locked = false;
+          personnesUtilisees.add(choisi.nom_id);
+        }
+      }
+
+      // Vérifie si toutes les cases ouvertes de la journée sont remplies
+      const casesVides = tempPlanning.filter(cell =>
+        cell.date === date &&
+        cell.ouverture == 1 &&
+        !cell.nom &&
+        !cell.locked &&
+        cell.repos !== 1
+      ).length;
+
+      if (casesVides === 0) {
+        // On reporte les affectations de la journée sur le planning principal
+        planning.forEach((cell, idx) => {
+          if (cell.date === date) {
+            cell.nom = tempPlanning[idx].nom;
+            cell.nom_id = tempPlanning[idx].nom_id;
+            cell.locked = tempPlanning[idx].locked;
           }
         });
-        const chosenNom = candidats[Math.floor(Math.random() * candidats.length)];
-        cell.nom = chosenNom.nom;
-        cell.nom_id = chosenNom.nom_id;
-        cell.locked = false;
-        affectationCounts[chosenNom.nom_id] = (affectationCounts[chosenNom.nom_id] || 0) + 1;
-        if (!affectationsParJour[chosenNom.nom_id]) affectationsParJour[chosenNom.nom_id] = new Set();
-        affectationsParJour[chosenNom.nom_id].add(cell.date);
+        rempli = true;
       }
-      // Sinon, on laisse la case vide et on continue
     }
+    // Si après 20 essais la journée n'est pas remplie, on laisse les cases vides
   }
 
   renderPlanningRemplissageTable(planning);
@@ -109,6 +145,7 @@ function renderPlanningRemplissageTable(data) {
         horaire_fin: row.horaire_fin,
         competence_id: row.competence_id,
         horaire_id: row.horaire_id,
+        repos: row.repos, // <-- ajoute cette ligne
         cells: {}
       };
     }
@@ -129,13 +166,16 @@ function renderPlanningRemplissageTable(data) {
   html += '</tr>';
 
   Object.values(lignes).forEach(ligne => {
+    // Ajoute la détection repos ici (repos == 1 => ligne fermée)
+    const isRepos = ligne.repos === 1;
     html += `<tr>
       <td>${ligne.competence}</td>
       <td>${ligne.horaire_debut} - ${ligne.horaire_fin}</td>`;
     dates.forEach(date => {
       const cell = ligne.cells[date];
-      if (!cell) {
-        // Correction : toujours afficher une cellule vide si pas de case ce jour-là
+      if (isRepos) {
+        html += `<td style="background:#d3d3d3"></td>`;
+      } else if (!cell) {
         html += `<td></td>`;
       } else if (cell.ouverture == 1) {
         if (cell.nom) {
@@ -145,7 +185,7 @@ function renderPlanningRemplissageTable(data) {
             html += `<td><b>${cell.nom}</b></td>`;
           }
         } else {
-          html += `<td></td>`; // Case ouverte mais pas de nom : cellule blanche
+          html += `<td></td>`;
         }
       } else {
         html += `<td style="background:#d3d3d3"></td>`;
@@ -209,6 +249,7 @@ function buildLignesEtDates(data) {
         horaire_fin: row.horaire_fin,
         competence_id: row.competence_id,
         horaire_id: row.horaire_id,
+        repos: row.repos || 0, // <-- AJOUT ICI
         cells: {}
       };
     }
@@ -217,7 +258,7 @@ function buildLignesEtDates(data) {
       nom: row.nom,
       nom_id: row.nom_id,
       date: row.date,
-      locked: row.locked === true // <-- AJOUT ICI
+      locked: row.locked === true
     };
     datesSet.add(row.date);
   });
@@ -321,6 +362,8 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
   html += '</tr>';
 
   lignes.forEach(ligne => {
+    // Ajoute la détection repos ici (repos == 1 => ligne fermée)
+    const isRepos = ligne.repos === 1;
     html += `<tr>
       <td>${ligne.competence}</td>
       <td>${ligne.horaire_debut} - ${ligne.horaire_fin}</td>`;
@@ -334,7 +377,9 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
       )) {
         highlight = ' class="highlight-switch"';
       }
-      if (!cell) {
+      if (isRepos) {
+        html += `<td style="background:#d3d3d3"></td>`;
+      } else if (!cell) {
         html += `<td style="background:#eee"></td>`;
       } else if (cell.ouverture == 1) {
         if (cell.nom) {
