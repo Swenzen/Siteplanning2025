@@ -9,12 +9,7 @@ const siteId = sessionStorage.getItem("selectedSite");
 let groupesCache = {};
 
 
-const groupePriorites = {
-  "Radiopharmacie": 4, // priorité 1 (plus important)
-  "EFF": 3,            // priorité 2
-  "TEP": 2,            // priorité 3
-  "Scinti": 1          // priorité 4 (moins important)
-};
+
 
 window.addEventListener("DOMContentLoaded", () => {
   if (!document.getElementById("auto-fill-btn")) {
@@ -283,7 +278,7 @@ function renderStatsPanel(stats) {
   html += "</tbody></table>";
 
   // Ajoute le score global d'équilibre
-  const score = computeEquilibreScore(stats, groupePriorites);
+  const score = computeEquilibreScore(stats, window.groupePriorites);
   html = `<div style="margin-bottom:8px;"><b>Score d'équilibre : ${score.toFixed(3)}</b></div>` + html;
 
   document.getElementById("stats-results").innerHTML = html;
@@ -602,7 +597,7 @@ async function launchBestPlannings() {
   let statsPlannings = plannings.map((planning) => ({
     planning,
     stats: computeStats(planning),
-    score: computeEquilibreScore(computeStats(planning), groupePriorites),
+    score: computeEquilibreScore(computeStats(planning), window.groupePriorites),
   }));
   statsPlannings.sort((a, b) => a.score - b.score);
   bestPlannings = statsPlannings.slice(0, 10).map((x) => x.planning);
@@ -661,7 +656,7 @@ async function launchCrossMutateCycle() {
     return {
       planning,
       stats,
-      score: computeEquilibreScore(stats, groupePriorites),
+      score: computeEquilibreScore(stats, window.groupePriorites),
       etRadiopharma
     };
   });
@@ -692,7 +687,7 @@ async function nextEvolutionGeneration() {
   // 1. Conserve l'élite
   const elitePlanning = crossMutatePlannings[0];
   const eliteStats = await computeStats(elitePlanning);
-  const eliteScore = computeEquilibreScore(eliteStats, groupePriorites);
+  const eliteScore = computeEquilibreScore(eliteStats, window.groupePriorites);
 
   // 2. Génère de nouveaux enfants à partir des meilleurs plannings actuels
   const competencesParNom = await fetchCompetencesParNom();
@@ -727,7 +722,7 @@ async function nextEvolutionGeneration() {
     return {
       planning,
       stats,
-      score: computeEquilibreScore(stats, groupePriorites),
+      score: computeEquilibreScore(stats, window.groupePriorites),
       etRadiopharma
     };
   }));
