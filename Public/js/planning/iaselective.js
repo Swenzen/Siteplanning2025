@@ -536,10 +536,11 @@ function setupBestPlanningNav() {
 }
 
 // Affiche un planning croisé/muté
-function showCrossMutatePlanning(idx) {
+async function showCrossMutatePlanning(idx) {
   const { lignes, dates } = buildLignesEtDates(crossMutatePlannings[idx]);
   renderPlanningSwitchTable(crossMutatePlannings[idx], dates);
-  renderStatsPanel(crossMutateStats[idx]);
+  const stats = await computeStats(crossMutatePlannings[idx]);
+  renderStatsPanel(stats);
   document.getElementById("genLabel").textContent = `Enfant ${
     idx + 1
   }/10 (Génération ${generationCounter})`;
@@ -636,13 +637,24 @@ async function launchCrossMutateCycle() {
   crossMutatePlannings = statsEnfants.slice(0, 10).map((x) => x.planning);
   crossMutateStats = statsEnfants.slice(0, 10).map((x) => x.stats);
   currentCrossIdx = 0;
-  showCrossMutatePlanning(0);
+  await showCrossMutatePlanning(0);;
   setupCrossMutateNav();
+}
+
+async function next100Generations() {
+  const btn = document.getElementById("btnNextGen100");
+  if (btn) btn.disabled = true;
+  for (let i = 0; i < 100; i++) {
+    await nextEvolutionGeneration();
+  }
+  if (btn) btn.disabled = false;
 }
 
 // Lance une nouvelle génération à partir des enfants
 async function nextEvolutionGeneration() {
-  generationCounter++; // Incrémente à chaque nouvelle génération
+  const btn = document.getElementById("btnNextGen");
+  if (btn) btn.disabled = true;
+  generationCounter++;
 
   // Classe les 50 enfants et garde les 10 meilleurs
   let statsEnfants = crossMutatePlannings.map((planning) => ({
@@ -658,11 +670,26 @@ async function nextEvolutionGeneration() {
 
   // Relance un cycle de croisement/mutation sur ces nouveaux parents
   await launchCrossMutateCycle();
+  if (btn) btn.disabled = false;
 }
 
 // Ajoute les boutons à la page
 window.addEventListener("DOMContentLoaded", () => {
   // ... (reprends ta version actuelle)
+  if (!document.getElementById("btnNextGen100")) {
+    const btn = document.createElement("button");
+    btn.id = "btnNextGen100";
+    btn.textContent = "100 générations";
+    btn.style.marginTop = "16px";
+    btn.onclick = next100Generations;
+    // Place le bouton à gauche de "Nouvelle génération"
+    const nextGenBtn = document.getElementById("btnNextGen");
+    if (nextGenBtn) {
+      nextGenBtn.parentNode.insertBefore(btn, nextGenBtn);
+    } else {
+      document.getElementById("evolution-visualization").after(btn);
+    }
+  }
 });
 
 
