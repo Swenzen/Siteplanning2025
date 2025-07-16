@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <a href="planning.html" class="${window.location.pathname.includes('planning.html') ? 'active' : ''}">Planning</a>
                         <ul class="dropdown-menu">
                             <li><a href="planning-planning automatique.html">Planning automatique</a></li>
-                            <!-- Ajoute d'autres sous-pages ici si besoin -->
+                            <li><a href="planning-roulement.html">Planning roulement</a></li>
                         </ul>
                     </li>
                     <li><a href="parametrage.html" class="${window.location.pathname.includes('parametrage.html') ? 'active' : ''}">Paramétrage</a></li>
