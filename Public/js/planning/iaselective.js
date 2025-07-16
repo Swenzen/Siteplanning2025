@@ -160,6 +160,18 @@ function renderPlanningRemplissageTable(data) {
 // 1. FONCTIONS UTILITAIRES
 // =======================
 
+// Récupère dynamiquement les groupes de compétences
+async function fetchCompetenceGroupes(site_id) {
+  const res = await fetch(`/api/competence-groupes?site_id=${site_id}`, {
+    headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+  });
+  if (!res.ok) {
+    console.error("Erreur fetch groupes:", res.status, await res.text());
+    return [];
+  }
+  return await res.json();
+}
+
 // Regroupe les données pour affichage
 function buildLignesEtDates(data) {
   const lignes = {};
@@ -189,26 +201,31 @@ function buildLignesEtDates(data) {
 }
 
 // Calcule les stats d’un planning
-function computeStats(planning) {
+// Calcule les stats d’un planning (par groupe de compétences)
+async function computeStats(planning) {
+  const site_id = sessionStorage.getItem("selectedSite");
+  const groupes = await fetchCompetenceGroupes(site_id);
+  // stats[nom][groupe.nom_groupe] = nombre d'affectations
   const stats = {};
-  planning.forEach((cell) => {
-    if (!cell.nom) return;
-    if (!stats[cell.nom])
-      stats[cell.nom] = { total: 0, IRM: 0, Perso: 0, Matin: 0, ApresMidi: 0 };
-    if (cell.competence && cell.competence.toLowerCase().includes("irm"))
-      stats[cell.nom].IRM++;
-    if (cell.competence && cell.competence.toLowerCase().includes("perso"))
-      stats[cell.nom].Perso++;
-    if (cell.horaire_debut && cell.horaire_debut.startsWith("08"))
-      stats[cell.nom].Matin++;
-    if (cell.horaire_debut && cell.horaire_debut.startsWith("12"))
-      stats[cell.nom].ApresMidi++;
-    stats[cell.nom].total++;
+  planning.forEach(cell => {
+    if (!cell.nom || !cell.competence_id) return;
+    groupes.forEach(groupe => {
+      if (groupe.competences.some(c => c.competence_id == cell.competence_id)) {
+        if (!stats[cell.nom]) stats[cell.nom] = {};
+        stats[cell.nom][groupe.nom_groupe] = (stats[cell.nom][groupe.nom_groupe] || 0) + 1;
+      }
+    });
   });
+  // Ajoute le total
+  Object.values(stats).forEach(s => {
+    s.Total = Object.values(s).reduce((a, b) => a + b, 0);
+  });
+  stats._groupes = groupes; // Pour l'affichage plus tard
   return stats;
 }
 
 // Calcule le score d’équilibre
+// Calcule le score d’équilibre (somme des écarts types sur les groupes)
 function computeEquilibreScore(stats) {
   function ecartType(arr) {
     const moy = arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -216,28 +233,36 @@ function computeEquilibreScore(stats) {
       arr.reduce((a, b) => a + Math.pow(b - moy, 2), 0) / arr.length
     );
   }
-  const noms = Object.keys(stats);
+  const groupes = stats._groupes || [];
+  const noms = Object.keys(stats).filter(n => n !== "_groupes");
   if (noms.length === 0) return 99999;
-  const irm = noms.map((n) => stats[n].IRM || 0);
-  const perso = noms.map((n) => stats[n].Perso || 0);
-  const matin = noms.map((n) => stats[n].Matin || 0);
-  const apm = noms.map((n) => stats[n].ApresMidi || 0);
-  return ecartType(irm) + ecartType(perso) + ecartType(matin) + ecartType(apm);
+  let score = 0;
+  groupes.forEach(groupe => {
+    const vals = noms.map(nom => stats[nom][groupe.nom_groupe] || 0);
+    score += ecartType(vals);
+  });
+  return score;
 }
 
 // Affiche le panneau stats
+// Affiche le panneau stats dynamiquement selon les groupes
 function renderStatsPanel(stats) {
+  const groupes = stats._groupes || [];
   let html = `<table border="1" style="border-collapse:collapse;"><thead>
-    <tr><th>Nom</th><th>IRM</th><th>Perso</th><th>Matin</th><th>Après-midi</th><th>Total</th></tr></thead><tbody>`;
+    <tr><th>Nom</th>`;
+  groupes.forEach(g => html += `<th>${g.nom_groupe}</th>`);
+  html += `<th>Total</th></tr></thead><tbody>`;
+
   Object.entries(stats).forEach(([nom, s]) => {
-    html += `<tr>
-      <td>${nom}</td>
-      <td>${s.IRM || 0}</td>
-      <td>${s.Perso || 0}</td>
-      <td>${s.Matin || 0}</td>
-      <td>${s.ApresMidi || 0}</td>
-      <td>${s.total || 0}</td>
-    </tr>`;
+    if (nom === "_groupes") return;
+    html += `<tr><td>${nom}</td>`;
+    let total = 0;
+    groupes.forEach(g => {
+      const val = s[g.nom_groupe] || 0;
+      html += `<td>${val}</td>`;
+      total += val;
+    });
+    html += `<td>${total}</td></tr>`;
   });
   html += "</tbody></table>";
   document.getElementById("stats-results").innerHTML = html;
@@ -462,7 +487,7 @@ function nextGeneration(prevPlanning, competencesParNom) {
 // =======================
 
 // Affiche un planning parmi les meilleurs
-function showBestPlanning(idx) {
+async function showBestPlanning(idx) {
   console.log(
     "Affichage du planning n°",
     idx + 1,
@@ -470,8 +495,19 @@ function showBestPlanning(idx) {
   );
   const { lignes, dates } = buildLignesEtDates(bestPlannings[idx]);
   renderPlanningSwitchTable(bestPlannings[idx], dates);
-  renderStatsPanel(bestStats[idx]);
+  const stats = await computeStats(bestPlannings[idx]);
+  renderStatsPanel(stats);
   document.getElementById("genLabel").textContent = `Planning ${idx + 1}/10`;
+}
+
+async function showCrossMutatePlanning(idx) {
+  const { lignes, dates } = buildLignesEtDates(crossMutatePlannings[idx]);
+  renderPlanningSwitchTable(crossMutatePlannings[idx], dates);
+  const stats = await computeStats(crossMutatePlannings[idx]);
+  renderStatsPanel(stats);
+  document.getElementById("genLabel").textContent = `Enfant ${
+    idx + 1
+  }/10 (Génération ${generationCounter})`;
 }
 
 // Navigation dans les meilleurs plannings
