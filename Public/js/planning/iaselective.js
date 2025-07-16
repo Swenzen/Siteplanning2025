@@ -180,7 +180,8 @@ function buildLignesEtDates(data) {
       ouverture: row.ouverture,
       nom: row.nom,
       nom_id: row.nom_id,
-      date: row.date
+      date: row.date,
+      locked: row.locked === true // <-- AJOUT ICI
     };
     datesSet.add(row.date);
   });
@@ -268,9 +269,12 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
       if (!cell) {
         html += `<td style="background:#eee"></td>`;
       } else if (cell.ouverture == 1) {
-        // Si le nom est déjà présent dans le planning initial, on le bloque visuellement
         if (cell.nom) {
-          html += `<td${highlight}><b class="simu-locked">${cell.nom}</b></td>`;
+          if (cell.locked) {
+            html += `<td${highlight}><b class="simu-locked">${cell.nom}</b></td>`;
+          } else {
+            html += `<td${highlight}><b>${cell.nom}</b></td>`;
+          }
         } else {
           html += `<td${highlight}></td>`;
         }
@@ -289,19 +293,20 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
 // =======================
 
 // Génère X plannings aléatoires avec Y mutations chacun
-async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000) {
-  const startDate = startDateInput.value;
-  const endDate = endDateInput.value;
-  const siteId = sessionStorage.getItem("selectedSite");
-  if (!startDate || !endDate || !siteId) {
-    alert("Sélectionne d'abord un site et une période !");
-    return [];
+async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, planningBase = null) {
+  let planningInitial;
+  if (planningBase) {
+    planningInitial = JSON.parse(JSON.stringify(planningBase));
+  } else {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (!startDate || !endDate || !siteId) {
+      alert("Sélectionne d'abord un site et une période !");
+      return [];
+    }
+    planningInitial = await fetchCompetencesWithNames(siteId, startDate, endDate);
   }
-  const planningInitial = await fetchCompetencesWithNames(
-    siteId,
-    startDate,
-    endDate
-  );
   const competencesParNom = await fetchCompetencesParNom();
 
   let plannings = [];
@@ -311,8 +316,6 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000) {
       const res = nextGeneration(planning, competencesParNom);
       planning = res.planning;
     }
-    // Ajoute ce log pour voir si les plannings sont différents
-    console.log("Planning généré n°" + i, planning.map((c) => c.nom).join(","));
     plannings.push(planning);
   }
   return plannings;
@@ -325,11 +328,9 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000) {
 // Croisement avec points communs figés
 
 function crossoverByExchange(parentA, parentB) {
-  // On suppose que parentA et parentB sont des tableaux de cases, même ordre
   const enfant = [];
   const casesParDate = {};
 
-  // 1. Repère les points communs et prépare les cases à échanger
   parentA.forEach((cellA, i) => {
     const cellB = parentB[i];
     const key = cellA.date;
@@ -349,22 +350,28 @@ function crossoverByExchange(parentA, parentB) {
     }
   });
 
-  // 2. Pour chaque jour, fait des échanges entre les cases non communes
   Object.values(casesParDate).forEach(cases => {
-    // Liste des noms à échanger ce jour
     const nomsA = cases.map(c => c.cellA.nom_id).filter(Boolean);
     const nomsB = cases.map(c => c.cellB.nom_id).filter(Boolean);
-
-    // On mélange les deux listes et on répartit sans doublon
     const nomsDispo = Array.from(new Set([...nomsA, ...nomsB]));
     let used = new Set();
 
     cases.forEach(c => {
-      // On prend un nom qui n'a pas encore été utilisé ce jour
+      // Si la case est locked dans l'un des parents, on garde la valeur et locked=true
+      if (c.cellA.locked) {
+        enfant[c.idx] = { ...c.cellA, locked: true };
+        used.add(c.cellA.nom_id);
+        return;
+      }
+      if (c.cellB.locked) {
+        enfant[c.idx] = { ...c.cellB, locked: true };
+        used.add(c.cellB.nom_id);
+        return;
+      }
+      // Sinon, comportement normal
       let nom_id = null, nom = null;
       for (let id of nomsDispo) {
         if (!used.has(id)) {
-          // Cherche le nom dans cellA ou cellB
           if (c.cellA.nom_id === id) {
             nom_id = c.cellA.nom_id;
             nom = c.cellA.nom;
@@ -379,13 +386,16 @@ function crossoverByExchange(parentA, parentB) {
       enfant[c.idx] = {
         ...c.cellA,
         nom,
-        nom_id
+        nom_id,
+        locked: false // bien préciser que ce n'est pas une case verrouillée
       };
     });
   });
 
   // Remplit les cases null (si jamais)
-  return enfant.map((cell, i) => cell ? cell : { ...parentA[i], nom: null, nom_id: null });
+  return enfant.map((cell, i) =>
+    cell ? cell : { ...parentA[i], nom: null, nom_id: null, locked: parentA[i].locked }
+  );
 }
 
 let crossMutatePlannings = [];
@@ -401,7 +411,8 @@ function nextGeneration(prevPlanning, competencesParNom) {
     const casesJour = [];
     lignes.forEach(ligne => {
       const cell = ligne.cells[date];
-      if (cell && cell.ouverture == 1 && cell.nom_id) {
+      // Ajoute !cell.locked ici :
+      if (cell && cell.ouverture == 1 && cell.nom_id && !cell.locked) {
         casesJour.push({ ...cell, competence_id: ligne.competence_id, horaire_id: ligne.horaire_id });
       }
     });
@@ -528,7 +539,8 @@ function setupCrossMutateNav() {
 // Lance la génération des meilleurs plannings
 async function launchBestPlannings() {
   document.getElementById("stats-results").innerHTML = "Calcul en cours...";
-  const plannings = await generateRandomPlannings(20, 1000);
+  // Utilise le planning affiché dans planningData comme base
+  const plannings = await generateRandomPlannings(100, 1000, planningData);
   let statsPlannings = plannings.map((planning) => ({
     planning,
     stats: computeStats(planning),
