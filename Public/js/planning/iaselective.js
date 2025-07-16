@@ -180,6 +180,22 @@ async function fetchCompetenceGroupes(site_id) {
   return groupes;
 }
 
+
+async function fetchHoraireGroupes(site_id) {
+  if (groupesCache["horaire_" + site_id]) {
+    return groupesCache["horaire_" + site_id];
+  }
+  const res = await fetch(`/api/horaire-groupes?site_id=${site_id}`, {
+    headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+  });
+  if (!res.ok) {
+    console.error("Erreur fetch groupes horaires:", res.status, await res.text());
+    return [];
+  }
+  const groupes = await res.json();
+  groupesCache["horaire_" + site_id] = groupes;
+  return groupes;
+}
 // Regroupe les données pour affichage
 function buildLignesEtDates(data) {
   const lignes = {};
@@ -212,13 +228,24 @@ function buildLignesEtDates(data) {
 // Calcule les stats d’un planning (par groupe de compétences)
 async function computeStats(planning) {
   const site_id = sessionStorage.getItem("selectedSite");
-  const groupes = await fetchCompetenceGroupes(site_id);
+  const groupesCompetence = await fetchCompetenceGroupes(site_id);
+  const groupesHoraire = await fetchHoraireGroupes(site_id);
+
+  // Fusionne les deux listes de groupes
+  const groupes = [
+    ...groupesCompetence.map(g => ({ ...g, type: "competence" })),
+    ...groupesHoraire.map(g => ({ ...g, type: "horaire" }))
+  ];
+
   // stats[nom][groupe.nom_groupe] = nombre d'affectations
   const stats = {};
   planning.forEach(cell => {
-    if (!cell.nom || !cell.competence_id) return;
+    if (!cell.nom) return;
     groupes.forEach(groupe => {
-      if (groupe.competences.some(c => c.competence_id == cell.competence_id)) {
+      if (
+        (groupe.type === "competence" && groupe.competences?.some(c => c.competence_id == cell.competence_id)) ||
+        (groupe.type === "horaire" && groupe.horaires?.some(h => h.horaire_id == cell.horaire_id))
+      ) {
         if (!stats[cell.nom]) stats[cell.nom] = {};
         stats[cell.nom][groupe.nom_groupe] = (stats[cell.nom][groupe.nom_groupe] || 0) + 1;
       }
