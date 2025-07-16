@@ -144,14 +144,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Écouter les changements dans le menu déroulant
     siteSelector.addEventListener("change", (event) => {
-        const selectedSite = event.target.value;
+    const selectedSite = event.target.value;
 
-        // Enregistrer le site sélectionné dans sessionStorage
-        sessionStorage.setItem("selectedSite", selectedSite);
+    // Enregistrer le site sélectionné dans sessionStorage
+    sessionStorage.setItem("selectedSite", selectedSite);
 
-        // Réactualiser la page
-        window.location.reload();
-    });
+    // Vider le cache des groupes de compétences
+    if (typeof clearGroupesCache === "function") {
+        clearGroupesCache();
+    }
+
+    // Réactualiser la page
+    window.location.reload();
+});
 });
 
 async function loadSiteOptions() {

@@ -6,6 +6,7 @@ let evolutionLignes = [];
 let planningData = [];
 let nomsDisponiblesParCellule = {};
 const siteId = sessionStorage.getItem("selectedSite");
+let groupesCache = {};
 
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -162,6 +163,9 @@ function renderPlanningRemplissageTable(data) {
 
 // Récupère dynamiquement les groupes de compétences
 async function fetchCompetenceGroupes(site_id) {
+  if (groupesCache[site_id]) {
+    return groupesCache[site_id];
+  }
   const res = await fetch(`/api/competence-groupes?site_id=${site_id}`, {
     headers: { Authorization: "Bearer " + localStorage.getItem("token") }
   });
@@ -169,7 +173,9 @@ async function fetchCompetenceGroupes(site_id) {
     console.error("Erreur fetch groupes:", res.status, await res.text());
     return [];
   }
-  return await res.json();
+  const groupes = await res.json();
+  groupesCache[site_id] = groupes;
+  return groupes;
 }
 
 // Regroupe les données pour affichage
