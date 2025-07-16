@@ -1,3 +1,159 @@
+let generations = [];
+let currentGen = 0;
+let lastSwitch = null;
+let evolutionDates = [];
+let evolutionLignes = [];
+let planningData = [];
+let nomsDisponiblesParCellule = {};
+const siteId = sessionStorage.getItem("selectedSite");
+
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (!document.getElementById("auto-fill-btn")) {
+    const btn = document.createElement("button");
+    btn.id = "auto-fill-btn";
+    btn.textContent = "Remplir automatiquement le planning";
+    btn.style.position = "fixed";
+    btn.style.bottom = "20px";
+    btn.style.right = "20px";
+    btn.style.zIndex = 2000;
+    btn.style.padding = "10px 18px";
+    btn.style.background = "#007bff";
+    btn.style.color = "#fff";
+    btn.style.border = "none";
+    btn.style.borderRadius = "5px";
+    btn.style.fontWeight = "bold";
+    btn.style.cursor = "pointer";
+    btn.onclick = async function() {
+      if (!planningData || planningData.length === 0) {
+        alert("Aucune donnée de planning à remplir !");
+        return;
+      }
+      await autoFillPlanningSimulatedTable(planningData);
+    };
+    document.body.appendChild(btn);
+  }
+});
+
+
+// Remplissage automatique du planning simulé (pas de BDD)
+async function autoFillPlanningSimulatedTable(planningData) {
+  // Clone profond en gardant locked et les fermetures
+  let planning = planningData.map(cell => ({
+    ...cell,
+    locked: cell.locked === true,
+    nom: cell.locked === true ? cell.nom : null,
+    nom_id: cell.locked === true ? cell.nom_id : null
+  }));
+
+  const affectationCounts = {};
+  const affectationsParJour = {};
+
+  for (const cell of planning) {
+    if (cell.nom_id) {
+      if (!affectationCounts[cell.nom_id]) affectationCounts[cell.nom_id] = 0;
+      affectationCounts[cell.nom_id]++;
+      if (!affectationsParJour[cell.nom_id]) affectationsParJour[cell.nom_id] = new Set();
+      affectationsParJour[cell.nom_id].add(cell.date);
+    }
+  }
+
+  for (const cell of planning) {
+    // NE PAS toucher aux cases verrouillées ou fermées
+    if (cell.ouverture == 1 && !cell.nom && !cell.locked) {
+      const nomsDispo = await fetchAvailableNames(cell.competence_id, siteId, cell.date);
+      const nomsFiltrés = nomsDispo.filter(nom => !(affectationsParJour[nom.nom_id] || new Set()).has(cell.date));
+      if (nomsFiltrés.length) {
+        let minCount = Infinity;
+        let candidats = [];
+        nomsFiltrés.forEach(nom => {
+          const count = affectationCounts[nom.nom_id] || 0;
+          if (count < minCount) {
+            minCount = count;
+            candidats = [nom];
+          } else if (count === minCount) {
+            candidats.push(nom);
+          }
+        });
+        const chosenNom = candidats[Math.floor(Math.random() * candidats.length)];
+        cell.nom = chosenNom.nom;
+        cell.nom_id = chosenNom.nom_id;
+        cell.locked = false;
+        affectationCounts[chosenNom.nom_id] = (affectationCounts[chosenNom.nom_id] || 0) + 1;
+        if (!affectationsParJour[chosenNom.nom_id]) affectationsParJour[chosenNom.nom_id] = new Set();
+        affectationsParJour[chosenNom.nom_id].add(cell.date);
+      }
+      // Sinon, on laisse la case vide et on continue
+    }
+  }
+
+  renderPlanningRemplissageTable(planning);
+  return planning;
+}
+
+// Affiche le tableau du planning simulé (ne touche pas la BDD)
+function renderPlanningRemplissageTable(data) {
+  planningData = data;
+  // Regroupe les compétences et horaires
+  const lignes = {};
+  const datesSet = new Set();
+  data.forEach(row => {
+    const key = `${row.competence}||${row.horaire_debut}||${row.horaire_fin}||${row.competence_id}||${row.horaire_id}`;
+    if (!lignes[key]) {
+      lignes[key] = {
+        competence: row.competence,
+        horaire_debut: row.horaire_debut,
+        horaire_fin: row.horaire_fin,
+        competence_id: row.competence_id,
+        horaire_id: row.horaire_id,
+        cells: {}
+      };
+    }
+    lignes[key].cells[row.date] = {
+      ouverture: row.ouverture,
+      nom: row.nom,
+      nom_id: row.nom_id,
+      date: row.date,
+      locked: row.locked === true
+    };
+    datesSet.add(row.date);
+  });
+  const dates = Array.from(datesSet).sort();
+
+  let html = '<table border="1" style="border-collapse:collapse;"><tr>';
+  html += '<th>Compétence</th><th>Horaires</th>';
+  dates.forEach(date => html += `<th>${date}</th>`);
+  html += '</tr>';
+
+  Object.values(lignes).forEach(ligne => {
+    html += `<tr>
+      <td>${ligne.competence}</td>
+      <td>${ligne.horaire_debut} - ${ligne.horaire_fin}</td>`;
+    dates.forEach(date => {
+      const cell = ligne.cells[date];
+      if (!cell) {
+        // Correction : toujours afficher une cellule vide si pas de case ce jour-là
+        html += `<td></td>`;
+      } else if (cell.ouverture == 1) {
+        if (cell.nom) {
+          if (cell.locked) {
+            html += `<td><b class="simu-locked">${cell.nom}</b></td>`;
+          } else {
+            html += `<td><b>${cell.nom}</b></td>`;
+          }
+        } else {
+          html += `<td></td>`; // Case ouverte mais pas de nom : cellule blanche
+        }
+      } else {
+        html += `<td style="background:#d3d3d3"></td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  document.getElementById("planning-evolution-content").innerHTML = html;
+}
+
 
 
 // =======================
@@ -112,7 +268,12 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
       if (!cell) {
         html += `<td style="background:#eee"></td>`;
       } else if (cell.ouverture == 1) {
-        html += `<td${highlight}>${cell.nom ? `<b>${cell.nom}</b>` : ''}</td>`;
+        // Si le nom est déjà présent dans le planning initial, on le bloque visuellement
+        if (cell.nom) {
+          html += `<td${highlight}><b class="simu-locked">${cell.nom}</b></td>`;
+        } else {
+          html += `<td${highlight}></td>`;
+        }
       } else {
         html += `<td style="background:#d3d3d3"></td>`;
       }
@@ -462,11 +623,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 // 6. ÉVOLUTION SIMPLE (PLANNING SIMULÉ)
 // Stockage des générations et de la surbrillance
-let generations = [];
-let currentGen = 0;
-let lastSwitch = null;
-let evolutionDates = [];
-let evolutionLignes = [];
+
 
 // Initialise l'évolution simple (planning simulé)
 function startSwitchEvolution(planningInitial, competencesParNom) {

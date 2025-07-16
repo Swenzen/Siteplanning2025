@@ -960,3 +960,19 @@ button.danger {
 button.danger:hover {
     background-color: #c0392b; /* Rouge plus sombre au survol */
 }
+
+
+
+/* ========================= */
+/* pour tableau second      */
+/* ========================= */
+
+
+/* Pour le planning simulé : noms bloqués */
+#planning-evolution-content .simu-locked {
+    background: #ffe0e0;
+    border: 2px solid #d32f2f;
+    border-radius: 6px;
+    opacity: 0.85;
+    padding: 2px 6px;
+}
