@@ -317,6 +317,10 @@ CREATE TABLE Tcompetence_groupe_liaison (
 );
 
 
+
+
+
+
 -- Table des groupes d’horaires
 CREATE TABLE Thoraire_groupe (
     groupe_id INT AUTO_INCREMENT PRIMARY KEY,

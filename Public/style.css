@@ -602,77 +602,116 @@ header #user-section #logoutButton:hover {
 /* SECTION STATS  */
 /* ========================= */
 
-
-
-
-/* Ajoute ceci dans style.css */
-.group-manager {
-  display: flex;
-  gap: 40px;
-  justify-content: center;
-  margin: 40px 0;
+/* --- Groupes (compétences ET horaires) : style unifié --- */
+.group-card {
+    min-width: 220px;
+    min-height: 120px;
+    border: 1.5px solid #1976d2;
+    border-radius: 12px;
+    padding: 12px 14px 14px 14px;
+    margin-bottom: 18px;
+    background: #f7fbff;
+    box-shadow: 0 2px 8px #1976d233;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    position: relative;
 }
-.group-section {
-  background: #f9f9f9;
-  border-radius: 12px;
-  padding: 24px 32px;
-  box-shadow: 0 2px 8px #0001;
-  min-width: 340px;
+.group-card:hover {
+    box-shadow: 0 4px 16px #1976d244;
+    border-color: #125ea8;
 }
+.group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.group-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #1976d2;
+}
+.delete-group-btn {
+    background: #e57373;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 1.1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.delete-group-btn:hover {
+    background: #c62828;
+}
+
+/* Liste interne pour compétences ET horaires */
 .group-list {
-  margin-bottom: 16px;
+    min-height: 60px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
 }
-.group-creator {
-  border-top: 1px solid #ddd;
-  padding-top: 16px;
+.group-list li {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 8px;
+    margin: 4px 0;
+    padding: 6px 10px;
+    font-size: 1em;
+    cursor: grab;
+    transition: background 0.2s;
+    box-shadow: 0 1px 3px #1976d211;
 }
-.group-creator input[type="text"] {
-  width: 70%;
-  margin-bottom: 10px;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.group-list li.dragging {
+    opacity: 0.5;
 }
-.group-creator button {
-  margin-top: 10px;
-  padding: 6px 18px;
-  border-radius: 6px;
-  background: #1976d2;
-  color: white;
-  border: none;
-  cursor: pointer;
+
+/* Dropzone effet */
+.groupe-dropzone.over,
+.groupe-dropzone-horaire.over {
+    background: #e3f2fd;
+    border-color: #42a5f5;
 }
-.group-creator button:hover {
-  background: #125ea8;
+
+/* --- Groupes d'horaires : même style que compétences --- */
+.horaire-groupe-list {
+    min-height: 60px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
 }
-.group-badge {
-  display: inline-block;
-  background: #e3f2fd;
-  color: #1976d2;
-  border-radius: 16px;
-  padding: 4px 12px;
-  margin: 2px 4px;
-  font-size: 0.95em;
+.horaire-groupe-list li {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 8px;
+    margin: 4px 0;
+    padding: 6px 10px;
+    font-size: 1em;
+    cursor: grab;
+    transition: background 0.2s;
 }
-.group-list .group-item {
-  margin-bottom: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid #eee;
+.horaire-groupe-list li.dragging {
+    opacity: 0.5;
 }
-.group-list .group-item:last-child {
-  border-bottom: none;
+.groupe-dropzone-horaire.over {
+    background: #e3f2fd;
+    border-color: #42a5f5;
 }
-.group-item .delete-btn {
-  background: #e57373;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 2px 10px;
-  margin-left: 10px;
-  cursor: pointer;
+
+
+
+/* Harmonise le titre et la carte */
+.groupe-dropzone-horaire .group-title {
+    color: #1976d2;
 }
-.group-item .delete-btn:hover {
-  background: #c62828;
+.groupe-dropzone-horaire.group-card {
+    border: 1.5px solid #1976d2;
+    background: #f7fbff;
+    box-shadow: 0 2px 8px #1976d233;
 }
 
 /* ========================= */

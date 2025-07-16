@@ -30,17 +30,6 @@ router.get('/planning-stats', authenticateToken, (req, res) => {
     });
 });
 
-
-
-
-
-
-
-
-
-
-
-
 // En dessous = groupe pour stats
 
 router.get('/all-competences', authenticateToken, (req, res) => {
@@ -158,6 +147,140 @@ router.delete('/competence-groupe/:groupe_id', authenticateToken, (req, res) => 
             if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
             connection.query(
                 "DELETE FROM Tcompetence_groupe WHERE groupe_id = ?",
+                [groupe_id],
+                (err2) => {
+                    if (err2) return res.status(500).json({ error: "Erreur serveur", details: err2.message });
+                    res.json({ success: true });
+                }
+            );
+        }
+    );
+});
+
+
+// --- HORAIRES : GROUPES ET LIAISONS ---
+
+// Récupérer tous les horaires d’un site
+// Récupérer tous les horaires d’un site
+router.get('/all-horaires', authenticateToken, (req, res) => {
+    const site_id = req.query.site_id;
+    if (!site_id) return res.status(400).json({ error: "site_id manquant" });
+
+    const query = `
+        SELECT h.horaire_id, h.horaire_debut, h.horaire_fin
+        FROM Thoraire h
+        JOIN Thoraire_Tsite ht ON h.horaire_id = ht.horaire_id
+        WHERE ht.site_id = ?
+        ORDER BY h.horaire_debut, h.horaire_fin
+    `;
+    connection.query(query, [site_id], (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des horaires :', err.message);
+            return res.status(500).json({ error: "Erreur lors de la récupération des horaires" });
+        }
+        res.json(results);
+    });
+});
+// Créer un groupe d’horaires
+router.post('/horaire-groupe', authenticateToken, (req, res) => {
+    const { nom_groupe, horaires } = req.body;
+    if (!nom_groupe || !Array.isArray(horaires)) {
+        return res.status(400).json({ error: "Paramètres manquants" });
+    }
+    connection.query(
+        "INSERT INTO Thoraire_groupe (nom_groupe) VALUES (?)",
+        [nom_groupe],
+        (err, result) => {
+            if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+            const groupe_id = result.insertId;
+            if (!horaires.length) return res.json({ groupe_id });
+            const values = horaires.map(hid => [hid, groupe_id]);
+            connection.query(
+                "INSERT INTO Thoraire_groupe_liaison (horaire_id, groupe_id) VALUES ?",
+                [values],
+                (err2) => {
+                    if (err2) return res.status(500).json({ error: "Erreur serveur", details: err2.message });
+                    res.json({ groupe_id });
+                }
+            );
+        }
+    );
+});
+
+// Récupérer les groupes d’horaires d’un site (avec leurs horaires)
+router.get('/horaire-groupes', authenticateToken, (req, res) => {
+    const site_id = req.query.site_id;
+    if (!site_id) return res.status(400).json({ error: "site_id manquant" });
+
+    const sql = `
+        SELECT g.groupe_id, g.nom_groupe, l.horaire_id, h.horaire_debut, h.horaire_fin
+        FROM Thoraire_groupe g
+        LEFT JOIN Thoraire_groupe_liaison l ON g.groupe_id = l.groupe_id
+        LEFT JOIN Thoraire h ON l.horaire_id = h.horaire_id
+        LEFT JOIN Thoraire_Tsite ht ON h.horaire_id = ht.horaire_id
+        WHERE ht.site_id = ? OR ht.site_id IS NULL
+        ORDER BY g.nom_groupe, h.horaire_debut, h.horaire_fin
+    `;
+    connection.query(sql, [site_id], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+        // Regroupe par groupe
+        const groupes = {};
+        rows.forEach(row => {
+            if (!groupes[row.groupe_id]) {
+                groupes[row.groupe_id] = { groupe_id: row.groupe_id, nom_groupe: row.nom_groupe, horaires: [] };
+            }
+            if (row.horaire_id && row.horaire_debut && row.horaire_fin) {
+                groupes[row.groupe_id].horaires.push({
+                    horaire_id: row.horaire_id,
+                    horaire_debut: row.horaire_debut,
+                    horaire_fin: row.horaire_fin
+                });
+            }
+        });
+        res.json(Object.values(groupes));
+    });
+});
+
+// Lier un horaire à un groupe
+router.post('/horaire-groupe/liaison', authenticateToken, (req, res) => {
+    const { groupe_id, horaire_id } = req.body;
+    if (!groupe_id || !horaire_id) return res.status(400).json({ error: "Paramètres manquants" });
+    connection.query(
+        "INSERT IGNORE INTO Thoraire_groupe_liaison (horaire_id, groupe_id) VALUES (?, ?)",
+        [horaire_id, groupe_id],
+        (err) => {
+            if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
+// Délier un horaire d’un groupe
+router.delete('/horaire-groupe/liaison', authenticateToken, (req, res) => {
+    const { groupe_id, horaire_id } = req.body;
+    if (!groupe_id || !horaire_id) return res.status(400).json({ error: "Paramètres manquants" });
+    connection.query(
+        "DELETE FROM Thoraire_groupe_liaison WHERE horaire_id = ? AND groupe_id = ?",
+        [horaire_id, groupe_id],
+        (err) => {
+            if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
+// Supprimer un groupe d’horaires
+router.delete('/horaire-groupe/:groupe_id', authenticateToken, (req, res) => {
+    const groupe_id = req.params.groupe_id;
+    if (!groupe_id) return res.status(400).json({ error: "groupe_id manquant" });
+    // Supprime d'abord les liaisons, puis le groupe
+    connection.query(
+        "DELETE FROM Thoraire_groupe_liaison WHERE groupe_id = ?",
+        [groupe_id],
+        (err) => {
+            if (err) return res.status(500).json({ error: "Erreur serveur", details: err.message });
+            connection.query(
+                "DELETE FROM Thoraire_groupe WHERE groupe_id = ?",
                 [groupe_id],
                 (err2) => {
                     if (err2) return res.status(500).json({ error: "Erreur serveur", details: err2.message });

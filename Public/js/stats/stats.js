@@ -309,8 +309,11 @@ document.getElementById("btn-creer-groupe").onclick = async function() {
 
 // Initialisation
 document.addEventListener("DOMContentLoaded", async () => {
+    // ...autres initialisations...
     await afficherCompetencesDisponibles();
     await afficherGroupesCompetence();
+    await afficherHorairesDisponibles();
+    await afficherGroupesHoraire();
 });
 
 // Ajoute cette fonction dans ton stats.js (frontend)
@@ -324,3 +327,166 @@ async function getCompetenceGroups() {
     if (!res.ok) return [];
     return await res.json(); // [{groupe_id, nom_groupe, competences: [{competence_id, competence}, ...]}, ...]
 }
+
+
+//pour hoaires 
+
+// --- Récupérer les groupes d'horaires ---
+async function getHoraireGroups() {
+    const token = localStorage.getItem("token");
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (!token || !siteId) return [];
+    const res = await fetch(`/api/horaire-groupes?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return [];
+    return await res.json(); // [{groupe_id, nom_groupe, horaires: [{horaire_id, horaire_debut, horaire_fin}, ...]}, ...]
+}
+
+// --- Afficher les horaires disponibles (non liés à un groupe) ---
+async function afficherHorairesDisponibles() {
+    const token = localStorage.getItem("token");
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (!token || !siteId) return;
+    const res = await fetch(`/api/all-horaires?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const horaires = await res.json();
+    // Récupère tous les horaires déjà liés à un groupe
+    const groupes = await getHoraireGroups();
+    const liees = new Set(groupes.flatMap(g => g.horaires.map(h => h.horaire_id)));
+    const ul = document.getElementById("liste-horaires");
+    ul.innerHTML = horaires
+        .filter(h => !liees.has(h.horaire_id))
+        .map(h => `<li class="draggable-horaire" draggable="true" data-id="${h.horaire_id}">${h.horaire_debut} - ${h.horaire_fin}</li>`)
+        .join("");
+    addDragEventsHoraire();
+}
+
+// --- Afficher les groupes d'horaires et leurs horaires ---
+async function afficherGroupesHoraire() {
+    const token = localStorage.getItem("token");
+    const siteId = sessionStorage.getItem("selectedSite");
+    if (!token || !siteId) return;
+    const groupes = await getHoraireGroups();
+    const container = document.getElementById("groupes-horaire-container");
+    container.innerHTML = groupes.map(g =>
+        `<div class="groupe-dropzone-horaire group-card" data-groupe="${g.groupe_id}">
+            <div class="group-header">
+                <span class="group-title">${g.nom_groupe}</span>
+                <button class="delete-group-btn-horaire" data-groupe="${g.groupe_id}" title="Supprimer ce groupe">🗑️</button>
+            </div>
+            <ul class="horaire-groupe-list">
+                ${g.horaires.map(h => `<li class="draggable-horaire" draggable="true" data-id="${h.horaire_id}">${h.horaire_debut} - ${h.horaire_fin}</li>`).join("")}
+            </ul>
+        </div>`
+    ).join("");
+    addDropEventsHoraire();
+    addDragEventsHoraire();
+    // Ajoute l'event sur les boutons supprimer
+    document.querySelectorAll('.delete-group-btn-horaire').forEach(btn => {
+        btn.onclick = async function() {
+            if (!confirm("Supprimer ce groupe d'horaires ?")) return;
+            const groupe_id = btn.dataset.groupe;
+            await fetch(`/api/horaire-groupe/${groupe_id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            await afficherGroupesHoraire();
+            await afficherHorairesDisponibles();
+        };
+    });
+}
+
+// --- Drag & Drop pour horaires ---
+function addDragEventsHoraire() {
+    document.querySelectorAll('.draggable-horaire').forEach(el => {
+        el.ondragstart = e => {
+            e.dataTransfer.setData("horaire_id", el.dataset.id);
+            e.dataTransfer.effectAllowed = "move";
+            setTimeout(() => el.classList.add("dragging"), 0);
+        };
+        el.ondragend = e => el.classList.remove("dragging");
+    });
+}
+function addDropEventsHoraire() {
+    // Drop sur un groupe d'horaires
+    document.querySelectorAll('.groupe-dropzone-horaire').forEach(zone => {
+        zone.ondragover = e => { e.preventDefault(); zone.classList.add("over"); };
+        zone.ondragleave = e => zone.classList.remove("over");
+        zone.ondrop = async e => {
+            e.preventDefault();
+            zone.classList.remove("over");
+            const horaire_id = e.dataTransfer.getData("horaire_id");
+            const groupe_id = zone.dataset.groupe;
+            await fetch('/api/horaire-groupe/liaison', {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+                body: JSON.stringify({ groupe_id, horaire_id })
+            });
+            await afficherHorairesDisponibles();
+            await afficherGroupesHoraire();
+        };
+    });
+    // Drop sur la liste de gauche (pour retirer d'un groupe)
+    const ul = document.getElementById("liste-horaires");
+    ul.ondragover = e => { e.preventDefault(); ul.classList.add("over"); };
+    ul.ondragleave = e => ul.classList.remove("over");
+    ul.ondrop = async e => {
+        e.preventDefault();
+        ul.classList.remove("over");
+        const horaire_id = e.dataTransfer.getData("horaire_id");
+        // Trouve le groupe d'origine
+        const token = localStorage.getItem("token");
+        const siteId = sessionStorage.getItem("selectedSite");
+        const groupes = await getHoraireGroups();
+        let groupe_id = null;
+        groupes.forEach(g => {
+            if (g.horaires.some(h => h.horaire_id == horaire_id)) groupe_id = g.groupe_id;
+        });
+        if (groupe_id) {
+            await fetch('/api/horaire-groupe/liaison', {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ groupe_id, horaire_id })
+            });
+            await afficherHorairesDisponibles();
+            await afficherGroupesHoraire();
+        }
+    };
+}
+
+// --- Création de groupe d'horaires ---
+document.getElementById("btn-creer-groupe-horaire").onclick = async function() {
+    const token = localStorage.getItem("token");
+    const nomGroupe = document.getElementById("nom-nouveau-groupe-horaire").value.trim();
+    const siteId = sessionStorage.getItem("selectedSite");
+    const msgDiv = document.getElementById("message-groupe-horaire");
+    msgDiv.textContent = "";
+    if (!token || !siteId || !nomGroupe) {
+        msgDiv.textContent = "Veuillez saisir un nom de groupe d'horaires.";
+        return;
+    }
+    const res = await fetch('/api/horaire-groupe', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ nom_groupe: nomGroupe, horaires: [], site_id: siteId })
+    });
+    if (res.ok) {
+        msgDiv.textContent = "Groupe d'horaires créé !";
+        document.getElementById("nom-nouveau-groupe-horaire").value = "";
+        await afficherGroupesHoraire();
+    } else {
+        msgDiv.textContent = "Erreur lors de la création du groupe d'horaires.";
+    }
+};
+
+// --- Initialisation (à placer dans le DOMContentLoaded principal) ---
+document.addEventListener("DOMContentLoaded", async () => {
+    await afficherHorairesDisponibles();
+    await afficherGroupesHoraire();
+});
