@@ -156,7 +156,9 @@ function renderPlanningRemplissageTable(data) {
       nom: row.nom,
       nom_id: row.nom_id,
       date: row.date,
-      locked: row.locked === true
+      locked: row.locked === true,
+      commentaires: row.commentaires || [],
+      commentaire: row.commentaire || null // pour compatibilité
     };
     datesSet.add(row.date);
   });
@@ -179,18 +181,31 @@ function renderPlanningRemplissageTable(data) {
         html += `<td style="background:#d3d3d3"></td>`;
       } else if (!cell) {
         html += `<td></td>`;
-      } else if (cell.ouverture == 1) {
-        if (cell.nom) {
-          if (cell.locked) {
-            html += `<td><b class="simu-locked">${cell.nom}</b></td>`;
+      } else {
+        // Ajout : détection commentaire "Fermée"
+        let isFermee = false;
+        if (cell.commentaires && Array.isArray(cell.commentaires)) {
+          const commentaireGeneral = cell.commentaires.find(c => !c.nom_id);
+          if (commentaireGeneral && commentaireGeneral.commentaire && commentaireGeneral.commentaire.trim().toLowerCase() === "fermée") {
+            isFermee = true;
+          }
+        }
+        if (!isFermee && cell.commentaire && typeof cell.commentaire === "string" && cell.commentaire.trim().toLowerCase() === "fermée") {
+          isFermee = true;
+        }
+        if (cell.ouverture == 1 && !isFermee) {
+          if (cell.nom) {
+            if (cell.locked) {
+              html += `<td><b class="simu-locked">${cell.nom}</b></td>`;
+            } else {
+              html += `<td><b>${cell.nom}</b></td>`;
+            }
           } else {
-            html += `<td><b>${cell.nom}</b></td>`;
+            html += `<td></td>`;
           }
         } else {
-          html += `<td></td>`;
+          html += `<td style="background:#d3d3d3"></td>`;
         }
-      } else {
-        html += `<td style="background:#d3d3d3"></td>`;
       }
     });
     html += '</tr>';
@@ -364,7 +379,6 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
   html += '</tr>';
 
   lignes.forEach(ligne => {
-    // Ajoute la détection repos ici (repos == 1 => ligne fermée)
     const isRepos = ligne.repos === 1;
     html += `<tr>
       <td>${ligne.competence}</td>
@@ -379,11 +393,22 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
       )) {
         highlight = ' class="highlight-switch"';
       }
+      // Ajout : détection commentaire "Fermée"
+      let isFermee = false;
+      if (cell && cell.commentaires && Array.isArray(cell.commentaires)) {
+        const commentaireGeneral = cell.commentaires.find(c => !c.nom_id);
+        if (commentaireGeneral && commentaireGeneral.commentaire && commentaireGeneral.commentaire.trim().toLowerCase() === "fermée") {
+          isFermee = true;
+        }
+      }
+      if (cell && !isFermee && cell.commentaire && typeof cell.commentaire === "string" && cell.commentaire.trim().toLowerCase() === "fermée") {
+        isFermee = true;
+      }
       if (isRepos) {
         html += `<td style="background:#d3d3d3"></td>`;
       } else if (!cell) {
         html += `<td style="background:#eee"></td>`;
-      } else if (cell.ouverture == 1) {
+      } else if (cell.ouverture == 1 && !isFermee) {
         if (cell.nom) {
           if (cell.locked) {
             html += `<td${highlight}><b class="simu-locked">${cell.nom}</b></td>`;

@@ -192,13 +192,19 @@ async function displayPlanningWithNames(
           noms = cells[date].noms;
           commentaires = cells[date].commentaires || [];
         }
+
+        // Si commentaire "Fermée", on force ouverture à "non"
+        const commentaireGeneral = commentaires.find((c) => !c.nom_id);
+        if (commentaireGeneral && commentaireGeneral.commentaire.trim().toLowerCase() === "fermée") {
+          ouverture = "non";
+        }
+
         dateCell.dataset.ouverture = ouverture;
         if (ouverture === "non") {
           dateCell.style.backgroundColor = "#d3d3d3";
         }
 
         // Afficher le commentaire général (case sans nom)
-        const commentaireGeneral = commentaires.find((c) => !c.nom_id);
         if (commentaireGeneral) {
           dateCell.innerHTML += `<div class="commentaire-block">${commentaireGeneral.commentaire}</div>`;
         }
@@ -468,10 +474,24 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
     console.log("Données récupérées pour le tableau avec noms :", data);
 
     // Ajout de la gestion des cellules verrouillées
-    const dataWithLocked = data.map((cell) => ({
-      ...cell,
-      locked: !!cell.nom, // locked = true si nom déjà présent
-    }));
+    const dataWithLocked = data.map((cell) => {
+      // Vérifie si le commentaire général est "Fermée"
+      let fermetureForcee = false;
+      if (cell.commentaires && Array.isArray(cell.commentaires)) {
+        const commentaireGeneral = cell.commentaires.find(c => !c.nom_id);
+        if (commentaireGeneral && commentaireGeneral.commentaire && commentaireGeneral.commentaire.trim().toLowerCase() === "fermée") {
+          fermetureForcee = true;
+        }
+      }
+      if (!fermetureForcee && cell.commentaire && typeof cell.commentaire === "string" && cell.commentaire.trim().toLowerCase() === "fermée") {
+        fermetureForcee = true;
+      }
+      return {
+        ...cell,
+        locked: !!cell.nom,
+        ouverture: fermetureForcee ? 0 : cell.ouverture // <-- force fermeture si besoin
+      };
+    });
     renderPlanningRemplissageTable(dataWithLocked);
 
     // Ajoute ces deux lignes ici :
@@ -636,5 +656,3 @@ async function fetchCompetencesParNom() {
   });
   return map;
 }
-
-
