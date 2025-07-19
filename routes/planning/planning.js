@@ -199,15 +199,19 @@ router.post('/troulement', authenticateToken, (req, res) => {
 
 router.get('/troulement', authenticateToken, (req, res) => {
     const { nom_id, site_id } = req.query;
-    if (!nom_id || !site_id) return res.status(400).send('Paramètres manquants');
-    connection.query(
-        'SELECT * FROM Troulement WHERE nom_id = ? AND site_id = ?',
-        [nom_id, site_id],
-        (err, results) => {
-            if (err) return res.status(500).send('Erreur SQL');
-            res.json(results);
-        }
-    );
+    if (!site_id) return res.status(400).send('Paramètres manquants');
+    let query, params;
+    if (nom_id) {
+        query = 'SELECT * FROM Troulement WHERE nom_id = ? AND site_id = ?';
+        params = [nom_id, site_id];
+    } else {
+        query = 'SELECT * FROM Troulement WHERE site_id = ?';
+        params = [site_id];
+    }
+    connection.query(query, params, (err, results) => {
+        if (err) return res.status(500).send('Erreur SQL');
+        res.json(results);
+    });
 });
 
 router.delete('/troulement/:roulement_id', authenticateToken, (req, res) => {
