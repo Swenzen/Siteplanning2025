@@ -103,6 +103,7 @@ function openRoulementMenu(nom_id, nom) {
         });
         modal.remove();
         alert('Roulement ajouté !');
+        fetchRoulementNoms(); // <-- Ajoute cette ligne pour rafraîchir le tableau
     };
 }
 
