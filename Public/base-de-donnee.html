@@ -283,7 +283,28 @@
         });
 
         // Ouvre la première section par défaut
-        document.querySelector('.collapsible-section')?.classList.add('active');
+        //document.querySelector('.collapsible-section')?.classList.add('active');
+    </script>
+    <script>
+        // Au clic, on sauvegarde l'index de la section puis reload
+        document.querySelectorAll('.collapsible-header').forEach((header, idx) => {
+            header.addEventListener('click', function() {
+                localStorage.setItem('sectionToOpen', idx);
+                location.reload();
+            });
+        });
+
+        // Au chargement, on ouvre la section demandée puis on efface la clé
+        document.addEventListener('DOMContentLoaded', function() {
+            const idx = localStorage.getItem('sectionToOpen');
+            if (idx !== null) {
+                const sections = document.querySelectorAll('.collapsible-section');
+                if (sections[idx]) {
+                    sections[idx].classList.add('active');
+                }
+                localStorage.removeItem('sectionToOpen');S
+            }
+        });
     </script>
 </body>
 </html>
