@@ -173,4 +173,53 @@ router.get('/competence-horaire-dates', authenticateToken, (req, res) => {
         res.json(results);
     });
 });
+
+
+
+
+//pour roulement
+
+router.post('/troulement', authenticateToken, (req, res) => {
+    const { nom_id, competence_id, horaire_id, jours_semaine, semaine_type, site_id } = req.body;
+    if (!nom_id || !competence_id || !horaire_id || !jours_semaine || !semaine_type || !site_id) {
+        return res.status(400).send('Paramètres manquants');
+    }
+    const query = `
+        INSERT INTO Troulement (nom_id, competence_id, horaire_id, jours_semaine, semaine_type, site_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    connection.query(query, [nom_id, competence_id, horaire_id, jours_semaine, semaine_type, site_id], (err, result) => {
+        if (err) {
+            console.error('Erreur SQL troulement:', err.message);
+            return res.status(500).send('Erreur lors de l\'ajout du roulement');
+        }
+        res.json({ success: true, roulement_id: result.insertId });
+    });
+});
+
+router.get('/troulement', authenticateToken, (req, res) => {
+    const { nom_id, site_id } = req.query;
+    if (!nom_id || !site_id) return res.status(400).send('Paramètres manquants');
+    connection.query(
+        'SELECT * FROM Troulement WHERE nom_id = ? AND site_id = ?',
+        [nom_id, site_id],
+        (err, results) => {
+            if (err) return res.status(500).send('Erreur SQL');
+            res.json(results);
+        }
+    );
+});
+
+router.delete('/troulement/:roulement_id', authenticateToken, (req, res) => {
+    const { roulement_id } = req.params;
+    connection.query(
+        'DELETE FROM Troulement WHERE roulement_id = ?',
+        [roulement_id],
+        (err) => {
+            if (err) return res.status(500).send('Erreur SQL');
+            res.json({ success: true });
+        }
+    );
+});
+
 module.exports = router;
