@@ -48,29 +48,26 @@ connection.connect((err) => {
 // Middleware pour parser le corps des requêtes
 app.use(bodyParser.json());
 
-// Servir les fichiers statiques depuis le dossier "public"
-app.use(express.static(path.join(__dirname, 'Public')));
-
-// Sécurité : protection contre les attaques courantes
+// Place les middlewares de sécurité AVANT express.static
 app.use(helmet());
-
-// Pour personnaliser certains headers :
 app.use(helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"],
-    objectSrc: ["'none'"],
-    styleSrc: ["'self'"]
+    scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+    objectSrc: ["'none'"]
   }
 }));
 app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
 app.use(helmet.frameguard({ action: 'sameorigin' }));
 app.use(helmet.crossOriginResourcePolicy({ policy: 'same-origin' }));
-
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   next();
 });
+
+// Servir les fichiers statiques 
+app.use(express.static(path.join(__dirname, 'Public')));
 
 // Importer les routes
 const competencesRoutes = require('./routes/bdd/competences');
