@@ -1059,15 +1059,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.body.insertBefore(btn, document.getElementById("evolution-nav"));
     setupBestPlanningNav();
   }
-  if (!document.getElementById("btnCrossMutate")) {
-    const btn = document.createElement("button");
-    btn.id = "btnCrossMutate";
-    btn.textContent = "Croiser et muter les meilleurs plannings";
-    btn.style.marginTop = "16px";
-    btn.onclick = launchCrossMutateCycle;
-    // Ajoute le bouton sous le tableau d'évolution
-    document.getElementById("evolution-visualization").after(btn);
-  }
+  
   
   if (!document.getElementById("progressBarContainer")) {
     const container = document.createElement("div");
@@ -1118,6 +1110,53 @@ window.addEventListener("DOMContentLoaded", () => {
     };
     document.getElementById("evolution-visualization").after(btn);
   }
+
+  document.getElementById("btnApplyRoulements").onclick = async function() {
+    setButtonState(0);
+    await appliquerRoulementsDansPlanningAuto();
+  };
+
+  document.getElementById("auto-fill-btn").onclick = async function() {
+    setButtonState(1);
+    if (!planningData || planningData.length === 0) {
+      alert("Aucune donnée de planning à remplir !");
+      return;
+    }
+    await autoFillPlanningSimulatedTable(planningData);
+  };
+
+  document.getElementById("btnBestPlannings").onclick = async function() {
+    setButtonState(2);
+    await launchBestPlannings();
+  };
+
+  document.getElementById("btnNextGen100").onclick = async function() {
+    setButtonState(3);
+    await next100Generations();
+  };
+
+  document.getElementById("btnApplySimuPlanning").onclick = async function() {
+    setButtonState(4);
+    let toApply = planningData;
+    if (typeof currentBestIdx !== "undefined" && bestPlannings && bestPlannings.length > 0) {
+      const genLabel = document.getElementById("genLabel");
+      if (genLabel && genLabel.textContent.startsWith("Planning")) {
+        toApply = bestPlannings[currentBestIdx];
+      }
+    }
+    if (typeof currentCrossIdx !== "undefined" && crossMutatePlannings && crossMutatePlannings.length > 0) {
+      const genLabel = document.getElementById("genLabel");
+      if (genLabel && genLabel.textContent.startsWith("Enfant")) {
+        toApply = crossMutatePlannings[currentCrossIdx];
+      }
+    }
+    if (!toApply || toApply.length === 0) {
+      alert("Aucun planning simulé à appliquer !");
+      return;
+    }
+    if (!confirm("Voulez-vous vraiment appliquer ce planning ? Cela va écraser les affectations existantes pour cette période.")) return;
+    await applySimuPlanningToDB(toApply);
+  };
 });
 
 
@@ -1202,4 +1241,29 @@ async function appliquerRoulementsDansPlanningAuto() {
 }
       
     
+}
+
+
+
+function setButtonState(activeIdx) {
+  const ids = [
+    "btnApplyRoulements",
+    "auto-fill-btn",
+    "btnBestPlannings",
+    "btnNextGen100",
+    "btnApplySimuPlanning"
+  ];
+  ids.forEach((id, idx) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.style.background = "";
+    btn.style.color = "";
+    btn.classList.remove("btn-blink");
+    if (idx <= activeIdx) {
+      btn.style.background = "#28a745";
+      btn.style.color = "#fff";
+    } else if (idx === activeIdx + 1) {
+      btn.classList.add("btn-blink");
+    }
+  });
 }

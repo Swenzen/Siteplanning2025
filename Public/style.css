@@ -1045,7 +1045,14 @@ button.danger:hover {
     background-color: #c0392b; /* Rouge plus sombre au survol */
 }
 
-
+.btn-blink {
+  animation: blink 0.8s linear infinite;
+}
+@keyframes blink {
+  0% { box-shadow: 0 0 8px #007bff; }
+  50% { box-shadow: 0 0 24px #007bff; }
+  100% { box-shadow: 0 0 8px #007bff; }
+}
 
 /* ========================= */
 /* pour tableau second      */
