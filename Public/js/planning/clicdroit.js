@@ -157,10 +157,17 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
         ${
           isFermee
             ? `<button class="tooltip-reopen" style="background: #fff; color: #28a745; border: 1px solid #28a745; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Réouvrir</button>`
-            : `<button class="tooltip-fermee" style="background: #fff; color: #c00; border: 1px solid #c00; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Fermée</button>
-               <button class="tooltip-add-commentaire" style="background: #fff; color: #007bff; border: 1px solid #007bff; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Ajouter un commentaire</button>`
-        }
-      </div>
+            : `
+              ${commentaireNom ? `
+                <div style="font-weight:bold; color:#007bff; margin-bottom:4px;">Commentaire :</div>
+                <div style="margin-bottom:6px;">${commentaireNom}</div>
+                <button class="tooltip-delete-commentaire" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer le commentaire</button>
+              ` : `
+                <button class="tooltip-fermee" style="background: #fff; color: #c00; border: 1px solid #c00; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Fermée</button>
+                <button class="tooltip-add-commentaire" style="background: #fff; color: #007bff; border: 1px solid #007bff; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Ajouter un commentaire</button>`
+            }
+          `
+      }
     `;
   }
   // CASE AVEC NOM
