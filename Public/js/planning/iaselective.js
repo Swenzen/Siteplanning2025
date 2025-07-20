@@ -1008,6 +1008,7 @@ async function applySimuPlanningToDB(planningSimule) {
   }
   alert(`Planning appliqué !\nSuccès : ${ok}\nErreurs : ${fail}`);
   if (typeof fetchPlanningData === "function") fetchPlanningData();
+
 }
 
 
@@ -1053,14 +1054,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Ajoute le bouton sous le tableau d'évolution
     document.getElementById("evolution-visualization").after(btn);
   }
-  if (!document.getElementById("btnNextGen")) {
-    const btn = document.createElement("button");
-    btn.id = "btnNextGen";
-    btn.textContent = "Nouvelle génération (croiser/muter les enfants)";
-    btn.style.marginTop = "16px";
-    btn.onclick = nextEvolutionGeneration;
-    document.getElementById("evolution-visualization").after(btn);
-  }
+  
   if (!document.getElementById("progressBarContainer")) {
     const container = document.createElement("div");
     container.id = "progressBarContainer";
@@ -1189,4 +1183,9 @@ async function appliquerRoulementsDansPlanningAuto() {
 
     alert(`${affectations.length} affectations réalisées !`);
     refreshSecondTable();
+    if (typeof refreshPlanningTableWithNames === "function") {
+    refreshPlanningTableWithNames();
+}
+      
+    
 }
