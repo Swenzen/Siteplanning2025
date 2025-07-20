@@ -25,10 +25,10 @@ async function renderPonderationTable() {
   ];
   if (!groupes.length) return;
 
-  // Prépare le HTML du tableau
-  let html = `<div id="ponderationia-panel" style="margin-top:32px;">
+  // Prépare le HTML du tableau SANS style inline
+  let html = `<div id="ponderationia-panel" class="ponderationia-panel">
     <h3>Pondération des groupes</h3>
-    <table border="1" style="border-collapse:collapse;">
+    <table border="1" class="ponderation-table">
       <thead><tr><th>Groupe</th><th>Type</th><th>Pondération</th></tr></thead>
       <tbody>
   `;
@@ -37,14 +37,14 @@ async function renderPonderationTable() {
     html += `<tr>
       <td>${groupe.nom_groupe}</td>
       <td>${groupe.type === "horaire" ? "Horaires" : "Compétences"}</td>
-      <td>
+      <td class="bg-ponderation">
         <input type="number" min="1" step="1" value="${val}" 
-          data-groupe="${groupe.nom_groupe}" style="width:60px;">
+          data-groupe="${groupe.nom_groupe}" class="ponderation-input">
       </td>
     </tr>`;
   });
   html += `</tbody></table>
-    <button id="btnApplyPonderation" style="margin-top:8px;">Appliquer</button>
+    <button id="btnApplyPonderation" class="btn-ponderation">Appliquer</button>
   </div>`;
 
   // Ajoute le tableau tout en bas du body

@@ -31,29 +31,7 @@
 
     
     <script src="js/auth.js"></script>
-    <script>
-           
-
-        // Gestion de l'inscription
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('registerUsername').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password })
-            });
-
-            const result = await response.text();
-            alert(result);
-        });
-
     
-        
-    </script>
 </body>
 
 </html>

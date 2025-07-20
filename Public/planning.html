@@ -9,7 +9,7 @@
 </head>
 <body>
     <!-- Menu -->
-    <div id="user-info" style="display: none;">
+    <div id="user-info" class="hidden">
         <p>Connecté en tant que : <span id="username-display"></span></p>
         <button id="logoutButton">Se déconnecter</button>
     </div>
@@ -36,14 +36,14 @@
         </tfoot>
     </table>
 
-    <div id="tooltip" style="display:none; position:absolute; background:white; border:1px solid #ccc; z-index:1000; min-width:200px;"></div>
+    <div id="tooltip" class="tooltip-hidden"></div>
 
-    <div id="evolution-visualization" style="margin:32px 0;">
+    <div id="evolution-visualization" class="evolution-visualization">
   <h3>Planning simulé (aperçu brut des données)</h3>
   <div id="planning-evolution-content"></div>
 </div>
 
-<div id="evolution-nav" style="margin: 10px 0px;">
+<div id="evolution-nav" class="evolution-nav">
   <button id="prevGen">Précédent</button>
   <span id="genLabel">Génération 1/1</span>
   <button id="nextGen">Suivant</button>

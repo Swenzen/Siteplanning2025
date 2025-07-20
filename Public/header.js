@@ -35,8 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
             </nav>
             <div id="user-section">
                 <span id="user-info"></span>
-                <select id="siteSelector" style="display: none;"></select>
-                <button id="logoutButton" style="display: none;">Se déconnecter</button>
+                <select id="siteSelector" class="hidden"></select>
+                <button id="logoutButton" class="hidden">Se déconnecter</button>
             </div>
         </div>
     `;
@@ -53,6 +53,8 @@ document.addEventListener("DOMContentLoaded", () => {
         userInfo.textContent = `${username}`;
         logoutButton.style.display = "inline-block";
         siteSelector.style.display = "inline-block";
+        logoutButton.classList.remove("hidden");
+        siteSelector.classList.remove("hidden");
         loadSiteOptions();
     } else if (window.location.pathname.includes("index.html")) {
         userInfo.innerHTML = `
@@ -85,6 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
             // Pas de e.preventDefault()
         });
     });
+
+    // Pour afficher une section
+    // document.getElementById('section-noms').classList.remove('hidden');
 });
 
 async function loadSiteOptions() {

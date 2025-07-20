@@ -10,7 +10,7 @@
     <div class="section-container">
         <h2>Statistiques du planning</h2>
         <p>Cette page affichera bientôt les statistiques et critères personnalisés pour chaque personne.</p>
-        <form id="periode-stats-form" style="margin-bottom:24px;">
+        <form id="periode-stats-form" class="mb-20">
             <label for="statsStartDate">Début :</label>
             <input type="date" id="statsStartDate" name="statsStartDate" required>
             <label for="statsEndDate">Fin :</label>
@@ -20,42 +20,42 @@
         <div id="stats-results"></div>
     </div>
 
-    <div style="display: flex; gap: 32px;">
+    <div class="flex-row gap-32">
         <!-- Liste des compétences -->
-        <div class="section-container" id="groupe-competence-container" style="flex:1;">
+        <div class="section-container flex-1" id="groupe-competence-container">
             <h2>Compétences disponibles</h2>
-            <ul id="liste-competences" class="competence-list" style="min-height:200px; border:1px solid #ccc; padding:8px;"></ul>
-            <div style="margin-top:16px;">
+            <ul id="liste-competences" class="competence-list"></ul>
+            <div class="mt-20">
                 <input type="text" id="nom-nouveau-groupe" placeholder="Nom du groupe">
                 <button id="btn-creer-groupe">Créer groupe</button>
             </div>
             <div id="message-groupe"></div>
         </div>
         <!-- Groupes dynamiques -->
-        <div class="section-container" style="flex:2;">
+        <div class="section-container flex-2">
             <h2>Groupes</h2>
-            <div id="groupes-container" style="display:flex; gap:24px; flex-wrap:wrap;"></div>
+            <div id="groupes-container" class="flex-row gap-24 wrap"></div>
         </div>
     </div>
 
     <!-- Partie HORAIRES, à placer sous la partie compétences -->
-    <div style="display: flex; gap: 32px; margin-top:40px;">
+    <div class="flex-row gap-32 mt-40">
         <!-- Liste des horaires -->
-        <div class="section-container" id="groupe-horaire-container" style="flex:1;">
+        <div class="section-container flex-1" id="groupe-horaire-container">
             <h2>Horaires disponibles</h2>
-            <ul id="liste-horaires" class="competence-list" style="min-height:200px; border:1px solid #ccc; padding:8px;"></ul>
-            <div style="margin-top:16px;">
+            <ul id="liste-horaires" class="competence-list"></ul>
+            <div class="mt-20">
                 <input type="text" id="nom-nouveau-groupe-horaire" placeholder="Nom du groupe d'horaires">
                 <button id="btn-creer-groupe-horaire">Créer groupe horaire</button>
             </div>
             <div id="message-groupe-horaire"></div>
         </div>
         <!-- Groupes d'horaires dynamiques -->
-        <div class="section-container" style="flex:2;">
+        <div class="section-container flex-2">
             <h2>Groupes d'horaires</h2>
-            <div id="groupes-horaire-container" style="display:flex; gap:24px; flex-wrap:wrap;"></div>
+            <div id="groupes-horaire-container" class="flex-row gap-24 wrap"></div>
         </div>
     </div>
+    <script src="js/stats/stats.js"></script>
 </body>
-<script src="js/stats/stats.js"></script>
 </html>

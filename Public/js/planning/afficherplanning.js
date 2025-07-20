@@ -18,16 +18,13 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // second planning
-//fonction creatioon tableau dessous
 function generateFooterRows(dateHeaders) {
   const vacanceRow = document.createElement("tr");
   const autreRow = document.createElement("tr");
 
-  // Première colonne
   vacanceRow.appendChild(document.createElement("th")).textContent = "Vacance";
   autreRow.appendChild(document.createElement("th")).textContent = "Autre";
 
-  // Colonnes jours
   dateHeaders.forEach((date) => {
     vacanceRow.appendChild(document.createElement("td"));
     autreRow.appendChild(document.createElement("td"));
@@ -48,11 +45,10 @@ async function displayPlanningWithNames(
   let tfoot = table.querySelector("tfoot");
   if (!tfoot) tfoot = table.createTFoot();
 
-  // Effacer le contenu précédent
   tbody.innerHTML = "";
   thead.innerHTML = "";
 
-  // Créer l'en-tête du tableau
+  // En-tête
   const headerRow = document.createElement("tr");
   const competenceHeader = document.createElement("th");
   competenceHeader.textContent = "Compétence";
@@ -62,7 +58,6 @@ async function displayPlanningWithNames(
   horairesHeader.textContent = "Horaires";
   headerRow.appendChild(horairesHeader);
 
-  // Colonnes dynamiques pour les dates
   const currentDate = new Date(startDate);
   const endDateObj = new Date(endDate);
   const dateHeaders = [];
@@ -76,7 +71,7 @@ async function displayPlanningWithNames(
   }
   thead.appendChild(headerRow);
 
-  // Regrouper les données par competence_id, horaire_id, date
+  // Regroupement des données
   const cases = {};
   data.forEach((row) => {
     const key = `${row.competence_id}-${row.horaire_id}-${row.date}`;
@@ -115,7 +110,6 @@ async function displayPlanningWithNames(
     }
   });
 
-  // Regrouper par competence_id et horaire_id pour les lignes
   const lignes = {};
   Object.values(cases).forEach((cell) => {
     const key = `${cell.competence_id}-${cell.horaire_id}`;
@@ -135,7 +129,6 @@ async function displayPlanningWithNames(
     lignes[key].cells[cell.date] = cell;
   });
 
-  // Préparer les lignes repos à insérer dans le tfoot
   const lignesRepos = [];
 
   Object.values(lignes).forEach((item) => {
@@ -151,7 +144,6 @@ async function displayPlanningWithNames(
       repos,
     } = item;
 
-    // Vérifier si au moins une date affichée est dans la période d'ouverture
     const ligneActivePourAuMoinsUneDate = dateHeaders.some(
       (date) =>
         (!competence_date_debut || date >= competence_date_debut) &&
@@ -161,17 +153,14 @@ async function displayPlanningWithNames(
 
     const row = document.createElement("tr");
 
-    // Colonne Compétence
     const competenceCell = document.createElement("td");
     competenceCell.textContent = competence;
     row.appendChild(competenceCell);
 
-    // Colonne Horaires
     const horairesCell = document.createElement("td");
     horairesCell.textContent = `${horaire_debut} - ${horaire_fin}`;
     row.appendChild(horairesCell);
 
-    // Colonnes dynamiques pour les dates
     dateHeaders.forEach((date) => {
       const dateCell = document.createElement("td");
       dateCell.dataset.competenceId = competence_id;
@@ -182,7 +171,6 @@ async function displayPlanningWithNames(
       let noms = [];
       let commentaires = [];
 
-      // Afficher la case uniquement si la date est dans la période d'ouverture
       if (
         (!competence_date_debut || date >= competence_date_debut) &&
         (!competence_date_fin || date <= competence_date_fin)
@@ -194,16 +182,14 @@ async function displayPlanningWithNames(
         }
         dateCell.dataset.ouverture = ouverture;
         if (ouverture === "non") {
-          dateCell.style.backgroundColor = "#d3d3d3";
+          dateCell.classList.add("cell-fermee");
         }
 
-        // Afficher le commentaire général (case sans nom)
         const commentaireGeneral = commentaires.find((c) => !c.nom_id);
         if (commentaireGeneral) {
           dateCell.innerHTML += `<div class="commentaire-block">${commentaireGeneral.commentaire}</div>`;
         }
 
-        // Afficher les noms et leur commentaire
         if (noms.length > 0) {
           noms.forEach(({ nom, nom_id }) => {
             const commentaireNom = commentaires.find((c) => c.nom_id == nom_id);
@@ -216,22 +202,20 @@ async function displayPlanningWithNames(
               </div>
             `;
           });
-          dateCell.style.whiteSpace = "normal";
+          dateCell.classList.add("cell-normal");
         } else if (!commentaireGeneral) {
           dateCell.textContent = "";
-          dateCell.style.whiteSpace = "pre-line";
+          dateCell.classList.add("cell-normal");
         }
       } else {
-        // Hors période d'ouverture : case vide et grisée
         dateCell.dataset.ouverture = "non";
-        dateCell.style.backgroundColor = "#d3d3d3";
+        dateCell.classList.add("cell-fermee");
         dateCell.textContent = "";
       }
 
       row.appendChild(dateCell);
     });
 
-    // Si repos == 1, stocke la ligne pour le tfoot, sinon ajoute au tbody
     if (repos == 1) {
       lignesRepos.push(row);
     } else {
@@ -249,10 +233,9 @@ async function displayPlanningWithNames(
     lignesRepos.forEach((row) => tfoot.appendChild(row));
   }
 
-  // Nettoyer le tfoot
   tfoot.innerHTML = "";
 
-  // 1. Ligne Vacance/Autre + dates (toujours en premier)
+  // Ligne Vacance/Autre + dates
   const vacanceAutreRow = document.createElement("tr");
   vacanceAutreRow.id = "vacance-autre-row";
   const thVacance = document.createElement("th");
@@ -263,22 +246,19 @@ async function displayPlanningWithNames(
   vacanceAutreRow.appendChild(thAutre);
   dateHeaders.forEach((date) => {
     const th = document.createElement("th");
-    // Affiche la date au format JJ/MM/AAAA
     th.textContent = new Date(date).toLocaleDateString("fr-FR");
     vacanceAutreRow.appendChild(th);
   });
   tfoot.appendChild(vacanceAutreRow);
 
-  // 2. Lignes repos (juste après la ligne Vacance/Autre)
   lignesRepos.forEach((row) => tfoot.appendChild(row));
 
-  // 3. Ligne extra-vacance-row (celle qui contient les noms en vacances)
+  // Ligne extra-vacance-row (noms en vacances)
   let extraRow = document.getElementById("extra-vacance-row");
   if (extraRow) extraRow.remove();
   const extraTr = document.createElement("tr");
   extraTr.id = "extra-vacance-row";
 
-  // 1. Calculer les noms présents dans toutes les dates
   const allDates = dateHeaders;
   const nomsParDate = allDates.map((date) =>
     ((vacancesData && vacancesData[date]) || []).map((v) => v.nom_id)
@@ -287,26 +267,21 @@ async function displayPlanningWithNames(
     (acc, noms) => acc.filter((nomId) => noms.includes(nomId)),
     nomsParDate[0] || []
   );
-  // nomsDansToutesLesDates = [nom_id, nom_id, ...] présents tous les jours
 
-  // 2. Récupérer les objets {nom, nom_id} pour affichage
   let nomsDansToutesLesDatesObj = [];
   if (nomsDansToutesLesDates.length > 0) {
-    // On prend le premier jour pour récupérer les noms/nom_id
     const refList = (vacancesData && vacancesData[allDates[0]]) || [];
     nomsDansToutesLesDatesObj = refList.filter((v) =>
       nomsDansToutesLesDates.includes(v.nom_id)
     );
   }
 
-  // Cellule "Vacance" (titre)
   const tdVacanceTitle = document.createElement("td");
-  tdVacanceTitle.style.cursor = "pointer";
+  tdVacanceTitle.classList.add("cursor-pointer", "vacance-title-cell");
   tdVacanceTitle.onclick = function (event) {
-    showTooltipVacanceMulti(event, dateHeaders); // On passe toutes les dates affichées
+    showTooltipVacanceMulti(event, dateHeaders);
   };
-  tdVacanceTitle.style.fontWeight = "bold";
-  // Afficher les noms présents tous les jours ici
+  tdVacanceTitle.classList.add("fw-bold");
   if (nomsDansToutesLesDatesObj.length > 0) {
     nomsDansToutesLesDatesObj.forEach((vacance) => {
       const div = document.createElement("div");
@@ -314,12 +289,8 @@ async function displayPlanningWithNames(
       div.dataset.nom = vacance.nom;
       div.dataset.nomId = vacance.nom_id;
       div.innerHTML = `<span class="nom-valeur">${vacance.nom}</span>`;
-      // Ajout du clic droit
       div.addEventListener("contextmenu", function (e) {
         e.preventDefault();
-        // SUPPRIMER cette ligne :
-        // showTooltipVacanceDeleteMulti(e, vacance.nom_id, dateHeaders, vacance.nom);
-        // Le clic droit est déjà géré globalement par clicdroit.js
       });
       tdVacanceTitle.appendChild(div);
     });
@@ -328,20 +299,15 @@ async function displayPlanningWithNames(
   }
   extraTr.appendChild(tdVacanceTitle);
 
-  // Cellule "Autre" (titre ou "Congés")
   const tdAutre = document.createElement("td");
   tdAutre.textContent = "Congés";
   extraTr.appendChild(tdAutre);
 
-  // Pour chaque date affichée, une cellule "vacance" TOUJOURS créée et cliquable
   dateHeaders.forEach((date) => {
     const td = document.createElement("td");
-    td.classList.add("vacance-cell");
+    td.classList.add("vacance-cell", "cursor-pointer", "bg-vacance");
     td.dataset.date = date;
-    td.style.cursor = "pointer";
-    td.style.background = "#f8fcff";
 
-    // Affiche les noms en vacances pour cette date/site, sauf ceux déjà dans la case "Vacance" (tous les jours)
     const vacanceList = (vacancesData && vacancesData[date]) || [];
     const vacanceListFiltered = vacanceList.filter(
       (v) => !nomsDansToutesLesDates.includes(v.nom_id)
@@ -352,13 +318,12 @@ async function displayPlanningWithNames(
           <span class="nom-valeur">${vacance.nom}</span>
         </div>`;
       });
-      td.style.whiteSpace = "normal";
+      td.classList.add("ws-normal");
     } else {
       td.innerHTML = "";
-      td.style.whiteSpace = "pre-line";
+      td.classList.add("ws-preline");
     }
 
-    // Clic pour afficher le tooltip vacances (siteId et date)
     td.onclick = function (event) {
       showTooltipVacance(event, date);
     };
@@ -371,65 +336,53 @@ async function displayPlanningWithNames(
   const compteurTr = document.createElement("tr");
   compteurTr.id = "compteur-row";
 
-  // Première colonne : "Compteur"
   const compteurTh = document.createElement("th");
   compteurTh.textContent = "Compteur";
   compteurTr.appendChild(compteurTh);
 
-  // Deuxième colonne : vide
   const emptyTd = document.createElement("td");
   emptyTd.textContent = "";
   compteurTr.appendChild(emptyTd);
 
-  // Colonnes dates : compter les cases non grisées ET vides (pas de nom, pas de commentaire)
   const siteId = sessionStorage.getItem("selectedSite");
   const availableCounts = await fetchAvailableCount(siteId, dateHeaders);
 
   dateHeaders.forEach((date) => {
-    // Sélectionne toutes les cases du tbody pour cette date
     const cells = Array.from(
       document.querySelectorAll(
         `#planningTableWithNames tbody td[data-date="${date}"]`
       )
     );
-    // Compte celles qui sont ouvertes ET vides (pas de nom-block, pas de commentaire-block)
     const count = cells.filter((td) => {
       if (td.dataset.ouverture !== "oui") return false;
       if (td.querySelector(".nom-block")) return false;
-
-      // Cherche un commentaire "Fermée"
       const commentaireBlocks = td.querySelectorAll(".commentaire-block");
       for (const cb of commentaireBlocks) {
         if (cb.textContent.trim().toLowerCase() === "fermée") {
-          return false; // case pleine si commentaire = Fermée
+          return false;
         }
       }
-      // Sinon, case vide même s'il y a un autre commentaire
       return true;
     }).length;
 
-    // Nombre de personnes disponibles ce jour
     const dispo = availableCounts[date] ?? null;
 
-    // Calcul du delta
     let delta = "";
-    let color = "#007bff";
+    let colorClass = "delta-blue";
     if (dispo !== null && !isNaN(Number(dispo))) {
       const d = Number(dispo) - count;
       if (dispo !== 0 || count !== 0) {
         delta = d > 0 ? `+${d}` : `${d}`;
-        color = d < 0 ? "#c00" : "#007bff";
+        colorClass = d < 0 ? "delta-red" : "delta-blue";
       } else {
         delta = "0";
-        color = "#007bff";
+        colorClass = "delta-blue";
       }
     }
 
     const tdElem = document.createElement("td");
-    tdElem.style.fontWeight = "bold";
-    tdElem.style.fontSize = "18px";
-    tdElem.style.textAlign = "center";
-    tdElem.innerHTML = `<span style="color:${color};">${delta}</span>`;
+    tdElem.classList.add("fw-bold", "fs-18", "ta-center");
+    tdElem.innerHTML = `<span class="${colorClass}">${delta}</span>`;
     compteurTr.appendChild(tdElem);
   });
 
@@ -469,7 +422,6 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
 
     renderPlanningRemplissageTable(data);
 
-    // Ajoute ces deux lignes ici :
     const competencesParNom = await fetchCompetencesParNom();
     startSwitchEvolution(data, competencesParNom);
 
@@ -491,7 +443,6 @@ async function refreshSecondTable() {
       startDate,
       endDate
     );
-    // Ajoute ici la récupération des vacances pour la période
     const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
     displayPlanningWithNames(
       competencesWithNames,
@@ -506,7 +457,6 @@ applyDateFilterButton.addEventListener("click", async () => {
   const endDate = endDateInput.value;
   const siteId = sessionStorage.getItem("selectedSite");
 
-  // Vérifiez si les dates sont définies
   if (!startDate || !endDate) {
     alert("Veuillez sélectionner une date de début et une date de fin.");
     return;
@@ -514,13 +464,11 @@ applyDateFilterButton.addEventListener("click", async () => {
 
   console.log("Dates sélectionnées :", { startDate, endDate });
 
-  // Récupérer les compétences avec noms pour le deuxième tableau
   const competencesWithNames = await fetchCompetencesWithNames(
     siteId,
     startDate,
     endDate
   );
-  // Récupérer les vacances pour la période
   const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
 
   displayPlanningWithNames(
@@ -536,7 +484,6 @@ document
   .addEventListener("click", async (event) => {
     const cell = event.target;
 
-    // Vérifiez si la cellule cliquée est valide
     if (
       cell.tagName !== "TD" ||
       !cell.dataset.competenceId ||
@@ -552,20 +499,17 @@ document
     const date = cell.dataset.date;
     const siteId = sessionStorage.getItem("selectedSite");
 
-    // Récupère le nom de la compétence affiché dans la colonne (première colonne de la ligne)
     const nomDeLaCompetence =
       cell.parentElement.querySelector("td").textContent;
 
-    // Récupérer les noms disponibles
     const noms = await fetchAvailableNames(competenceId, siteId, date);
 
-    // Afficher le tooltip en passant bien le nom de la compétence et la date cliquée
     showTooltip(event, noms, {
       competenceId,
       horaireId,
       date,
       siteId,
-      clickedCompetence: nomDeLaCompetence, // <-- c'est le nom affiché dans la colonne
+      clickedCompetence: nomDeLaCompetence,
       clickedDate: date,
     });
   });
@@ -580,7 +524,6 @@ async function fetchVacancesData(siteId, startDate, endDate) {
   );
   if (!res.ok) return {};
   const data = await res.json();
-  // Regroupe par date
   const vacancesData = {};
   data.forEach((v) => {
     if (!vacancesData[v.date]) vacancesData[v.date] = [];
@@ -589,7 +532,6 @@ async function fetchVacancesData(siteId, startDate, endDate) {
   return vacancesData;
 }
 
-// Sauvegarder les dates dans le localStorage lors de l'application du filtre
 applyDateFilterButton.addEventListener("click", () => {
   const startDate = startDateInput.value;
   const endDate = endDateInput.value;
@@ -602,7 +544,6 @@ applyDateFilterButton.addEventListener("click", () => {
 
 async function fetchAvailableCount(siteId, dates) {
   const token = localStorage.getItem("token");
-  // On suppose que tu as une route qui retourne un objet { "2025-05-05": 3, ... }
   const res = await fetch(
     `/api/available-count?site_id=${siteId}&dates=${dates.join(",")}`,
     {
@@ -624,7 +565,6 @@ async function fetchCompetencesParNom() {
   if (!res.ok) return {};
 
   const personnes = await res.json();
-  // On veut un mapping { nom_id: [liste_competence_id] }
   const map = {};
   personnes.forEach((p) => {
     map[p.nom_id] = p.competences;

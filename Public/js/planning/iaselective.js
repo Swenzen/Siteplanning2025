@@ -8,19 +8,13 @@ let nomsDisponiblesParCellule = {};
 const siteId = sessionStorage.getItem("selectedSite");
 let groupesCache = {};
 
-
-
-
 window.addEventListener("DOMContentLoaded", () => {
   // Crée un conteneur pour les boutons si pas déjà présent
   let actionsDiv = document.getElementById("planning-actions");
   if (!actionsDiv) {
     actionsDiv = document.createElement("div");
     actionsDiv.id = "planning-actions";
-    actionsDiv.style.display = "flex";
-    actionsDiv.style.gap = "12px";
-    actionsDiv.style.flexWrap = "wrap";
-    actionsDiv.style.margin = "24px 0";
+    actionsDiv.classList.add("actions-container");
     // Place le conteneur juste avant le tableau d'évolution
     const evoVisu = document.getElementById("evolution-visualization");
     evoVisu.parentNode.insertBefore(actionsDiv, evoVisu);
@@ -28,26 +22,22 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // 1 - Appliquer les roulements
   if (!document.getElementById("btnApplyRoulements")) {
-  const btn = document.createElement("button");
-  btn.id = "btnApplyRoulements";
-  btn.textContent = "1 - Appliquer les roulements";
-  btn.style.padding = "10px 18px";
-  btn.style.fontWeight = "bold";
-  btn.onclick = function() {
-    // Remplace cette ligne par la fonction réelle du bouton original
-    appliquerRoulementsDansPlanningAuto();
-  };
-  actionsDiv.appendChild(btn);
-}
-
+    const btn = document.createElement("button");
+    btn.id = "btnApplyRoulements";
+    btn.textContent = "1 - Appliquer les roulements";
+    btn.classList.add("action-btn");
+    btn.onclick = function() {
+      appliquerRoulementsDansPlanningAuto();
+    };
+    actionsDiv.appendChild(btn);
+  }
 
   // 2 - Remplir automatiquement le planning
   if (!document.getElementById("auto-fill-btn")) {
     const btn = document.createElement("button");
     btn.id = "auto-fill-btn";
     btn.textContent = "2 - Remplir automatiquement le planning";
-    btn.style.padding = "10px 18px";
-    btn.style.fontWeight = "bold";
+    btn.classList.add("action-btn");
     btn.onclick = async function() {
       if (!planningData || planningData.length === 0) {
         alert("Aucune donnée de planning à remplir !");
@@ -63,10 +53,8 @@ window.addEventListener("DOMContentLoaded", () => {
     const btn = document.createElement("button");
     btn.id = "btnBestPlannings";
     btn.textContent = "3 - Générer 100 plannings équilibrés";
-    btn.style.padding = "10px 18px";
-    btn.style.fontWeight = "bold";
+    btn.classList.add("action-btn");
     btn.onclick = launchBestPlannings;
-    // Place le bouton à la fin du conteneur d'actions
     actionsDiv.appendChild(btn);
   }
 
@@ -75,8 +63,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const btn = document.createElement("button");
     btn.id = "btnNextGen100";
     btn.textContent = "4 - 100 générations";
-    btn.style.padding = "10px 18px";
-    btn.style.fontWeight = "bold";
+    btn.classList.add("action-btn");
     btn.onclick = next100Generations;
     actionsDiv.appendChild(btn);
   }
@@ -86,18 +73,15 @@ window.addEventListener("DOMContentLoaded", () => {
     const btn = document.createElement("button");
     btn.id = "btnApplySimuPlanning";
     btn.textContent = "5 - Appliquer ce planning";
-    btn.style.padding = "10px 18px";
-    btn.style.fontWeight = "bold";
+    btn.classList.add("action-btn");
     btn.onclick = async function() {
       let toApply = planningData;
-      // Si on est dans la navigation des meilleurs plannings
       if (typeof currentBestIdx !== "undefined" && bestPlannings && bestPlannings.length > 0) {
         const genLabel = document.getElementById("genLabel");
         if (genLabel && genLabel.textContent.startsWith("Planning")) {
           toApply = bestPlannings[currentBestIdx];
         }
       }
-      // Si on est dans la navigation des enfants croisés/mutés
       if (typeof currentCrossIdx !== "undefined" && crossMutatePlannings && crossMutatePlannings.length > 0) {
         const genLabel = document.getElementById("genLabel");
         if (genLabel && genLabel.textContent.startsWith("Enfant")) {
@@ -119,8 +103,20 @@ window.addEventListener("DOMContentLoaded", () => {
   if (nav) {
     actionsDiv.parentNode.insertBefore(nav, actionsDiv.nextSibling);
   }
-});
 
+  // Barre de progression
+  if (!document.getElementById("progressBarContainer")) {
+    const container = document.createElement("div");
+    container.id = "progressBarContainer";
+    container.classList.add("progress-bar-container");
+    container.style.display = "none";
+    const bar = document.createElement("div");
+    bar.id = "progressBar";
+    bar.classList.add("progress-bar");
+    container.appendChild(bar);
+    document.body.insertBefore(container, document.getElementById("evolution-nav"));
+  }
+});
 
 // Remplissage automatique du planning simulé (pas de BDD)
 async function autoFillPlanningSimulatedTable(planningData) {
@@ -249,7 +245,7 @@ function renderPlanningRemplissageTable(data) {
   });
   const dates = Array.from(datesSet).sort();
 
-  let html = '<table border="1" style="border-collapse:collapse;"><tr>';
+  let html = '<table class="simu-table"><tr>';
   html += '<th>Compétence</th><th>Horaires</th>';
   dates.forEach(date => html += `<th>${date}</th>`);
   html += '</tr>';
@@ -263,9 +259,9 @@ function renderPlanningRemplissageTable(data) {
     dates.forEach(date => {
       const cell = ligne.cells[date];
       if (isRepos) {
-        html += `<td style="background:#d3d3d3"></td>`;
+        html += `<td class="cell-fermee"></td>`;
       } else if (!cell) {
-        html += `<td></td>`;
+        html += `<td class="cell-empty"></td>`;
       } else {
         // Ajout : détection commentaire "Fermée"
         let isFermee = false;
@@ -289,7 +285,7 @@ function renderPlanningRemplissageTable(data) {
             html += `<td></td>`;
           }
         } else {
-          html += `<td style="background:#d3d3d3"></td>`;
+          html += `<td class="cell-fermee"></td>`;
         }
       }
     });
@@ -430,7 +426,7 @@ function computeEquilibreScore(stats, priorites = {}) {
 // Affiche le panneau stats dynamiquement selon les groupes
 function renderStatsPanel(stats) {
   const groupes = stats._groupes || [];
-  let html = `<table border="1" style="border-collapse:collapse;"><thead>
+  let html = `<table border="1" class="stats-table"><thead>
     <tr><th>Nom</th>`;
   groupes.forEach(g => html += `<th>${g.nom_groupe}</th>`);
   html += `<th>Total</th></tr></thead><tbody>`;
@@ -450,7 +446,7 @@ function renderStatsPanel(stats) {
 
   // Ajoute le score global d'équilibre
   const score = computeEquilibreScore(stats, window.groupePriorites);
-  html = `<div style="margin-bottom:8px;"><b>Score d'équilibre : ${score.toFixed(3)}</b></div>` + html;
+  html = `<div class="stats-score"><b>Score d'équilibre : ${score.toFixed(3)}</b></div>` + html;
 
   document.getElementById("stats-results").innerHTML = html;
 }
@@ -459,7 +455,7 @@ function renderStatsPanel(stats) {
 function renderPlanningSwitchTable(data, dates, switched = []) {
   const { lignes } = buildLignesEtDates(data);
 
-  let html = '<table border="1" style="border-collapse:collapse;"><tr>';
+  let html = '<table class="simu-table"><tr>';
   html += '<th>Compétence</th><th>Horaires</th>';
   dates.forEach(date => html += `<th>${date}</th>`);
   html += '</tr>';
@@ -477,9 +473,8 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
         sw.horaire_id == ligne.horaire_id &&
         sw.date == date
       )) {
-        highlight = ' class="highlight-switch"';
+        highlight = ' highlight-switch';
       }
-      // Ajout : détection commentaire "Fermée"
       let isFermee = false;
       if (cell && cell.commentaires && Array.isArray(cell.commentaires)) {
         const commentaireGeneral = cell.commentaires.find(c => !c.nom_id);
@@ -491,21 +486,21 @@ function renderPlanningSwitchTable(data, dates, switched = []) {
         isFermee = true;
       }
       if (isRepos) {
-        html += `<td style="background:#d3d3d3"></td>`;
+        html += `<td class="cell-fermee${highlight}"></td>`;
       } else if (!cell) {
-        html += `<td style="background:#eee"></td>`;
+        html += `<td class="cell-empty${highlight}"></td>`;
       } else if (cell.ouverture == 1 && !isFermee) {
         if (cell.nom) {
           if (cell.locked) {
-            html += `<td${highlight}><b class="simu-locked">${cell.nom}</b></td>`;
+            html += `<td class="${highlight}"><b class="simu-locked">${cell.nom}</b></td>`;
           } else {
-            html += `<td${highlight}><b>${cell.nom}</b></td>`;
+            html += `<td class="${highlight}"><b>${cell.nom}</b></td>`;
           }
         } else {
-          html += `<td${highlight}></td>`;
+          html += `<td class="${highlight}"></td>`;
         }
       } else {
-        html += `<td style="background:#d3d3d3"></td>`;
+        html += `<td class="cell-fermee${highlight}"></td>`;
       }
     });
     html += '</tr>';
@@ -1256,12 +1251,10 @@ function setButtonState(activeIdx) {
   ids.forEach((id, idx) => {
     const btn = document.getElementById(id);
     if (!btn) return;
-    btn.style.background = "";
-    btn.style.color = "";
+    btn.classList.remove("btn-active");
     btn.classList.remove("btn-blink");
     if (idx <= activeIdx) {
-      btn.style.background = "#28a745";
-      btn.style.color = "#fff";
+      btn.classList.add("btn-active");
     } else if (idx === activeIdx + 1) {
       btn.classList.add("btn-blink");
     }

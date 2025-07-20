@@ -182,7 +182,6 @@ async function displayPlanningWithNames(
       let noms = [];
       let commentaires = [];
 
-      // Afficher la case uniquement si la date est dans la période d'ouverture
       if (
         (!competence_date_debut || date >= competence_date_debut) &&
         (!competence_date_fin || date <= competence_date_fin)
@@ -193,7 +192,6 @@ async function displayPlanningWithNames(
           commentaires = cells[date].commentaires || [];
         }
 
-        // Si commentaire "Fermée", on force ouverture à "non"
         const commentaireGeneral = commentaires.find((c) => !c.nom_id);
         if (commentaireGeneral && commentaireGeneral.commentaire.trim().toLowerCase() === "fermée") {
           ouverture = "non";
@@ -201,15 +199,13 @@ async function displayPlanningWithNames(
 
         dateCell.dataset.ouverture = ouverture;
         if (ouverture === "non") {
-          dateCell.style.backgroundColor = "#d3d3d3";
+          dateCell.classList.add("cell-fermee");
         }
 
-        // Afficher le commentaire général (case sans nom)
         if (commentaireGeneral) {
           dateCell.innerHTML += `<div class="commentaire-block">${commentaireGeneral.commentaire}</div>`;
         }
 
-        // Afficher les noms et leur commentaire
         if (noms.length > 0) {
           noms.forEach(({ nom, nom_id }) => {
             const commentaireNom = commentaires.find((c) => c.nom_id == nom_id);
@@ -222,15 +218,14 @@ async function displayPlanningWithNames(
               </div>
             `;
           });
-          dateCell.style.whiteSpace = "normal";
+          dateCell.classList.add("ws-normal");
         } else if (!commentaireGeneral) {
           dateCell.textContent = "";
-          dateCell.style.whiteSpace = "pre-line";
+          dateCell.classList.add("ws-preline");
         }
       } else {
-        // Hors période d'ouverture : case vide et grisée
         dateCell.dataset.ouverture = "non";
-        dateCell.style.backgroundColor = "#d3d3d3";
+        dateCell.classList.add("cell-fermee");
         dateCell.textContent = "";
       }
 
@@ -307,12 +302,10 @@ async function displayPlanningWithNames(
 
   // Cellule "Vacance" (titre)
   const tdVacanceTitle = document.createElement("td");
-  tdVacanceTitle.style.cursor = "pointer";
+  tdVacanceTitle.classList.add("cursor-pointer", "fw-bold");
   tdVacanceTitle.onclick = function (event) {
-    showTooltipVacanceMulti(event, dateHeaders); // On passe toutes les dates affichées
+    showTooltipVacanceMulti(event, dateHeaders);
   };
-  tdVacanceTitle.style.fontWeight = "bold";
-  // Afficher les noms présents tous les jours ici
   if (nomsDansToutesLesDatesObj.length > 0) {
     nomsDansToutesLesDatesObj.forEach((vacance) => {
       const div = document.createElement("div");
@@ -320,12 +313,8 @@ async function displayPlanningWithNames(
       div.dataset.nom = vacance.nom;
       div.dataset.nomId = vacance.nom_id;
       div.innerHTML = `<span class="nom-valeur">${vacance.nom}</span>`;
-      // Ajout du clic droit
       div.addEventListener("contextmenu", function (e) {
         e.preventDefault();
-        // SUPPRIMER cette ligne :
-        // showTooltipVacanceDeleteMulti(e, vacance.nom_id, dateHeaders, vacance.nom);
-        // Le clic droit est déjà géré globalement par clicdroit.js
       });
       tdVacanceTitle.appendChild(div);
     });
@@ -339,15 +328,11 @@ async function displayPlanningWithNames(
   tdAutre.textContent = "Congés";
   extraTr.appendChild(tdAutre);
 
-  // Pour chaque date affichée, une cellule "vacance" TOUJOURS créée et cliquable
   dateHeaders.forEach((date) => {
     const td = document.createElement("td");
-    td.classList.add("vacance-cell");
+    td.classList.add("vacance-cell", "cursor-pointer", "bg-vacance");
     td.dataset.date = date;
-    td.style.cursor = "pointer";
-    td.style.background = "#f8fcff";
 
-    // Affiche les noms en vacances pour cette date/site, sauf ceux déjà dans la case "Vacance" (tous les jours)
     const vacanceList = (vacancesData && vacancesData[date]) || [];
     const vacanceListFiltered = vacanceList.filter(
       (v) => !nomsDansToutesLesDates.includes(v.nom_id)
@@ -358,13 +343,12 @@ async function displayPlanningWithNames(
           <span class="nom-valeur">${vacance.nom}</span>
         </div>`;
       });
-      td.style.whiteSpace = "normal";
+      td.classList.add("ws-normal");
     } else {
       td.innerHTML = "";
-      td.style.whiteSpace = "pre-line";
+      td.classList.add("ws-preline");
     }
 
-    // Clic pour afficher le tooltip vacances (siteId et date)
     td.onclick = function (event) {
       showTooltipVacance(event, date);
     };
@@ -432,10 +416,8 @@ async function displayPlanningWithNames(
     }
 
     const tdElem = document.createElement("td");
-    tdElem.style.fontWeight = "bold";
-    tdElem.style.fontSize = "18px";
-    tdElem.style.textAlign = "center";
-    tdElem.innerHTML = `<span style="color:${color};">${delta}</span>`;
+    tdElem.classList.add("fw-bold", "fs-18", "ta-center");
+    tdElem.innerHTML = `<span class="${color === "#c00" ? "delta-red" : "delta-blue"}">${delta}</span>`;
     compteurTr.appendChild(tdElem);
   });
 

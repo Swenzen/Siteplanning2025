@@ -8,14 +8,7 @@ function createRoulementButton(nom_id, nom) {
 function openRoulementMenu(nom_id, nom) {
     // Création du menu/modal
     const modal = document.createElement('div');
-    modal.style.position = 'fixed';
-    modal.style.top = '20%';
-    modal.style.left = '50%';
-    modal.style.transform = 'translate(-50%, 0)';
-    modal.style.background = '#fff';
-    modal.style.border = '1px solid #ccc';
-    modal.style.padding = '24px';
-    modal.style.zIndex = 9999;
+    modal.className = 'roulement-modal';
 
     modal.innerHTML = `
         <h3>Roulement pour ${nom}</h3>
@@ -103,7 +96,7 @@ function openRoulementMenu(nom_id, nom) {
         });
         modal.remove();
         alert('Roulement ajouté !');
-        fetchRoulementNoms(); // <-- Ajoute cette ligne pour rafraîchir le tableau
+        fetchRoulementNoms();
     };
 }
 
@@ -205,7 +198,7 @@ async function fetchRoulementNoms() {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                fetchRoulementNoms(); // Refresh
+                fetchRoulementNoms();
             };
             tdSuppr.appendChild(btn);
             tdSuppr.appendChild(document.createElement('br'));
@@ -218,21 +211,5 @@ async function fetchRoulementNoms() {
         tbody.appendChild(tr);
     });
 }
-
-// Ajoute un peu de style pour les vignettes
-const style = document.createElement('style');
-style.textContent = `
-.roulement-vignette {
-    display:inline-block;
-    background:#e3e6f7;
-    color:#222;
-    border-radius:8px;
-    padding:2px 8px;
-    margin:2px 2px;
-    font-size:13px;
-    font-weight:bold;
-}
-`;
-document.head.appendChild(style);
 
 document.addEventListener('DOMContentLoaded', fetchRoulementNoms);

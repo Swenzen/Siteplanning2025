@@ -1,3 +1,75 @@
+/* Styles pour la base de données */
+
+.hidden { display: none !important; }
+.max400-overflow { max-height: 400px; overflow: auto; }
+.float-right { float: right; }
+.cursor-pointer { cursor: pointer; }
+
+
+
+.hidden { display: none !important; }
+
+
+
+.box {
+    border: 1px solid #ccc;
+    padding: 20px;
+}
+.mb-20 {
+    margin-bottom: 20px;
+}
+.mt-20 {
+    margin-top: 20px;
+}
+.competence-list {
+    min-height: 200px;
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+
+.flex-row {
+    display: flex;
+}
+.gap-32 {
+    gap: 32px;
+}
+.gap-24 {
+    gap: 24px;
+}
+.flex-1 {
+    flex: 1;
+}
+.flex-2 {
+    flex: 2;
+}
+.wrap {
+    flex-wrap: wrap;
+}
+.mt-40 {
+    margin-top: 40px;
+}
+
+
+
+
+.cell-fermee {
+    background: #d3d3d3;
+}
+.simu-table {
+    border-collapse: collapse;
+    width: 100%;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.simu-table th, .simu-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+}
+
 /* Style global pour le body */
 body {
     font-family: Arial, sans-serif;
@@ -8,7 +80,21 @@ body {
 }
 
 
-
+.hidden { display: none !important; }
+.tooltip-hidden {
+    display: none;
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    min-width: 200px;
+}
+.evolution-visualization {
+    margin: 32px 0;
+}
+.evolution-nav {
+    margin: 10px 0;
+}
 
 /* ========================= */
 /* STYLE DES TABLEAUX        */
@@ -234,8 +320,6 @@ header #user-section #logoutButton:hover {
 }
 
 
-
-/* ...existing code... */
 
 /* Menu déroulant pour le header */
 .has-dropdown {
@@ -1054,6 +1138,248 @@ button.danger:hover {
   100% { box-shadow: 0 0 8px #007bff; }
 }
 
+
+.actions-container {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 24px 0;
+}
+
+.action-btn {
+    padding: 10px 18px;
+    font-weight: bold;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.action-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.btn-active {
+    background: #28a745 !important;
+    color: #fff !important;
+}
+
+.btn-blink {
+    animation: blink 0.8s linear infinite;
+}
+@keyframes blink {
+    0% { box-shadow: 0 0 8px #007bff; }
+    50% { box-shadow: 0 0 24px #007bff; }
+    100% { box-shadow: 0 0 8px #007bff; }
+}
+
+.progress-bar-container {
+    position: relative;
+    width: 100%;
+    height: 18px;
+    background-color: #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 12px 0;
+    display: none;
+}
+
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background-color: #007bff;
+    transition: width 0.2s;
+}
+
+
+.cell-empty {
+    background: #eee;
+}
+.highlight-switch {
+    box-shadow: 0 0 8px #007bff;
+    border: 2px solid #007bff;
+}
+
+
+.cell-fermee {
+    background-color: #d3d3d3;
+}
+.cell-normal {
+    white-space: normal;
+}
+
+.cursor-pointer { cursor: pointer; }
+.bg-vacance { background: #f8fcff; }
+.ws-normal { white-space: normal; }
+.ws-preline { white-space: pre-line; }
+
+.fw-bold { font-weight: bold; }
+.fs-18 { font-size: 18px; }
+.ta-center { text-align: center; }
+.delta-blue { color: #007bff; }
+.delta-red { color: #c00; }
+.vacance-title-cell { font-weight: bold; cursor: pointer; }
+
+.bg-ponderation { background: #f8fcff; }
+
+
+
+.ponderationia-panel {
+    margin-top: 32px;
+}
+.ponderation-table {
+    border-collapse: collapse;
+    width: 100%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.ponderation-table th, .ponderation-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+.bg-ponderation {
+    background: #f8fcff;
+}
+.ponderation-input {
+    width: 60px;
+}
+.btn-ponderation {
+    margin-top: 8px;
+    padding: 8px 16px;
+    font-weight: bold;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-ponderation:hover {
+    background: #2980b9;
+}
+
+
+.stats-score {
+    margin-bottom: 8px;
+}
+.stats-table {
+    border-collapse: collapse;
+    width: 100%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.stats-table th, .stats-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.cell-empty {
+    background: #eee;
+}
+
+.cell-fermee { background-color: #d3d3d3; }
+.ws-normal { white-space: normal; }
+.ws-preline { white-space: pre-line; }
+.cursor-pointer { cursor: pointer; }
+.bg-vacance { background: #f8fcff; }
+.fw-bold { font-weight: bold; }
+.fs-18 { font-size: 18px; }
+.ta-center { text-align: center; }
+.delta-blue { color: #007bff; }
+.delta-red { color: #c00; }
+
+
+/* Modal pour roulement */
+.roulement-modal {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 24px;
+    z-index: 9999;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    min-width: 320px;
+}
+
+.roulement-vignette {
+    display: inline-block;
+    background: #e3e6f7;
+    color: #222;
+    border-radius: 8px;
+    padding: 2px 8px;
+    margin: 2px 2px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+
+.roulement-modal {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 24px;
+    z-index: 9999;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    min-width: 320px;
+}
+.roulement-vignette {
+    display: inline-block;
+    background: #e3e6f7;
+    color: #222;
+    border-radius: 8px;
+    padding: 2px 8px;
+    margin: 2px 2px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+
+
+/* Pour le tableau noms */
+.roulement-nom-table {
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+/* Pour le tooltip */
+.tooltip-hidden {
+    display: none;
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    min-width: 200px;
+}
+
+
+.stats-groupe-col {
+    background: #e3f2fd;
+}
+
+
+
+
 /* ========================= */
 /* pour tableau second      */
 /* ========================= */
@@ -1086,5 +1412,24 @@ button.danger:hover {
     width: 100%;
     min-width: 900px;       /* Optionnel : largeur minimale pour forcer le scroll si trop de colonnes */
     table-layout: auto;     /* Permet aux colonnes de s'adapter */
+}
+
+.progress-bar-container {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background-color: #f3f3f3;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #4caf50;
+    transition: width 0.4s ease;
 }
 

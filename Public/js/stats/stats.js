@@ -75,7 +75,7 @@ document.getElementById("periode-stats-form").addEventListener("submit", async f
     // Colonnes compétences individuelles
     allCompetences.forEach(c => html += `<th>${c}</th>`);
     // Colonnes groupes
-    groupes.forEach(g => html += `<th style="background:#e3f2fd">${g.nom_groupe}</th>`);
+    groupes.forEach(g => html += `<th class="stats-groupe-col">${g.nom_groupe}</th>`);
     // Colonnes horaires
     allModalites.forEach(m => html += `<th>${m}</th>`);
     html += `<th>Total</th></tr></thead><tbody>`;
@@ -85,7 +85,7 @@ document.getElementById("periode-stats-form").addEventListener("submit", async f
         // Compétences individuelles
         allCompetences.forEach(c => html += `<td>${stats[nom]?.competences[c] || 0}</td>`);
         // Groupes
-        groupes.forEach(g => html += `<td style="background:#e3f2fd">${getGroupeStat(nom, g)}</td>`);
+        groupes.forEach(g => html += `<td class="stats-groupe-col">${getGroupeStat(nom, g)}</td>`);
         // Horaires
         allModalites.forEach(m => html += `<td>${stats[nom]?.modalites[m] || 0}</td>`);
         html += `<td>${stats[nom]?.total || 0}</td></tr>`;
