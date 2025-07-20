@@ -55,7 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
         siteSelector.style.display = "inline-block";
         loadSiteOptions();
     } else if (window.location.pathname.includes("index.html")) {
-        userInfo.innerHTML = `<a href="#login">Connexion</a> | <a href="#register">Inscription</a>`;
+        userInfo.innerHTML = `
+    <button class="user-btn" id="loginBtn">Connexion</button>
+    <button class="user-btn" id="registerBtn">Inscription</button>
+`;
     } else {
         userInfo.textContent = "Non connecté";
     }

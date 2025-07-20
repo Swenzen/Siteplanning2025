@@ -108,20 +108,37 @@ app.get('/health', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
 
     try {
-        // Hacher le mot de passe
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insérer l'utilisateur dans la base de données
-        const query = 'INSERT INTO Tuser (username, password, email) VALUES (?, ?, ?)';
-        pool.query(query, [username, hashedPassword, email], (err, results) => {
+        // 1. Créer le site (nom = email ou "Site de {email}")
+        const siteName = `Site de ${email}`;
+        pool.query('INSERT INTO Tsite (site_name) VALUES (?)', [siteName], (err, siteResult) => {
             if (err) {
-                console.error('Erreur lors de l\'inscription :', err.message);
-                return res.status(500).send('Erreur lors de l\'inscription');
+                console.error('Erreur lors de la création du site :', err.message);
+                return res.status(500).send('Erreur lors de la création du site');
             }
-            res.status(201).send('Utilisateur inscrit avec succès');
+            const siteId = siteResult.insertId;
+
+            // 2. Créer l'utilisateur
+            pool.query('INSERT INTO Tuser (username, password, email) VALUES (?, ?, ?)', [email, hashedPassword, email], (err, userResult) => {
+                if (err) {
+                    console.error('Erreur lors de l\'inscription :', err.message);
+                    return res.status(500).send('Erreur lors de l\'inscription');
+                }
+                const userId = userResult.insertId;
+
+                // 3. Lier l'utilisateur au site
+                pool.query('INSERT INTO Tuser_Tsite (user_id, site_id) VALUES (?, ?)', [userId, siteId], (err, linkResult) => {
+                    if (err) {
+                        console.error('Erreur lors de la liaison user-site :', err.message);
+                        return res.status(500).send('Erreur lors de la liaison user-site');
+                    }
+                    res.status(201).send('Utilisateur et site créés avec succès');
+                });
+            });
         });
     } catch (err) {
         console.error('Erreur lors du hachage du mot de passe :', err.message);
@@ -130,7 +147,8 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
+    console.log('Tentative de connexion avec email:', email);
 
     const query = `
         SELECT u.user_id, u.username, u.password, GROUP_CONCAT(st.site_id) AS site_ids
@@ -140,7 +158,8 @@ app.post('/login', (req, res) => {
         GROUP BY u.user_id
     `;
 
-    pool.query(query, [username], async (err, results) => {
+    pool.query(query, [email], async (err, results) => {
+        console.log('Résultat SQL:', results);
         if (err) {
             console.error('Erreur lors de la connexion :', err.message);
             return res.status(500).send('Erreur lors de la connexion');
