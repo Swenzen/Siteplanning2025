@@ -1037,4 +1037,18 @@ button.danger:hover {
 
 
 
+.sticky-table-container {
+    max-height: 1000px;      /* Hauteur max, scroll vertical si besoin */
+    overflow-x: auto;       /* Scroll horizontal si le tableau déborde */
+    overflow-y: auto;       /* Scroll vertical si besoin */
+    width: 100%;            /* Prend toute la largeur disponible */
+    box-sizing: border-box;
+}
+
+/* Tableau à 100% de la largeur du conteneur */
+#horaireCompetenceDaysTable {
+    width: 100%;
+    min-width: 900px;       /* Optionnel : largeur minimale pour forcer le scroll si trop de colonnes */
+    table-layout: auto;     /* Permet aux colonnes de s'adapter */
+}
 

@@ -70,10 +70,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Forcer le rechargement à chaque clic sur le menu BDD
     document.querySelectorAll('nav#menu .dropdown-menu a').forEach(link => {
         link.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Force un vrai reload même si seul le hash change
-            window.location.assign(this.href.split('#')[0] + '#' + decodeURIComponent(this.href.split('#')[1] || ''));
-            window.location.reload();
+            // Si le lien pointe vers la même page (juste le hash), on reload
+            const currentPage = window.location.pathname.split('/').pop();
+            const targetPage = this.href.split('/').pop().split('#')[0];
+            if (currentPage === targetPage) {
+                e.preventDefault();
+                window.location.assign(this.href.split('#')[0] + '#' + decodeURIComponent(this.href.split('#')[1] || ''));
+                window.location.reload();
+            }
+            // Sinon, navigation normale (ne bloque pas le clic)
+            // Pas de e.preventDefault()
         });
     });
 });
