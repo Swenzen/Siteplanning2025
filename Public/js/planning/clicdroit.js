@@ -98,17 +98,7 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
 
   tooltip = document.createElement("div");
   tooltip.id = "tooltip-clicdroit";
-  tooltip.style.position = "fixed";
-  tooltip.style.zIndex = 10000;
-  tooltip.style.background = "#fff";
-  tooltip.style.border = "1px solid #ccc";
-  tooltip.style.borderRadius = "6px";
-  tooltip.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
-  tooltip.style.padding = "10px";
-  tooltip.style.minWidth = "180px";
-  tooltip.style.maxWidth = "300px";
-  tooltip.style.fontFamily = "Arial, sans-serif";
-  tooltip.style.display = "block";
+  tooltip.className = "tooltip-clicdroit";
   document.body.appendChild(tooltip);
 
   // Positionnement intelligent (évite de sortir de l'écran)
@@ -123,23 +113,17 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
     tooltip.style.top = y + "px";
   }, 0);
 
-  // Détection : est-ce une cellule de vacances (tfoot) ?
-  let isVacanceCell = false;
-  if (event.target.closest('td') && event.target.closest('td').classList.contains('vacance-cell')) {
-    isVacanceCell = !(competenceId && horaireId);
-  }
-
   // CASE VACANCE SOUS-CASE
   if (isVacanceSousCase) {
     tooltip.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 6px;">
-        <span style="font-weight: bold;">${nom}</span>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button class="tooltip-delete-multi" title="Supprimer" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer sur toute la période</button>
-          <span class="tooltip-close" style="cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+      <div class="tooltip-header">
+        <span class="tooltip-title">${nom}</span>
+        <div class="tooltip-actions">
+          <button class="tooltip-delete-multi" title="Supprimer">Supprimer sur toute la période</button>
+          <span class="tooltip-close">&times;</span>
         </div>
       </div>
-      <div style="font-size: 13px; color: #555;">
+      <div class="tooltip-details">
         <div><b>Site ID :</b> ${siteId}</div>
         <div><b>Période :</b> ${dateHeaders ? dateHeaders.join(" / ") : ""}</div>
       </div>
@@ -149,48 +133,48 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
   else if (isCaseVide) {
     let isFermee = commentaireNom && commentaireNom.trim().toLowerCase() === "fermée";
     tooltip.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 6px;">
-        <span style="font-weight: bold;">Case vide</span>
-        <span class="tooltip-close" style="cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+      <div class="tooltip-header">
+        <span class="tooltip-title">Case vide</span>
+        <span class="tooltip-close">&times;</span>
       </div>
-      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+      <div class="tooltip-content">
         ${
           isFermee
-            ? `<button class="tooltip-reopen" style="background: #fff; color: #28a745; border: 1px solid #28a745; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Réouvrir</button>`
-            : `
-              ${commentaireNom ? `
-                <div style="font-weight:bold; color:#007bff; margin-bottom:4px;">Commentaire :</div>
-                <div style="margin-bottom:6px;">${commentaireNom}</div>
-                <button class="tooltip-delete-commentaire" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer le commentaire</button>
-              ` : `
-                <button class="tooltip-fermee" style="background: #fff; color: #c00; border: 1px solid #c00; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Fermée</button>
-                <button class="tooltip-add-commentaire" style="background: #fff; color: #007bff; border: 1px solid #007bff; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Ajouter un commentaire</button>`
-            }
-          `
-      }
+            ? `<button class="tooltip-reopen">Réouvrir</button>`
+            : (
+              commentaireNom
+                ? `<div class="tooltip-comment-label">Commentaire :</div>
+                   <div class="tooltip-comment">${commentaireNom}</div>
+                   <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>`
+                : `<button class="tooltip-fermee">Fermée</button>
+                   <button class="tooltip-add-commentaire">Ajouter un commentaire</button>`
+            )
+        }
+      </div>
     `;
   }
   // CASE AVEC NOM
   else {
     tooltip.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 6px;">
-        <span style="font-weight: bold;">${nom}</span>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button class="tooltip-delete" title="Supprimer" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer</button>
-          <span class="tooltip-close" style="cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+      <div class="tooltip-header">
+        <span class="tooltip-title">${nom}</span>
+        <div class="tooltip-actions">
+          <button class="tooltip-delete" title="Supprimer">Supprimer</button>
+          <span class="tooltip-close">&times;</span>
         </div>
       </div>
       ${
         commentaireNom
-          ? `<div style="margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
-              <div style="font-weight:bold; color:#007bff; margin-bottom:4px;">Commentaire :</div>
-              <div style="margin-bottom:6px;">${commentaireNom}</div>
-              <button class="tooltip-delete-commentaire" style="background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Supprimer le commentaire</button>
+          ? `<div class="tooltip-content">
+              <div class="tooltip-comment-label">Commentaire :</div>
+              <div class="tooltip-comment">${commentaireNom}</div>
+              <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>
             </div>`
-          : `<button class="tooltip-add-commentaire" style="margin-top:10px; background: #fff; color: #007bff; border: 1px solid #007bff; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 13px;">Ajouter un commentaire</button>`
+          : `<button class="tooltip-add-commentaire">Ajouter un commentaire</button>`
       }
     `;
   }
+
 
   // Fermeture tooltip
   tooltip.querySelector(".tooltip-close").onclick = function() {
@@ -287,7 +271,7 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       tooltip.style.display = "none";
       try {
         const token = localStorage.getItem("token");
-        if (isVacanceCell) {
+        if (isVacanceSousCase) { // <-- correction ici
           await fetch('/api/delete-vacancev2', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

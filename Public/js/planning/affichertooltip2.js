@@ -276,15 +276,15 @@ async function fetchAvailableNames(competenceId, siteId, date) {
 function showTooltip(event, noms, { competenceId, horaireId, date, siteId, planningStartDate, planningEndDate, clickedCompetence, clickedDate }) {
   const tooltip = document.getElementById("tooltip");
   tooltip.innerHTML = `
-    <div style="position: relative; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #eee; text-align: right;">
-        <div class="tooltip-close" style="cursor: pointer;">&times;</div>
+    <div class="tooltip-content">
+        <div class="tooltip-close">&times;</div>
     </div>
-    <ul style="list-style: none; padding: 0; margin: 0;">
+    <ul class="tooltip-list">
         ${noms.map(nomObj => {
           if (typeof nomObj === "string") {
-            return `<li style="cursor:pointer;" data-nom="${nomObj}">${nomObj}</li>`;
+            return `<li class="unavailable" data-nom="${nomObj}">${nomObj}</li>`;
           } else {
-            return `<li style="cursor:pointer;" data-nom="${nomObj.nom}" data-nom-id="${nomObj.nom_id}">${nomObj.nom}</li>`;
+            return `<li data-nom="${nomObj.nom}" data-nom-id="${nomObj.nom_id}">${nomObj.nom}</li>`;
           }
         }).join("")}
     </ul>
@@ -335,10 +335,10 @@ function showTooltip(event, noms, { competenceId, horaireId, date, siteId, plann
 
       const container = tooltip.querySelector("#affectations-table-container");
       if (!dateHeaders.length) {
-        container.innerHTML = `<div style="color:#c00;">Erreur : aucune date trouvée</div>`;
+        container.innerHTML = `<div class="tooltip-error">Erreur : aucune date trouvée</div>`;
         return;
       }
-      container.innerHTML = `<div style="color:#888; font-size:13px;">Chargement...</div>`;
+      container.innerHTML = `<div class="tooltip-loading">Chargement...</div>`;
       await showNomAffectationsTableInTooltip(
         nom, nomId, dateHeaders, siteId, container,
         clickedCompetence, clickedDate
@@ -354,9 +354,8 @@ function showTooltip(event, noms, { competenceId, horaireId, date, siteId, plann
 
 // Affichage du tableau avec le X rouge à la bonne case
 async function showNomAffectationsTableInTooltip(nom, nom_id, dateHeaders, siteId, container, clickedCompetence, clickedDate) {
-  // Vérification des dates
   if (!Array.isArray(dateHeaders) || !dateHeaders.length || !dateHeaders[0] || !dateHeaders[dateHeaders.length - 1]) {
-    container.innerHTML = `<div style="color:#c00;">Erreur : période non définie</div>`;
+    container.innerHTML = `<div class="tooltip-error">Erreur : période non définie</div>`;
     return;
   }
   const startDate = dateHeaders[0];
@@ -368,7 +367,7 @@ async function showNomAffectationsTableInTooltip(nom, nom_id, dateHeaders, siteI
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) {
-      container.innerHTML = `<div style="color:#c00;">Erreur de chargement</div>`;
+      container.innerHTML = `<div class="tooltip-error">Erreur de chargement</div>`;
       return;
     }
     const affectations = await res.json();
@@ -381,36 +380,34 @@ async function showNomAffectationsTableInTooltip(nom, nom_id, dateHeaders, siteI
     const competences = Object.keys(compDates);
 
     if (competences.length === 0) {
-      container.innerHTML = `<div style="color:#888; font-size:13px;">Aucune affectation sur la période</div>`;
+      container.innerHTML = `<div class="tooltip-loading">Aucune affectation sur la période</div>`;
       return;
     }
 
-    let table = `<table style="border-collapse:collapse;width:100%;font-size:13px;">
+    let table = `<table class="tooltip-table">
       <tr>
-        <th style="border-bottom:1px solid #ccc;"></th>
-        ${dateHeaders.map(date => `<th style="border-bottom:1px solid #ccc;padding:2px 4px;">${new Date(date).toLocaleDateString("fr-FR")}</th>`).join("")}
+        <th></th>
+        ${dateHeaders.map(date => `<th>${new Date(date).toLocaleDateString("fr-FR")}</th>`).join("")}
       </tr>
       ${competences.map(comp => `
         <tr>
-          <td style="font-weight:bold;padding:2px 4px;">${comp}</td>
+          <td><strong>${comp}</strong></td>
           ${dateHeaders.map(date => {
-            // Ajoute ce log pour debug
-            console.log("comp=", comp, "clickedCompetence=", clickedCompetence, "date=", date, "clickedDate=", clickedDate);
             if (compDates[comp] && compDates[comp][date]) {
-              return `<td style="padding:2px 4px;text-align:center;">${compDates[comp][date]}</td>`;
+              return `<td>${compDates[comp][date]}</td>`;
             } else if (comp == clickedCompetence && date == clickedDate) {
-              return `<td style="padding:2px 4px;text-align:center; color:red; font-weight:bold;">X</td>`;
+              return `<td class="cell-x">X</td>`;
             } else {
-              return `<td style="padding:2px 4px;text-align:center;"></td>`;
+              return `<td></td>`;
             }
           }).join("")}
         </tr>
       `).join("")}
     </table>`;
 
-    container.innerHTML = `<div style="font-weight:bold; margin-bottom:4px;">Affectations de ${nom} :</div>${table}`;
+    container.innerHTML = `<div class="tooltip-title">Affectations de ${nom} :</div>${table}`;
   } catch (err) {
-    container.innerHTML = `<div style="color:#c00;">Erreur réseau ou serveur</div>`;
+    container.innerHTML = `<div class="tooltip-error">Erreur réseau ou serveur</div>`;
   }
 }
 
