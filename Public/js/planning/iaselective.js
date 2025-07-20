@@ -845,14 +845,23 @@ async function launchCrossMutateCycle() {
 async function next100Generations() {
   const btn = document.getElementById("btnNextGen100");
   if (btn) btn.disabled = true;
+
+  // 1. Récupère les données une seule fois et mets en cache
+  const competencesParNom = await fetchCompetencesParNom();
+  window._competencesParNomCache = competencesParNom; // cache global temporaire
+
   for (let i = 0; i < 100; i++) {
-    await nextEvolutionGeneration();
+    await nextEvolutionGeneration(window._competencesParNomCache);
   }
+
+  // 2. Supprime le cache à la fin
+  delete window._competencesParNomCache;
+
   if (btn) btn.disabled = false;
 }
 
-// Lance une nouvelle génération à partir des enfants
-async function nextEvolutionGeneration() {
+// Modifie nextEvolutionGeneration pour accepter le cache en paramètre
+async function nextEvolutionGeneration(competencesParNomCache = null) {
   const btn = document.getElementById("btnNextGen");
   if (btn) btn.disabled = true;
   generationCounter++;
@@ -862,8 +871,8 @@ async function nextEvolutionGeneration() {
   const eliteStats = await computeStats(elitePlanning);
   const eliteScore = computeEquilibreScore(eliteStats, window.groupePriorites);
 
-  // 2. Génère de nouveaux enfants à partir des meilleurs plannings actuels
-  const competencesParNom = await fetchCompetencesParNom();
+  // 2. Utilise le cache si fourni
+  const competencesParNom = competencesParNomCache || await fetchCompetencesParNom();
   const pairs = [
     [0, 1], [2, 3], [4, 5], [6, 7], [8, 9]
   ];
