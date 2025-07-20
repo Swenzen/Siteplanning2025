@@ -66,29 +66,58 @@ window.addEventListener("DOMContentLoaded", () => {
     btn.style.padding = "10px 18px";
     btn.style.fontWeight = "bold";
     btn.onclick = launchBestPlannings;
+    // Place le bouton à la fin du conteneur d'actions
     actionsDiv.appendChild(btn);
   }
 
-  // 4 - Croiser et muter les meilleurs plannings
-  if (!document.getElementById("btnCrossMutate")) {
-    const btn = document.createElement("button");
-    btn.id = "btnCrossMutate";
-    btn.textContent = "4 - Croiser et muter les meilleurs plannings";
-    btn.style.padding = "10px 18px";
-    btn.style.fontWeight = "bold";
-    btn.onclick = launchCrossMutateCycle;
-    actionsDiv.appendChild(btn);
-  }
-
-  // 5 - 100 générations
+  // 4 - 100 générations (remplace le bouton croiser/muter)
   if (!document.getElementById("btnNextGen100")) {
     const btn = document.createElement("button");
     btn.id = "btnNextGen100";
-    btn.textContent = "5 - 100 générations";
+    btn.textContent = "4 - 100 générations";
     btn.style.padding = "10px 18px";
     btn.style.fontWeight = "bold";
     btn.onclick = next100Generations;
     actionsDiv.appendChild(btn);
+  }
+
+  // 5 - Appliquer ce planning
+  if (!document.getElementById("btnApplySimuPlanning")) {
+    const btn = document.createElement("button");
+    btn.id = "btnApplySimuPlanning";
+    btn.textContent = "5 - Appliquer ce planning";
+    btn.style.padding = "10px 18px";
+    btn.style.fontWeight = "bold";
+    btn.onclick = async function() {
+      let toApply = planningData;
+      // Si on est dans la navigation des meilleurs plannings
+      if (typeof currentBestIdx !== "undefined" && bestPlannings && bestPlannings.length > 0) {
+        const genLabel = document.getElementById("genLabel");
+        if (genLabel && genLabel.textContent.startsWith("Planning")) {
+          toApply = bestPlannings[currentBestIdx];
+        }
+      }
+      // Si on est dans la navigation des enfants croisés/mutés
+      if (typeof currentCrossIdx !== "undefined" && crossMutatePlannings && crossMutatePlannings.length > 0) {
+        const genLabel = document.getElementById("genLabel");
+        if (genLabel && genLabel.textContent.startsWith("Enfant")) {
+          toApply = crossMutatePlannings[currentCrossIdx];
+        }
+      }
+      if (!toApply || toApply.length === 0) {
+        alert("Aucun planning simulé à appliquer !");
+        return;
+      }
+      if (!confirm("Voulez-vous vraiment appliquer ce planning ? Cela va écraser les affectations existantes pour cette période.")) return;
+      await applySimuPlanningToDB(toApply);
+    };
+    actionsDiv.appendChild(btn);
+  }
+
+  // Place la navigation juste sous les boutons
+  const nav = document.getElementById("evolution-nav");
+  if (nav) {
+    actionsDiv.parentNode.insertBefore(nav, actionsDiv.nextSibling);
   }
 });
 
@@ -765,7 +794,6 @@ function setupCrossMutateNav() {
 // Lance la génération des meilleurs plannings
 async function launchBestPlannings() {
   document.getElementById("stats-results").innerHTML = "Calcul en cours...";
-  // Utilise le planning affiché dans planningData comme base
   const plannings = await generateRandomPlannings(100, 1000, planningData);
   let statsPlannings = plannings.map((planning) => ({
     planning,
@@ -778,6 +806,9 @@ async function launchBestPlannings() {
   currentBestIdx = 0;
   showBestPlanning(0);
   setupBestPlanningNav();
+
+  // Lance automatiquement le croisement/mutation à la fin
+  await launchCrossMutateCycle();
 }
 
 // Lance le croisement/mutation des meilleurs plannings
@@ -949,24 +980,7 @@ function ecartType(arr) {
   );
 }
 
-// Ajoute les boutons à la page
-window.addEventListener("DOMContentLoaded", () => {
-  // ... (reprends ta version actuelle)
-  if (!document.getElementById("btnNextGen100")) {
-    const btn = document.createElement("button");
-    btn.id = "btnNextGen100";
-    btn.textContent = "100 générations";
-    btn.style.marginTop = "16px";
-    btn.onclick = next100Generations;
-    // Place le bouton à gauche de "Nouvelle génération"
-    const nextGenBtn = document.getElementById("btnNextGen");
-    if (nextGenBtn) {
-      nextGenBtn.parentNode.insertBefore(btn, nextGenBtn);
-    } else {
-      document.getElementById("evolution-visualization").after(btn);
-    }
-  }
-});
+
 
 async function applySimuPlanningToDB(planningSimule) {
   const token = localStorage.getItem("token");
