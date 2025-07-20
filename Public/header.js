@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <ul>
                     <li><a href="index.html" class="${window.location.pathname.includes('index.html') ? 'active' : ''}">Index</a></li>
                     <li class="has-dropdown">
-                        <a href="base-de-donnee.html">Base de donnée</a>
+                        <a href="base-de-donnee.html" class="${window.location.pathname.includes('base-de-donnee.html') ? 'active' : (window.location.pathname.includes('base-de-donnee') ? 'active' : '')}">Base de donnée</a>
                         <ul class="dropdown-menu">
                             <li><a href="base-de-donnee.html#noms">Noms</a></li>
                             <li><a href="base-de-donnee.html#compétences">Compétences</a></li>
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </ul>
                     </li>
                     <li class="has-dropdown">
-                        <a href="planning.html" class="${window.location.pathname.includes('planning.html') ? 'active' : ''}">Planning</a>
+                        <a href="planning.html" class="${window.location.pathname.includes('planning') ? 'active' : ''}">Planning</a>
                         <ul class="dropdown-menu">
                             <li><a href="planning-planning automatique.html">Planning automatique</a></li>
                             <li><a href="planning-roulement.html">Planning roulement</a></li>

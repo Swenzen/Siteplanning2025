@@ -734,9 +734,7 @@ header #user-section #logoutButton:hover {
 /* SECTION groupe compétence stats  */
 /* ========================= */
 
-
-
-/* --- Groupes de compétences --- */
+/* --- Groupes de compétences et d'horaires --- */
 .group-card {
     min-width: 220px;
     min-height: 120px;
@@ -764,7 +762,8 @@ header #user-section #logoutButton:hover {
     font-size: 1.1em;
     color: #1976d2;
 }
-.delete-group-btn {
+.delete-group-btn,
+.delete-group-btn-horaire {
     background: #e57373;
     color: white;
     border: none;
@@ -778,16 +777,23 @@ header #user-section #logoutButton:hover {
     justify-content: center;
     transition: background 0.2s;
 }
-.delete-group-btn:hover {
+.delete-group-btn:hover,
+.delete-group-btn-horaire:hover {
     background: #c62828;
 }
-.competence-groupe-list {
+
+/* Liste interne pour compétences ET horaires */
+.competence-groupe-list,
+.horaire-groupe-list,
+.group-list {
     min-height: 60px;
     padding: 0;
     margin: 0;
     list-style: none;
 }
-.competence-groupe-list li {
+.competence-groupe-list li,
+.horaire-groupe-list li,
+.group-list li {
     background: #e3f2fd;
     color: #1976d2;
     border-radius: 8px;
@@ -796,23 +802,23 @@ header #user-section #logoutButton:hover {
     font-size: 1em;
     cursor: grab;
     transition: background 0.2s;
+    box-shadow: 0 1px 3px #1976d211;
 }
-.competence-groupe-list li.dragging {
+.competence-groupe-list li.dragging,
+.horaire-groupe-list li.dragging,
+.group-list li.dragging {
     opacity: 0.5;
 }
-.groupe-dropzone.over {
+
+/* Dropzone effet */
+.groupe-dropzone.over,
+.groupe-dropzone-horaire.over {
     background: #e3f2fd;
     border-color: #42a5f5;
 }
 
-
-
-
-
-
-
-
-/* Container compétences disponibles */
+/* Harmonise la liste des horaires et compétences */
+#liste-horaires.competence-list,
 #liste-competences.competence-list {
     min-height: 200px;
     border: 1.5px solid #1976d2;
@@ -827,11 +833,14 @@ header #user-section #logoutButton:hover {
     flex-direction: column;
     gap: 8px;
 }
+#liste-horaires.competence-list.over,
 #liste-competences.competence-list.over {
     background: #e3f2fd;
     border-color: #42a5f5;
 }
+#liste-horaires.competence-list li,
 #liste-competences.competence-list li,
+.draggable-horaire,
 .draggable-competence {
     background: #e3f2fd;
     color: #1976d2;
@@ -843,13 +852,12 @@ header #user-section #logoutButton:hover {
     transition: background 0.2s;
     box-shadow: 0 1px 3px #1976d211;
 }
+#liste-horaires.competence-list li.dragging,
 #liste-competences.competence-list li.dragging,
+.draggable-horaire.dragging,
 .draggable-competence.dragging {
     opacity: 0.5;
 }
-
-
-
 
 
 
