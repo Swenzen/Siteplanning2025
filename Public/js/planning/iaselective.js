@@ -44,10 +44,12 @@ async function autoFillPlanningSimulatedTable(planningData) {
   const site_id = sessionStorage.getItem("selectedSite");
   let planning = planningData.map(cell => ({
     ...cell,
-    site_id, // <-- AJOUT ICI
+    site_id,
     locked: cell.locked === true,
     nom: cell.locked === true ? cell.nom : null,
-    nom_id: cell.locked === true ? cell.nom_id : null
+    nom_id: cell.locked === true ? cell.nom_id : null,
+    commentaires: cell.commentaires || [],
+    commentaire: cell.commentaire || null
   }));
 
   // Regroupe les cases par date
@@ -266,7 +268,7 @@ function buildLignesEtDates(data) {
         horaire_fin: row.horaire_fin,
         competence_id: row.competence_id,
         horaire_id: row.horaire_id,
-        repos: row.repos || 0, // <-- AJOUT ICI
+        repos: row.repos || 0,
         cells: {}
       };
     }
@@ -275,7 +277,9 @@ function buildLignesEtDates(data) {
       nom: row.nom,
       nom_id: row.nom_id,
       date: row.date,
-      locked: row.locked === true
+      locked: row.locked === true,
+      commentaires: row.commentaires || [], // <-- AJOUT ICI
+      commentaire: row.commentaire || null  // <-- AJOUT ICI
     };
     datesSet.add(row.date);
   });
