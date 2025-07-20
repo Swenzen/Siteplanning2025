@@ -2,13 +2,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const header = document.createElement("header");
     header.id = "main-header";
 
-    // Contenu du bandeau
     header.innerHTML = `
         <div id="header-container">
             <nav id="menu">
                 <ul>
                     <li><a href="index.html" class="${window.location.pathname.includes('index.html') ? 'active' : ''}">Index</a></li>
-                    <li><a href="base-de-donnee.html" class="${window.location.pathname.includes('base-de-donnee.html') ? 'active' : ''}">Base de donnée</a></li>
+                    <li class="has-dropdown">
+                        <a href="base-de-donnee.html">Base de donnée</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="base-de-donnee.html#noms">Noms</a></li>
+                            <li><a href="base-de-donnee.html#compétences">Compétences</a></li>
+                            <li><a href="base-de-donnee.html#horaires">Horaires</a></li>
+                            <li><a href="base-de-donnee.html#horaires par compétence">Horaires par compétence</a></li>
+                            <li><a href="base-de-donnee.html#horaires par compétence et jours">Horaires par compétence et jours</a></li>
+                            <li><a href="base-de-donnee.html#horaires par compétence avec dates">Horaires par compétence avec dates</a></li>
+                            <li><a href="base-de-donnee.html#compétences par nom">Compétences par nom</a></li>
+                            <li><a href="base-de-donnee.html#ordre compétences par nom">Ordre compétences par nom</a></li>
+                            <li><a href="base-de-donnee.html#jours repos">Jours repos</a></li>
+                            <li><a href="base-de-donnee.html#gérer les indisponibilités par compétence">Gérer les indisponibilités par compétence</a></li>
+                        </ul>
+                    </li>
                     <li class="has-dropdown">
                         <a href="planning.html" class="${window.location.pathname.includes('planning.html') ? 'active' : ''}">Planning</a>
                         <ul class="dropdown-menu">
@@ -17,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </ul>
                     </li>
                     <li><a href="parametrage.html" class="${window.location.pathname.includes('parametrage.html') ? 'active' : ''}">Paramétrage</a></li>
-                    <li><a href="stats.html" class="${window.location.pathname.includes('stats.html') ? 'active' : ''}">Stats</a></li> <!-- Nouveau lien -->
+                    <li><a href="stats.html" class="${window.location.pathname.includes('stats.html') ? 'active' : ''}">Stats</a></li>
                 </ul>
             </nav>
             <div id="user-section">
@@ -28,59 +41,46 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     `;
 
-    // Ajouter le bandeau au début du body
     document.body.insertBefore(header, document.body.firstChild);
 
-    // Gestion de l'utilisateur connecté
+    // Gestion utilisateur
     const username = localStorage.getItem("username");
     const userInfo = document.getElementById("user-info");
     const logoutButton = document.getElementById("logoutButton");
     const siteSelector = document.getElementById("siteSelector");
 
     if (username) {
-        // Si l'utilisateur est connecté
         userInfo.textContent = `${username}`;
         logoutButton.style.display = "inline-block";
-        siteSelector.style.display = "inline-block"; // Afficher le menu déroulant
-        loadSiteOptions(); // Charger les options du menu déroulant
+        siteSelector.style.display = "inline-block";
+        loadSiteOptions();
     } else if (window.location.pathname.includes("index.html")) {
-        // Si l'utilisateur est sur la page d'index (afficher inscription/connexion)
-        userInfo.innerHTML = `
-            <a href="#login">Connexion</a> | <a href="#register">Inscription</a>
-        `;
+        userInfo.innerHTML = `<a href="#login">Connexion</a> | <a href="#register">Inscription</a>`;
     } else {
-        // Si l'utilisateur n'est pas connecté et pas sur index.html
         userInfo.textContent = "Non connecté";
     }
 
-    // Gestion de la déconnexion
     logoutButton.addEventListener("click", () => {
-        // Supprimer toutes les données sensibles du localStorage
         localStorage.removeItem("token");
         localStorage.removeItem("username");
         localStorage.removeItem("site_id");
-
-        // Rediriger vers la page d'accueil ou de connexion
         window.location.href = "index.html";
     });
 
-    const token = localStorage.getItem("token");
-
-    // Si aucun token n'est présent, nettoyer les autres données
-    if (!token) {
-        localStorage.removeItem("username");
-        localStorage.removeItem("site_id");
-    }
+    // Forcer le rechargement à chaque clic sur le menu BDD
+    document.querySelectorAll('nav#menu .dropdown-menu a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Force un vrai reload même si seul le hash change
+            window.location.assign(this.href.split('#')[0] + '#' + decodeURIComponent(this.href.split('#')[1] || ''));
+            window.location.reload();
+        });
+    });
 });
 
 async function loadSiteOptions() {
     const token = localStorage.getItem('token');
-    console.log('Token récupéré :', token);
-    if (!token) {
-        console.error('Erreur : aucun token trouvé.');
-        return;
-    }
-
+    if (!token) return;
     try {
         const response = await fetch('/api/site', {
             method: 'GET',
@@ -89,128 +89,29 @@ async function loadSiteOptions() {
                 'Content-Type': 'application/json'
             }
         });
-
-        if (!response.ok) {
-            throw new Error(`Erreur lors de la récupération des sites : ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`Erreur lors de la récupération des sites : ${response.status}`);
         const data = await response.json();
-        console.log('Sites récupérés :', data);
-
-        // Vérifiez si `data.site` est un tableau
-        if (!Array.isArray(data.site)) {
-            throw new Error('La réponse de /api/site ne contient pas un tableau de sites.');
-        }
-
+        if (!Array.isArray(data.site)) throw new Error('La réponse de /api/site ne contient pas un tableau de sites.');
         const siteSelector = document.getElementById('siteSelector');
-        siteSelector.innerHTML = ''; // Vider les options existantes
-
+        siteSelector.innerHTML = '';
         data.site.forEach(site => {
             const option = document.createElement('option');
             option.value = site.site_id;
             option.textContent = site.site_name;
             siteSelector.appendChild(option);
         });
-
-        // Mettre à jour le site_id dans le localStorage lorsque l'utilisateur change de site
-        siteSelector.addEventListener('change', (event) => {
-            localStorage.setItem('site_id', event.target.value);
-            console.log('Site sélectionné :', event.target.value);
-            // Recharger les données du planning ou d'autres éléments liés au site
-            if (typeof fetchPlanningData === 'function') {
-                fetchPlanningData();
-            }
-        });
-
-        // Sélectionner le premier site par défaut
-        if (data.site.length > 0) {
-            siteSelector.value = data.site[0].site_id;
-            localStorage.setItem('site_id', data.site[0].site_id);
-        }
-    } catch (error) {
-        console.error('Erreur lors du chargement des sites :', error);
-    }
-}
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    const siteSelector = document.getElementById("siteSelector");
-
-    // Charger le site sélectionné depuis sessionStorage
-    const savedSite = sessionStorage.getItem("selectedSite");
-    if (savedSite) {
-        siteSelector.value = savedSite; // Restaurer la sélection
-    }
-
-    // Écouter les changements dans le menu déroulant
-    siteSelector.addEventListener("change", (event) => {
-    const selectedSite = event.target.value;
-
-    // Enregistrer le site sélectionné dans sessionStorage
-    sessionStorage.setItem("selectedSite", selectedSite);
-
-    // Vider le cache des groupes de compétences
-    if (typeof clearGroupesCache === "function") {
-        clearGroupesCache();
-    }
-
-    // Réactualiser la page
-    window.location.reload();
-});
-});
-
-async function loadSiteOptions() {
-    const token = localStorage.getItem('token');
-    console.log('Token récupéré :', token);
-    if (!token) {
-        console.error('Erreur : aucun token trouvé.');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/site', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erreur lors de la récupération des sites : ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Sites récupérés :', data);
-
-        // Vérifiez si `data.site` est un tableau
-        if (!Array.isArray(data.site)) {
-            throw new Error('La réponse de /api/site ne contient pas un tableau de sites.');
-        }
-
-        const siteSelector = document.getElementById('siteSelector');
-        siteSelector.innerHTML = ''; // Vider les options existantes
-
-        data.site.forEach(site => {
-            const option = document.createElement('option');
-            option.value = site.site_id;
-            option.textContent = site.site_name;
-            siteSelector.appendChild(option);
-        });
-
-        // Restaurer la sélection depuis sessionStorage
         const savedSite = sessionStorage.getItem("selectedSite");
         if (savedSite) {
             siteSelector.value = savedSite;
         } else if (data.site.length > 0) {
-            // Si aucun site n'est enregistré, sélectionner le premier par défaut
             siteSelector.value = data.site[0].site_id;
             sessionStorage.setItem("selectedSite", data.site[0].site_id);
         }
+        siteSelector.addEventListener('change', (event) => {
+            sessionStorage.setItem("selectedSite", event.target.value);
+            window.location.reload();
+        });
     } catch (error) {
         console.error('Erreur lors du chargement des sites :', error);
     }
 }
-
-// Appeler la fonction au chargement de la page
-document.addEventListener('DOMContentLoaded', loadSiteOptions);

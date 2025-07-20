@@ -6,205 +6,196 @@
     <title>Base de Donnée</title>
     <link rel="stylesheet" href="style.css">
     <script src="header.js" defer></script>
-    <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/main.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.css" rel="stylesheet">
 </head>
 <body>
     <div id="content">
-
-        <!-- Noms -->
-        <div class="section-container collapsible-section">
-            <div class="collapsible-header">Noms</div>
-            <div class="collapsible-content">
-                <table id="databaseTable">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>Date de début</th>
-                            <th>Date de fin</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes seront ajoutées ici dynamiquement -->
-                    </tbody>
-                </table>
-                <div class="form-container">
-                    <button id="addNameButton">Ajouter un nom</button>
-                </div>
+        <div id="section-noms" class="bdd-section" style="display:none;">
+            <h2>Noms</h2>
+            <div style="max-height: 600px; overflow: auto;">
+            <table id="databaseTable">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Date de début</th>
+                        <th>Date de fin</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées dynamiquement -->
+                </tbody>
+            </table>
+            </div>
+            <div class="form-container">
+                <button id="addNameButton">Ajouter un nom</button>
             </div>
         </div>
 
-        <!-- Compétences -->
-        <div class="section-container collapsible-section">
-            <div class="collapsible-header">Compétences</div>
-            <div class="collapsible-content">
-                <table id="competencesTable">
-                    <thead>
-                        <tr>
-                            <th>Compétence</th>
-                            <th>Date de début</th>
-                            <th>Date de fin</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes seront ajoutées ici dynamiquement -->
-                    </tbody>
-                </table>
-                <div class="form-container">
-                    <button id="addCompetenceButton">Ajouter une compétence</button>
-                </div>
-                <!-- Indisponibilités par compétence -->
-                <div class="section-container collapsible-section">
-                    <div class="collapsible-header">Gérer les indisponibilités par compétence</div>
-                    <div class="collapsible-content">
-                        <table id="competenceIndisponibilitesTable">
-                            <thead>
-                                <tr>
-                                    <th>Compétence</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Les lignes seront ajoutées dynamiquement -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div id="section-compétences" class="bdd-section" style="display:none;">
+            <h2>Compétences</h2>
+            <div style="max-height: 400px; overflow: auto;">
+            <table id="competencesTable">
+                <thead>
+                    <tr>
+                        <th>Compétence</th>
+                        <th>Date de début</th>
+                        <th>Date de fin</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées dynamiquement -->
+                </tbody>
+            </table>
+            </div>
+            <div class="form-container">
+                <button id="addCompetenceButton">Ajouter une compétence</button>
             </div>
         </div>
 
-        <!-- Horaires -->
-        <div class="section-container collapsible-section">
-            <div class="collapsible-header">Horaires</div>
-            <div class="collapsible-content">
-                <table id="horairesTable">
-                    <thead>
-                        <tr>
-                            <th>Horaire début</th>
-                            <th>Horaire fin</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes seront ajoutées ici dynamiquement -->
-                    </tbody>
-                </table>
-                <div class="form-container">
-                    <button id="addHoraireButton">Ajouter un horaire</button>
-                </div>
+        <div id="section-horaires" class="bdd-section" style="display:none;">
+            <h2>Horaires</h2>
+            <div style="max-height: 400px; overflow: auto;">
+            <table id="horairesTable">
+                <thead>
+                    <tr>
+                        <th>Horaire début</th>
+                        <th>Horaire fin</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Les lignes seront ajoutées dynamiquement -->
+                </tbody>
+            </table>
+            </div>
+            <div class="form-container">
+                <button id="addHoraireButton">Ajouter un horaire</button>
             </div>
         </div>
 
-        <!-- Horaires par compétence -->
-        <div class="section-container collapsible-section">
-            <div class="collapsible-header">Horaires par compétence</div>
-            <div class="collapsible-content">
-                <table id="horairescompetenceTable">
-                    <thead>
-                        <tr>
-                            <th>Horaires</th>
-                            <!-- Les colonnes des compétences seront ajoutées dynamiquement -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes des horaires et compétences seront ajoutées dynamiquement -->
-                    </tbody>
-                </table>
+        <div id="section-horaires par compétence" class="bdd-section" style="display:none;">
+            <h2>Horaires par compétence</h2>
+            <div style="max-height: 400px; overflow: auto;">
+            <div class="sticky-table-container">
+    <table id="horairescompetenceTable" class="sticky-table">
+        <thead>
+            <tr>
+                <th>Horaires</th>
+                <!-- Colonnes dynamiques -->
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Lignes dynamiques -->
+        </tbody>
+    </table>
+</div>
             </div>
         </div>
 
-        <!-- Horaires par compétence et jours -->
-        <div class="section-container collapsible-section scrollable-container">
-            <div class="collapsible-header">Horaires par compétence et jours</div>
-            <div class="collapsible-content">
-                <table id="horaireCompetenceDaysTable">
-                    <thead>
-                        <tr>
-                            <th>Horaires</th>
-                            <!-- Les colonnes des compétences seront ajoutées dynamiquement -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes seront ajoutées dynamiquement -->
-                    </tbody>
-                </table>
+        <div id="section-horaires par compétence et jours" class="bdd-section" style="display:none;">
+            <h2>Horaires par compétence et jours</h2>
+            <div class="sticky-table-container">
+            <table id="horaireCompetenceDaysTable" class="sticky-table">
+                <thead>
+                    <tr>
+                        <th>Horaires</th>
+                        <!-- Colonnes dynamiques -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Lignes dynamiques -->
+                </tbody>
+            </table>
             </div>
         </div>
 
-        <!-- Horaires par compétence avec dates -->
-        <div class="section-container collapsible-section">
-            <div class="collapsible-header">Horaires par compétence avec dates</div>
-            <div class="collapsible-content">
-                <table id="horaireCompetenceDatesTable">
-                    <thead>
-                        <tr>
-                            <th>Horaires</th>
-                            <!-- Les colonnes des compétences seront ajoutées dynamiquement -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes seront ajoutées dynamiquement -->
-                    </tbody>
-                </table>
+        <div id="section-horaires par compétence avec dates" class="bdd-section" style="display:none;">
+            <h2>Horaires par compétence avec dates</h2>
+            <div style="max-height: 400px; overflow: auto;">
+            <table id="horaireCompetenceDatesTable">
+                <thead>
+                    <tr>
+                        <th>Horaires</th>
+                        <!-- Colonnes dynamiques -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Lignes dynamiques -->
+                </tbody>
+            </table>
             </div>
         </div>
 
-        <!-- Compétences par nom -->
-        <div class="section-container collapsible-section">
-            <div class="collapsible-header">Compétences par nom</div>
-            <div class="collapsible-content">
-                <table id="competencesPersonnesTable">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <!-- Les colonnes des compétences seront ajoutées dynamiquement -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes des noms et compétences seront ajoutées dynamiquement -->
-                    </tbody>
-                </table>
+        <div id="section-compétences par nom" class="bdd-section" style="display:none;">
+            <h2>Compétences par nom</h2>
+            <div style="max-height: 400px; overflow: auto;">
+            <table id="competencesPersonnesTable">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <!-- Colonnes dynamiques -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Lignes dynamiques -->
+                </tbody>
+            </table>
             </div>
         </div>
 
-        <!-- Ordre compétences par nom -->
-        <div class="section-container collapsible-section">
-            <div class="collapsible-header">Ordre compétences par nom</div>
-            <div class="collapsible-content">
-                <table id="ordrecomptableau">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <!-- Les colonnes des compétences seront ajoutées dynamiquement -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Les lignes des noms et compétences seront ajoutées dynamiquement -->
-                    </tbody>
-                </table>
+        <div id="section-ordre compétences par nom" class="bdd-section" style="display:none;">
+            <h2>Ordre compétences par nom</h2>
+            <div style="max-height: 400px; overflow: auto;">
+            <table id="ordrecomptableau">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <!-- Colonnes dynamiques -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Lignes dynamiques -->
+                </tbody>
+            </table>
             </div>
         </div>
 
-        <!-- Jours repos -->
-        <div class="section-container collapsible-section">
-            <div class="collapsible-header">Jours repos</div>
-            <div class="collapsible-content">
-                <table id="joursrepos">
-                    <thead>
-                        <!-- Généré dynamiquement -->
-                    </thead>
-                    <tbody>
-                        <!-- Généré dynamiquement -->
-                    </tbody>
-                </table>
+        <div id="section-jours repos" class="bdd-section" style="display:none;">
+            <h2>Jours repos</h2>
+            <div style="max-height: 400px; overflow: auto;">
+            <table id="joursrepos">
+                <thead>
+                    <!-- Colonnes dynamiques -->
+                </thead>
+                <tbody>
+                    <!-- Lignes dynamiques -->
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div id="section-gérer les indisponibilités par compétence" class="bdd-section" style="display:none;">
+            <h2>Gérer les indisponibilités par compétence</h2>
+            <div style="max-height: 400px; overflow: auto;">
+            <table id="competenceIndisponibilitesTable">
+                <thead>
+                    <tr>
+                        <th>Compétence</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Lignes dynamiques -->
+                </tbody>
+            </table>
             </div>
         </div>
     </div>
-    
-    <!-- Fenêtre modale pour modifier les noms -->
+
+    <!-- Modales -->
     <div id="myModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -213,8 +204,6 @@
             <button id="saveName">Sauvegarder</button>
         </div>
     </div>
-    
-    <!-- Fenêtre modale pour modifier les dates -->
     <div id="dateModal" class="date-modal">
         <div class="date-modal-content">
             <span class="date-close">&times;</span>
@@ -226,10 +215,6 @@
             <button id="saveDatesButton">Sauvegarder</button>
         </div>
     </div>
-
-
-    
-    <!-- Fenêtre modale pour afficher et gérer les indisponibilités -->
     <div id="indisponibilitesModal" class="indisponibilites-modal">
         <div class="indisponibilites-modal-content">
             <span class="indisponibilites-close">&times;</span>
@@ -243,29 +228,66 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Les lignes seront ajoutées dynamiquement -->
+                    <!-- Lignes dynamiques -->
                 </tbody>
             </table>
             <button id="addIndisponibiliteButton">Ajouter une indisponibilité</button>
         </div>
     </div>
-
-    <!-- Modale pour ajouter un horaire -->
     <div id="horaireModal" class="modalh" style="display:none;">
-      <div class="modalh-content">
-        <span id="closeHoraireModal" style="float:right;cursor:pointer;">&times;</span>
-        <h3>Ajouter un horaire</h3>
-        <label for="horaireDebutInput">Début :</label>
-        <input type="time" id="horaireDebutInput" required>
-        <br>
-        <label for="horaireFinInput">Fin :</label>
-        <input type="time" id="horaireFinInput" required>
-        <br><br>
-        <button id="confirmAddHoraire">Ajouter</button>
-      </div>
+        <div class="modalh-content">
+            <span id="closeHoraireModal" style="float:right;cursor:pointer;">&times;</span>
+            <h3>Ajouter un horaire</h3>
+            <label for="horaireDebutInput">Début :</label>
+            <input type="time" id="horaireDebutInput" required>
+            <br>
+            <label for="horaireFinInput">Fin :</label>
+            <input type="time" id="horaireFinInput" required>
+            <br><br>
+            <button id="confirmAddHoraire">Ajouter</button>
+        </div>
     </div>
 
-    <!-- Inclure les fichiers JavaScript -->
+    <!-- Scripts de gestion des onglets -->
+    <script>
+const tabs = {
+    'noms': 'section-noms',
+    'compétences': 'section-compétences',
+    'horaires': 'section-horaires',
+    'horaires par compétence': 'section-horaires par compétence',
+    'horaires par compétence et jours': 'section-horaires par compétence et jours',
+    'horaires par compétence avec dates': 'section-horaires par compétence avec dates',
+    'compétences par nom': 'section-compétences par nom',
+    'ordre compétences par nom': 'section-ordre compétences par nom',
+    'jours repos': 'section-jours repos',
+    'gérer les indisponibilités par compétence': 'section-gérer les indisponibilités par compétence'
+};
+
+function showSection(tab) {
+    Object.values(tabs).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    if (tabs[tab]) {
+        const el = document.getElementById(tabs[tab]);
+        if (el) el.style.display = '';
+    }
+}
+
+function handleHash() {
+    const hash = decodeURIComponent(window.location.hash.replace('#', '').toLowerCase());
+    if (tabs[hash]) {
+        showSection(hash);
+    } else {
+        showSection('noms');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', handleHash);
+window.addEventListener('hashchange', handleHash);
+    </script>
+
+    <!-- Scripts métiers -->
     <script src="js/bdd/horaires.js"></script>
     <script src="js/bdd/competencespersonnes.js"></script>
     <script src="js/bdd/tableaucompetences.js"></script>
@@ -273,38 +295,5 @@
     <script src="js/bdd/tableaureposrttforma.js"></script>
     <script src="js/bdd/tableaunom.js"></script>
     <script src="js/bdd/ordrecomp.js"></script>
-    <script>
-        // Dépliage/repliage des sections
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                const section = this.parentElement;
-                section.classList.toggle('active');
-            });
-        });
-
-        // Ouvre la première section par défaut
-        //document.querySelector('.collapsible-section')?.classList.add('active');
-    </script>
-    <script>
-        // Au clic, on sauvegarde l'index de la section puis reload
-        document.querySelectorAll('.collapsible-header').forEach((header, idx) => {
-            header.addEventListener('click', function() {
-                localStorage.setItem('sectionToOpen', idx);
-                location.reload();
-            });
-        });
-
-        // Au chargement, on ouvre la section demandée puis on efface la clé
-        document.addEventListener('DOMContentLoaded', function() {
-            const idx = localStorage.getItem('sectionToOpen');
-            if (idx !== null) {
-                const sections = document.querySelectorAll('.collapsible-section');
-                if (sections[idx]) {
-                    sections[idx].classList.add('active');
-                }
-                localStorage.removeItem('sectionToOpen');S
-            }
-        });
-    </script>
 </body>
 </html>
