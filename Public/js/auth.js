@@ -12,7 +12,7 @@ async function login(email, password) {
 
             // Stocker le token et le nom de l'utilisateur dans le localStorage
             localStorage.setItem('token', result.token);
-            localStorage.setItem('username', result.email); // Stocke l'email comme identifiant
+            localStorage.setItem('username', result.username);
 
             return true;
         } else {

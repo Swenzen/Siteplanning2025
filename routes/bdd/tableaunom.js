@@ -117,8 +117,8 @@ router.get('/data', authenticateToken, (req, res) => {
         WHERE nts.site_id = ?
     `;
 
-    console.log('Requête SQL exécutée :', query);
-    console.log('Paramètres SQL :', [siteId]);
+    
+    
 
     connection.query(query, [siteId], (err, results) => {
         if (err) {

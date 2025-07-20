@@ -79,7 +79,7 @@
                 }
 
                 const data = await response.json();
-                console.log('Sites récupérés :', data);
+                
 
                 const siteSelector = document.getElementById('siteSelectorparametrage');
                 siteSelector.innerHTML = ''; // Vider les options existantes
@@ -232,7 +232,7 @@
                 }
 
                 const data = await response.json();
-                console.log('Sites récupérés pour suppression :', data);
+                
 
                 const siteSelectorDelete = document.getElementById('siteSelectorDelete');
                 siteSelectorDelete.innerHTML = ''; // Vider les options existantes

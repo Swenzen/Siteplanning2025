@@ -16,8 +16,7 @@ module.exports = (req, res, next) => {
             return res.status(403).send('Token invalide');
         }
 
-        console.log('Token décodé avec succès :', user);
-        req.user = user; // Inclut userId et siteIds
+                req.user = user; // Inclut userId et siteIds
         next();
     });
 };

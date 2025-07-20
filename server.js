@@ -180,8 +180,7 @@ app.post('/login', (req, res) => {
         // Générer un jeton JWT avec les site_ids
         const token = jwt.sign({ userId: user.user_id, siteIds: user.site_ids.split(',') }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        console.log('SiteIds inclus dans le token JWT :', user.site_ids.split(','));
-        console.log('Token généré :', token);
+                
         res.json({ token, username: user.username });
     });
 });
