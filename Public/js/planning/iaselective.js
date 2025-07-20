@@ -12,21 +12,42 @@ let groupesCache = {};
 
 
 window.addEventListener("DOMContentLoaded", () => {
+  // Crée un conteneur pour les boutons si pas déjà présent
+  let actionsDiv = document.getElementById("planning-actions");
+  if (!actionsDiv) {
+    actionsDiv = document.createElement("div");
+    actionsDiv.id = "planning-actions";
+    actionsDiv.style.display = "flex";
+    actionsDiv.style.gap = "12px";
+    actionsDiv.style.flexWrap = "wrap";
+    actionsDiv.style.margin = "24px 0";
+    // Place le conteneur juste avant le tableau d'évolution
+    const evoVisu = document.getElementById("evolution-visualization");
+    evoVisu.parentNode.insertBefore(actionsDiv, evoVisu);
+  }
+
+  // 1 - Appliquer les roulements
+  if (!document.getElementById("btnApplyRoulements")) {
+  const btn = document.createElement("button");
+  btn.id = "btnApplyRoulements";
+  btn.textContent = "1 - Appliquer les roulements";
+  btn.style.padding = "10px 18px";
+  btn.style.fontWeight = "bold";
+  btn.onclick = function() {
+    // Remplace cette ligne par la fonction réelle du bouton original
+    appliquerRoulementsDansPlanningAuto();
+  };
+  actionsDiv.appendChild(btn);
+}
+
+
+  // 2 - Remplir automatiquement le planning
   if (!document.getElementById("auto-fill-btn")) {
     const btn = document.createElement("button");
     btn.id = "auto-fill-btn";
-    btn.textContent = "Remplir automatiquement le planning";
-    btn.style.position = "fixed";
-    btn.style.bottom = "20px";
-    btn.style.right = "20px";
-    btn.style.zIndex = 2000;
+    btn.textContent = "2 - Remplir automatiquement le planning";
     btn.style.padding = "10px 18px";
-    btn.style.background = "#007bff";
-    btn.style.color = "#fff";
-    btn.style.border = "none";
-    btn.style.borderRadius = "5px";
     btn.style.fontWeight = "bold";
-    btn.style.cursor = "pointer";
     btn.onclick = async function() {
       if (!planningData || planningData.length === 0) {
         alert("Aucune donnée de planning à remplir !");
@@ -34,7 +55,40 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       await autoFillPlanningSimulatedTable(planningData);
     };
-    document.body.appendChild(btn);
+    actionsDiv.appendChild(btn);
+  }
+
+  // 3 - Générer 100 plannings équilibrés
+  if (!document.getElementById("btnBestPlannings")) {
+    const btn = document.createElement("button");
+    btn.id = "btnBestPlannings";
+    btn.textContent = "3 - Générer 100 plannings équilibrés";
+    btn.style.padding = "10px 18px";
+    btn.style.fontWeight = "bold";
+    btn.onclick = launchBestPlannings;
+    actionsDiv.appendChild(btn);
+  }
+
+  // 4 - Croiser et muter les meilleurs plannings
+  if (!document.getElementById("btnCrossMutate")) {
+    const btn = document.createElement("button");
+    btn.id = "btnCrossMutate";
+    btn.textContent = "4 - Croiser et muter les meilleurs plannings";
+    btn.style.padding = "10px 18px";
+    btn.style.fontWeight = "bold";
+    btn.onclick = launchCrossMutateCycle;
+    actionsDiv.appendChild(btn);
+  }
+
+  // 5 - 100 générations
+  if (!document.getElementById("btnNextGen100")) {
+    const btn = document.createElement("button");
+    btn.id = "btnNextGen100";
+    btn.textContent = "5 - 100 générations";
+    btn.style.padding = "10px 18px";
+    btn.style.fontWeight = "bold";
+    btn.onclick = next100Generations;
+    actionsDiv.appendChild(btn);
   }
 });
 
@@ -338,7 +392,6 @@ function computeEquilibreScore(stats, priorites = {}) {
     const vals = noms.map(nom => stats[nom][groupe.nom_groupe] || 0);
     const poids = priorites[groupe.nom_groupe] || 1;
     const et = ecartType(vals);
-    console.log(groupe.nom_groupe, "écart-type:", et, "poids:", poids, "score partiel:", et * poids);
     score += et * poids;
   });
   return score;
@@ -1049,3 +1102,82 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("evolution-visualization").after(btn);
   }
 });
+
+
+
+async function appliquerRoulementsDansPlanningAuto() {
+    const siteId = sessionStorage.getItem("selectedSite");
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+    const token = localStorage.getItem("token");
+    if (!siteId || !startDate || !endDate || !token) {
+        alert("Site ou dates manquants !");
+        return;
+    }
+
+    // 1. Récupérer tous les roulements du site
+    const roulements = await fetch(`/api/troulement?site_id=${siteId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.json());
+
+    // 2. Récupérer les vacances pour la période
+    const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
+
+    // 3. Pour chaque jour de la période
+    let currentDate = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    let affectations = [];
+    while (currentDate <= endDateObj) {
+        const dateStr = currentDate.toISOString().slice(0, 10);
+        const jourId = currentDate.getDay() === 0 ? 7 : currentDate.getDay(); // 1=lundi ... 7=dimanche
+        const semaineNum = getWeekNumber(currentDate);
+        const semaineType = semaineNum % 2 === 0 ? "paire" : "impaire";
+
+        for (const r of roulements) {
+            // Vérifie si le jour est dans le roulement
+            if (!r.jours_semaine.split(',').includes(jourId.toString())) continue;
+            // Vérifie semaine paire/impaire/toutes
+            if (r.semaine_type !== "toutes" && r.semaine_type !== semaineType) continue;
+            // Vérifie vacances
+            const vacs = vacancesData[dateStr] || [];
+            if (vacs.some(v => v.nom_id == r.nom_id)) continue;
+
+            // Vérifie ouverture de la case
+            const cell = document.querySelector(
+                `#planningTableWithNames td[data-competence-id="${r.competence_id}"][data-horaire-id="${r.horaire_id}"][data-date="${dateStr}"]`
+            );
+            if (!cell || cell.dataset.ouverture !== "oui") continue;
+            // Vérifie si déjà rempli
+            if (cell.querySelector(".nom-block")) continue;
+
+            // Vérifie disponibilité via fetchAvailableNames
+            const availableNames = await fetchAvailableNames(r.competence_id, siteId, dateStr);
+            if (!availableNames.some(n => n.nom_id == r.nom_id)) continue;
+
+            // Affecte la personne
+            affectations.push({
+                date: dateStr,
+                nom_id: r.nom_id,
+                competence_id: r.competence_id,
+                horaire_id: r.horaire_id,
+                site_id: siteId
+            });
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // 4. Envoie les affectations à l'API
+    for (const aff of affectations) {
+        await fetch('/api/update-planningv2', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(aff)
+        });
+    }
+
+    alert(`${affectations.length} affectations réalisées !`);
+    refreshSecondTable();
+}

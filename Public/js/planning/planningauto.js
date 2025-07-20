@@ -669,82 +669,7 @@ async function fetchAvailableNames(competence_id, site_id, date) {
     return await res.json(); // [{ nom, nom_id }, ...]
 }
 
-async function appliquerRoulementsDansPlanningAuto() {
-    const siteId = sessionStorage.getItem("selectedSite");
-    const startDate = document.getElementById("startDate").value;
-    const endDate = document.getElementById("endDate").value;
-    const token = localStorage.getItem("token");
-    if (!siteId || !startDate || !endDate || !token) {
-        alert("Site ou dates manquants !");
-        return;
-    }
 
-    // 1. Récupérer tous les roulements du site
-    const roulements = await fetch(`/api/troulement?site_id=${siteId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    }).then(r => r.json());
-
-    // 2. Récupérer les vacances pour la période
-    const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
-
-    // 3. Pour chaque jour de la période
-    let currentDate = new Date(startDate);
-    const endDateObj = new Date(endDate);
-    let affectations = [];
-    while (currentDate <= endDateObj) {
-        const dateStr = currentDate.toISOString().slice(0, 10);
-        const jourId = currentDate.getDay() === 0 ? 7 : currentDate.getDay(); // 1=lundi ... 7=dimanche
-        const semaineNum = getWeekNumber(currentDate);
-        const semaineType = semaineNum % 2 === 0 ? "paire" : "impaire";
-
-        for (const r of roulements) {
-            // Vérifie si le jour est dans le roulement
-            if (!r.jours_semaine.split(',').includes(jourId.toString())) continue;
-            // Vérifie semaine paire/impaire/toutes
-            if (r.semaine_type !== "toutes" && r.semaine_type !== semaineType) continue;
-            // Vérifie vacances
-            const vacs = vacancesData[dateStr] || [];
-            if (vacs.some(v => v.nom_id == r.nom_id)) continue;
-
-            // Vérifie ouverture de la case
-            const cell = document.querySelector(
-                `#planningTableWithNames td[data-competence-id="${r.competence_id}"][data-horaire-id="${r.horaire_id}"][data-date="${dateStr}"]`
-            );
-            if (!cell || cell.dataset.ouverture !== "oui") continue;
-            // Vérifie si déjà rempli
-            if (cell.querySelector(".nom-block")) continue;
-
-            // Vérifie disponibilité via fetchAvailableNames
-            const availableNames = await fetchAvailableNames(r.competence_id, siteId, dateStr);
-            if (!availableNames.some(n => n.nom_id == r.nom_id)) continue;
-
-            // Affecte la personne
-            affectations.push({
-                date: dateStr,
-                nom_id: r.nom_id,
-                competence_id: r.competence_id,
-                horaire_id: r.horaire_id,
-                site_id: siteId
-            });
-        }
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    // 4. Envoie les affectations à l'API
-    for (const aff of affectations) {
-        await fetch('/api/update-planningv2', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(aff)
-        });
-    }
-
-    alert(`${affectations.length} affectations réalisées !`);
-    refreshSecondTable();
-}
 
 // Fonction pour calculer le numéro de semaine ISO
 function getWeekNumber(date) {
@@ -755,11 +680,3 @@ function getWeekNumber(date) {
     return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
 }
 
-// Ajoute le bouton sur la page
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.createElement('button');
-    btn.textContent = "Appliquer les roulements dans planning auto";
-    btn.style.margin = "16px";
-    btn.onclick = appliquerRoulementsDansPlanningAuto;
-    document.body.insertBefore(btn, document.getElementById("planningTableWithNames"));
-});
