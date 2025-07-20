@@ -8,7 +8,6 @@ async function login(email, password) {
 
         if (response.ok) {
             const result = await response.json();
-            console.log('Token JWT :', result.token);
 
             // Stocker le token et le nom de l'utilisateur dans le localStorage
             localStorage.setItem('token', result.token);

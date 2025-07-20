@@ -12,11 +12,13 @@ module.exports = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
-            console.error('Token invalide :', err.message);
+            if (process.env.NODE_ENV !== 'production') {
+                console.error('Token invalide :', err.message);
+            }
             return res.status(403).send('Token invalide');
         }
 
-                req.user = user; // Inclut userId et siteIds
+        req.user = user; // Inclut userId et siteIds
         next();
     });
 };
