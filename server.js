@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const pool = require('./db');
 const jwt = require('jsonwebtoken');
+const helmet = require('helmet');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,6 +50,27 @@ app.use(bodyParser.json());
 
 // Servir les fichiers statiques depuis le dossier "public"
 app.use(express.static(path.join(__dirname, 'Public')));
+
+// Sécurité : protection contre les attaques courantes
+app.use(helmet());
+
+// Pour personnaliser certains headers :
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    objectSrc: ["'none'"],
+    styleSrc: ["'self'"]
+  }
+}));
+app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
+app.use(helmet.frameguard({ action: 'sameorigin' }));
+app.use(helmet.crossOriginResourcePolicy({ policy: 'same-origin' }));
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+});
 
 // Importer les routes
 const competencesRoutes = require('./routes/bdd/competences');
