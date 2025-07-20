@@ -319,6 +319,10 @@ async function fetchCompetenceDays() {
         console.log("Données des jours par compétence :", data);
 
         const tableBody = document.querySelector("#competenceDaysTable tbody");
+        if (!tableBody) {
+            console.error("Le tableau #competenceDaysTable ou son tbody n'existe pas !");
+            return;
+        }
         tableBody.innerHTML = '';
 
         data.forEach(({ competence_id, competence, jours }) => {

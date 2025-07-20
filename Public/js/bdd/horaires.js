@@ -152,6 +152,3 @@ document.querySelector("#horairesTable tbody").addEventListener("click", (event)
         deleteHoraire(horaireId);
     }
 });
-
-// Gestionnaire d'événements pour ajouter un horaire
-document.getElementById("addHoraireButton").addEventListener("click", addHoraire);
