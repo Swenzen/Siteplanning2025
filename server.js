@@ -30,8 +30,7 @@ const dbConfig = environment === 'production' ? {
     port: 3306
 };
 
-// Logs pour vérifier les variables d'environnement MySQL
-console.log('Configuration MySQL utilisée :', dbConfig);
+
 
 // Configuration de la connexion MySQL
 const connection = mysql.createConnection(dbConfig);
@@ -39,7 +38,7 @@ const connection = mysql.createConnection(dbConfig);
 // Test de la connexion MySQL
 connection.connect((err) => {
     if (err) {
-        console.error('Erreur de connexion à la base de données :', err.message);
+        console.error('Erreur de connexion à la base de données :');
     } else {
         console.log('Connecté à la base de données avec succès.');
     }
@@ -90,17 +89,7 @@ app.use('/api', statsRoutes);
 
 
 
-// Route par défaut pour servir "index2.html"
-app.get('/', (req, res) => {
-    const filePath = path.join(__dirname, 'public', 'index2.html');
-    console.log('Chemin du fichier index2.html :', filePath);
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            console.error('Erreur lors de l\'envoi du fichier index2.html :', err.message);
-            res.status(404).send('Fichier introuvable');
-        }
-    });
-});
+
 
 // Route de vérification de santé
 app.get('/health', (req, res) => {
@@ -148,7 +137,9 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
-    console.log('Tentative de connexion avec email:', email);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Tentative de connexion avec email:', email);
+    }
 
     const query = `
         SELECT u.user_id, u.username, u.password, GROUP_CONCAT(st.site_id) AS site_ids
@@ -159,7 +150,9 @@ app.post('/login', (req, res) => {
     `;
 
     pool.query(query, [email], async (err, results) => {
-        console.log('Résultat SQL:', results);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Résultat SQL:', results);
+        }
         if (err) {
             console.error('Erreur lors de la connexion :', err.message);
             return res.status(500).send('Erreur lors de la connexion');
