@@ -10,6 +10,8 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
 
     // Détection : est-ce la case sous "Vacance" (colonne 1 du tfoot) ?
     const isVacanceSousCase = cell && cell.parentElement && cell.parentElement.id === "extra-vacance-row" && cell.cellIndex === 0;
+    // Détection : est-ce une cellule vacance-cell ?
+    const isVacanceCell = cell && cell.classList.contains('vacance-cell');
 
     if (isVacanceSousCase) {
       // On récupère toutes les dates affichées (headers du tfoot)
@@ -23,6 +25,19 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
         siteId,
         dateHeaders,
         isVacanceSousCase: true
+      });
+      return;
+    }
+
+    // Si clic droit sur une case vacance-cell (hors première colonne)
+    if (isVacanceCell) {
+      const date = cell.dataset.date;
+      tooltipClicDroit(event, {
+        nom: nomClique,
+        nom_id: nomId,
+        siteId,
+        date,
+        isVacanceCell: true
       });
       return;
     }
@@ -55,21 +70,21 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
   }
 
   // Si clic droit sur une case (td) sans nom
-  const cell = event.target.closest('td');
+  const cellVide = event.target.closest('td');
   if (
-    cell &&
-    cell.dataset.competenceId &&
-    cell.dataset.horaireId &&
-    cell.dataset.date
+    cellVide &&
+    cellVide.dataset.competenceId &&
+    cellVide.dataset.horaireId &&
+    cellVide.dataset.date
   ) {
-    const competenceId = cell.dataset.competenceId;
-    const horaireId = cell.dataset.horaireId;
-    const date = cell.dataset.date;
+    const competenceId = cellVide.dataset.competenceId;
+    const horaireId = cellVide.dataset.horaireId;
+    const date = cellVide.dataset.date;
     const siteId = sessionStorage.getItem("selectedSite");
 
     // Cherche le commentaire général (où nom_id est null)
     let commentaireGeneral = "";
-    const commentaireBlock = Array.from(cell.querySelectorAll('.commentaire-block')).find(div => {
+    const commentaireBlock = Array.from(cellVide.querySelectorAll('.commentaire-block')).find(div => {
       // On considère que le commentaire général n'est pas suivi d'un .nom-block
       return !div.nextElementSibling || !div.nextElementSibling.classList.contains('nom-block');
     });
@@ -91,7 +106,7 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
 });
 
 // Tooltip clic droit qui affiche toutes les infos et le commentaire lié au nom
-function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, siteId, commentaireNom, isCaseVide, dateHeaders, isVacanceSousCase }) {
+function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, siteId, commentaireNom, isCaseVide, dateHeaders, isVacanceSousCase, isVacanceCell }) {
   // Supprime l'ancien tooltip si présent
   let tooltip = document.getElementById("tooltip-clicdroit");
   if (tooltip) tooltip.remove();
@@ -271,7 +286,7 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       tooltip.style.display = "none";
       try {
         const token = localStorage.getItem("token");
-        if (isVacanceSousCase) { // <-- correction ici
+        if (isVacanceSousCase || isVacanceCell) {
           await fetch('/api/delete-vacancev2', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
