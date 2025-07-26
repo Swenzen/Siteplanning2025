@@ -477,14 +477,14 @@ async function showTooltipVacance(event, date) {
   // Affiche le tooltip avec la liste des noms
   let tooltip = document.getElementById("tooltip");
   tooltip.innerHTML = `
-    <div style="position: relative; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #eee; text-align: right;">
-      <div class="tooltip-close" style="cursor: pointer;">&times;</div>
+    <div class="tooltip-header">
+      <div class="tooltip-close">&times;</div>
     </div>
-    <div style="font-weight:bold; margin-bottom:6px;">Ajouter une personne en vacances :</div>
-    <ul style="list-style:none; padding:0; margin:0;">
+    <div class="tooltip-title">Ajouter une personne en vacances sur toute la période :</div>
+    <ul class="tooltip-list">
       ${noms.length === 0
-        ? `<li style="color:#888;">Aucun nom disponible</li>`
-        : noms.map(n => `<li style="cursor:pointer; padding:2px 0;" data-nom-id="${n.nom_id}">${n.nom}</li>`).join("")}
+        ? `<li class="tooltip-unavailable">Aucun nom disponible</li>`
+        : noms.map(n => `<li class="tooltip-list-item" data-nom-id="${n.nom_id}">${n.nom}</li>`).join("")}
     </ul>
   `;
   tooltip.style.display = "block";
@@ -537,16 +537,16 @@ async function showTooltipVacanceMulti(event, dateHeaders) {
   // Affiche le tooltip avec la liste des noms
   let tooltip = document.getElementById("tooltip");
   tooltip.innerHTML = `
-    <div style="position: relative; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #eee; text-align: right;">
-      <div class="tooltip-close" style="cursor: pointer;">&times;</div>
-    </div>
-    <div style="font-weight:bold; margin-bottom:6px;">Ajouter une personne en vacances sur toute la période :</div>
-    <ul style="list-style:none; padding:0; margin:0;">
-      ${noms.length === 0
-        ? `<li style="color:#888;">Aucun nom disponible</li>`
-        : noms.map(n => `<li style="cursor:pointer; padding:2px 0;" data-nom-id="${n.nom_id}">${n.nom}</li>`).join("")}
-    </ul>
-  `;
+  <div class="tooltip-header">
+    <div class="tooltip-close">&times;</div>
+  </div>
+  <div class="tooltip-title">Ajouter une personne en vacances :</div>
+  <ul class="tooltip-list">
+    ${noms.length === 0
+      ? `<li class="tooltip-unavailable">Aucun nom disponible</li>`
+      : noms.map(n => `<li class="tooltip-list-item" data-nom-id="${n.nom_id}">${n.nom}</li>`).join("")}
+  </ul>
+`;
   tooltip.style.display = "block";
   tooltip.style.left = event.pageX + "px";
   tooltip.style.top = event.pageY + "px";
