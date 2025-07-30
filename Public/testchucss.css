@@ -1,0 +1,139 @@
+
+
+  body {
+
+    margin: 0; font-family: "Open Sans", Arial, sans-serif; background: #f9f9f9; color: #333;
+
+  }
+
+  header {
+
+    background: #007694; color: white; padding: 20px; text-align: center;
+
+  }
+
+  header h1 {
+
+    margin: 0 0 10px 0; font-size: 28px;
+
+  }
+
+  nav.quick-actions {
+
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 12px;
+
+  }
+
+  nav.quick-actions a {
+
+    background: white; color: #007694; padding: 14px 22px; border-radius: 8px;
+
+    font-weight: 700; font-size: 16px; text-decoration: none;
+
+    box-shadow: 0 2px 5px rgb(0 118 148 / 0.2);
+
+    transition: background 0.3s ease, color 0.3s ease;
+
+    display: flex; align-items: center; gap: 8px;
+
+  }
+
+  nav.quick-actions a:hover {
+
+    background: #e6f2f5; color: #005263;
+
+  }
+
+  nav.quick-actions a .icon {
+
+    font-size: 20px;
+
+  }
+
+  main {
+
+    max-width: 900px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px;
+
+    box-shadow: 0 3px 15px rgb(0 0 0 / 0.1);
+
+  }
+
+  h2 {
+
+    position: relative; padding-left: 35px; margin-top: 40px; margin-bottom: 20px;
+
+    color: #007694; font-size: 24px; font-weight: 700;
+
+  }
+
+  h2::before {
+
+    content: "▶"; position: absolute; left: 0; top: 0; font-size: 24px; color: #ff6600;
+
+  }
+
+  section p, section ul {
+
+    font-size: 16px; line-height: 1.5; margin-bottom: 18px;
+
+  }
+
+  ul {
+
+    padding-left: 20px;
+
+  }
+
+  ul li {
+
+    margin-bottom: 8px;
+
+  }
+
+  .highlight {
+
+    color: #ff6600; font-weight: 700;
+
+  }
+
+  .subsection {
+
+    margin-left: 20px; margin-bottom: 25px;
+
+  }
+
+  /* Style pour encadrer les consignes et infos importantes */
+
+  .info-box {
+
+    background: #e0f0f5; border-left: 5px solid #007694; padding: 15px 20px;
+
+    margin-bottom: 25px; border-radius: 4px;
+
+  }
+
+  /* Responsive pour petit écran */
+
+  @media(max-width:600px) {
+
+    nav.quick-actions {
+
+      flex-direction: column; align-items: center;
+
+    }
+
+    nav.quick-actions a {
+
+      width: 90%; justify-content: center;
+
+    }
+
+    main {
+
+      margin: 15px;
+
+      padding: 20px;
+
+    }
+
+  }
