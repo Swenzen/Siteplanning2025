@@ -37,7 +37,8 @@ async function displayPlanningWithNames(
   data,
   startDate,
   endDate,
-  vacancesData = {}
+  vacancesData = {},
+  missions = []
 ) {
   const table = document.getElementById("planningTableWithNames");
   const tbody = table.querySelector("tbody");
@@ -211,6 +212,34 @@ async function displayPlanningWithNames(
         dateCell.dataset.ouverture = "non";
         dateCell.classList.add("cell-fermee");
         dateCell.textContent = "";
+      }
+
+      // Affichage des missions
+      if (missions && missions.length > 0) {
+        // Mission liée à la case (sans nom)
+        const missionCase = missions.find(
+          (m) =>
+            m.competence_id == competence_id &&
+            m.horaire_id == horaire_id &&
+            m.date === date &&
+            (!m.nom_id || m.nom_id === null)
+        );
+        if (missionCase) {
+          dateCell.innerHTML += `<div class="mission-block">Mission : ${missionCase.texte}</div>`;
+        }
+        // Missions liées à un nom
+        noms.forEach(({ nom_id }) => {
+          const missionNom = missions.find(
+            (m) =>
+              m.competence_id == competence_id &&
+              m.horaire_id == horaire_id &&
+              m.date === date &&
+              m.nom_id == nom_id
+          );
+          if (missionNom) {
+            dateCell.innerHTML += `<div class="mission-block">Mission : ${missionNom.texte}</div>`;
+          }
+        });
       }
 
       row.appendChild(dateCell);
@@ -444,14 +473,31 @@ async function refreshSecondTable() {
       endDate
     );
     const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
+
+    // Ajout : récupération des missions
+    const missions = await fetchMissions(siteId, startDate, endDate);
+
     displayPlanningWithNames(
       competencesWithNames,
       startDate,
       endDate,
-      vacancesData
+      vacancesData,
+      missions // <-- on passe les missions à la fonction d'affichage
     );
   }
 }
+
+// Ajoute cette fonction utilitaire :
+async function fetchMissions(siteId, startDate, endDate) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(
+    `/api/missions?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return [];
+  return await res.json();
+}
+
 applyDateFilterButton.addEventListener("click", async () => {
   const startDate = startDateInput.value;
   const endDate = endDateInput.value;

@@ -361,6 +361,18 @@ CREATE TABLE Tcompetence_horaire_color (
     UNIQUE KEY unique_color (site_id, competence_id, horaire_id)
 );
 
+CREATE TABLE IF NOT EXISTS Tmission (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    site_id INT NOT NULL,
+    competence_id INT NOT NULL,
+    horaire_id INT NOT NULL,
+    date DATE NOT NULL,
+    nom_id INT, -- Peut être NULL si mission sur la case sans nom
+    texte TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 INSERT INTO Tnom (nom_id, nom, date_debut, date_fin) VALUES
 (1, 'Pierre', '2025-01-01', '2025-12-31'),
 (2, 'Max', '2025-02-01', '2025-11-30'),

@@ -1,6 +1,83 @@
 document.getElementById("planningTableWithNames").addEventListener("contextmenu", function(event) {
   event.preventDefault();
 
+  // --- GESTION CLIC DROIT SUR UNE MISSION ---
+  const missionBlock = event.target.closest('.mission-block');
+  if (missionBlock) {
+    const missionId = missionBlock.dataset.missionId;
+    const missionTexte = missionBlock.textContent.replace(/^Mission\s*:\s*/i, "");
+    let tooltip = document.getElementById("tooltip-clicdroit");
+    if (tooltip) tooltip.remove();
+
+    tooltip = document.createElement("div");
+    tooltip.id = "tooltip-clicdroit";
+    tooltip.className = "tooltip-clicdroit";
+    document.body.appendChild(tooltip);
+
+    // Positionnement intelligent
+    const margin = 10;
+    let x = event.clientX + margin;
+    let y = event.clientY + margin;
+    setTimeout(() => {
+      const rect = tooltip.getBoundingClientRect();
+      if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - margin;
+      if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - margin;
+      tooltip.style.left = x + "px";
+      tooltip.style.top = y + "px";
+    }, 0);
+
+    tooltip.innerHTML = `
+      <div class="tooltip-header">
+        <span class="tooltip-title">Mission</span>
+        <span class="tooltip-close" style="cursor:pointer;float:right;">&times;</span>
+      </div>
+      <div class="tooltip-content">
+        <div class="tooltip-mission-label">Mission :</div>
+        <div class="tooltip-mission">${missionTexte}</div>
+        <button class="tooltip-delete-mission" data-mission-id="${missionId}">Supprimer la mission</button>
+      </div>
+    `;
+
+    // Fermeture tooltip
+    tooltip.querySelector(".tooltip-close").onclick = function() {
+      tooltip.style.display = "none";
+    };
+
+    // Bouton supprimer la mission
+    const btnDeleteMission = tooltip.querySelector(".tooltip-delete-mission");
+    if (btnDeleteMission) {
+      btnDeleteMission.onclick = async function(e) {
+        e.stopPropagation();
+        tooltip.style.display = "none";
+        const missionId = this.dataset.missionId; // <-- Correction ici
+        if (!confirm("Supprimer cette mission ?")) return;
+        try {
+          const token = localStorage.getItem("token");
+          await fetch(`/api/delete-mission/${missionId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          await refreshSecondTable();
+        } catch (err) {
+          alert("Erreur lors de la suppression de la mission : " + err.message);
+        }
+      };
+    }
+
+    // Fermer le tooltip si clic ailleurs
+    setTimeout(() => {
+      function hideTooltip(e) {
+        if (!tooltip.contains(e.target)) {
+          tooltip.style.display = "none";
+          document.removeEventListener("mousedown", hideTooltip);
+        }
+      }
+      document.addEventListener("mousedown", hideTooltip);
+    }, 0);
+
+    return; // Stoppe ici pour ne pas déclencher les autres tooltips
+  }
+
   const nomBlock = event.target.closest('.nom-block');
   if (nomBlock) {
     const nomClique = nomBlock.dataset.nom;
@@ -57,6 +134,18 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
       commentaireNom = commentaireBlock.textContent;
     }
 
+    // Cherche la mission liée à ce nom
+    let missionNom = null;
+    const missionBlock = Array.from(cell.querySelectorAll('.mission-block')).find(div => {
+      return div.dataset && div.dataset.missionId && div.dataset.nomId === nomId;
+    });
+    if (missionBlock) {
+      missionNom = {
+        id: missionBlock.dataset.missionId,
+        texte: missionBlock.textContent.replace(/^Mission\s*:\s*/i, "")
+      };
+    }
+
     tooltipClicDroit(event, {
       nom: nomClique,
       nom_id: nomId,
@@ -64,7 +153,8 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
       horaireId,
       date,
       siteId,
-      commentaireNom // <-- on passe le commentaire trouvé
+      commentaireNom, // <-- on passe le commentaire trouvé
+      missionNom      // <-- ajoute bien cette ligne
     });
     return;
   }
@@ -106,7 +196,7 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
 });
 
 // Tooltip clic droit qui affiche toutes les infos et le commentaire lié au nom
-function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, siteId, commentaireNom, isCaseVide, dateHeaders, isVacanceSousCase, isVacanceCell }) {
+function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, siteId, commentaireNom, missionNom, isCaseVide, dateHeaders, isVacanceSousCase, isVacanceCell }) {
   // Supprime l'ancien tooltip si présent
   let tooltip = document.getElementById("tooltip-clicdroit");
   if (tooltip) tooltip.remove();
@@ -156,21 +246,23 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
         ${
           isFermee
             ? `<button class="tooltip-reopen">Réouvrir</button>`
-            : (
-              commentaireNom
+            : `
+              ${commentaireNom
                 ? `<div class="tooltip-comment-label">Commentaire :</div>
                    <div class="tooltip-comment">${commentaireNom}</div>
                    <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>`
                 : `<button class="tooltip-fermee">Fermée</button>
                    <button class="tooltip-add-commentaire">Ajouter un commentaire</button>`
-            )
+              }
+              <button class="tooltip-add-mission">Ajouter une mission</button>
+            `
         }
       </div>
     `;
   }
   // CASE AVEC NOM
   else {
-    tooltip.innerHTML = `
+    let html = `
       <div class="tooltip-header">
         <span class="tooltip-title">${nom}</span>
         <div class="tooltip-actions">
@@ -178,28 +270,62 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
           <span class="tooltip-close">&times;</span>
         </div>
       </div>
-      ${
-        commentaireNom
-          ? `<div class="tooltip-content">
-              <div class="tooltip-comment-label">Commentaire :</div>
-              <div class="tooltip-comment">${commentaireNom}</div>
-              <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>
-            </div>`
-          : `<button class="tooltip-add-commentaire">Ajouter un commentaire</button>`
-      }
+      <div class="tooltip-content">
     `;
+
+    // Ajoute le commentaire s'il existe
+    if (commentaireNom) {
+      html += `
+        <div class="tooltip-comment-label">Commentaire :</div>
+        <div class="tooltip-comment">${commentaireNom}</div>
+        <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>
+      `;
+    } else {
+      html += `<button class="tooltip-add-commentaire">Ajouter un commentaire</button>`;
+    }
+
+    // Ajoute la mission liée au nom s'il y en a une
+    if (missionNom) {
+      html += `
+        <div class="tooltip-mission-label">Mission :</div>
+        <div class="tooltip-mission">${missionNom.texte}</div>
+        <button class="tooltip-delete-mission" data-mission-id="${missionNom.id}">Supprimer la mission</button>
+      `;
+    } else {
+      html += `<button class="tooltip-add-mission">Ajouter une mission</button>`;
+    }
+
+    html += `</div>`;
+    tooltip.innerHTML = html;
   }
 
+  // Gestion des boutons du tooltip
+  tooltip.onclick = async function(e) {
+    // Fermer le tooltip
+    if (e.target.classList.contains("tooltip-close")) {
+      tooltip.style.display = "none";
+    }
 
-  // Fermeture tooltip
-  tooltip.querySelector(".tooltip-close").onclick = function() {
-    tooltip.style.display = "none";
-  };
+    // Supprimer la mission
+    if (e.target.classList.contains("tooltip-delete-mission")) {
+      e.stopPropagation();
+      tooltip.style.display = "none";
+      const missionId = e.target.dataset.missionId;
+      if (!confirm("Supprimer cette mission ?")) return;
+      try {
+        const token = localStorage.getItem("token");
+        await fetch(`/api/delete-mission/${missionId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        await refreshSecondTable();
+      } catch (err) {
+        alert("Erreur lors de la suppression de la mission : " + err.message);
+      }
+    }
 
-  // Bouton Fermée (case vide)
-  const btnFermee = tooltip.querySelector(".tooltip-fermee");
-  if (btnFermee) {
-    btnFermee.onclick = async function(e) {
+    // Bouton Fermée (case vide)
+    if (e.target.classList.contains("tooltip-fermee")) {
       e.stopPropagation();
       tooltip.style.display = "none";
       try {
@@ -213,13 +339,10 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       } catch (err) {
         alert("Erreur lors de l'ajout du commentaire Fermée : " + err.message);
       }
-    };
-  }
+    }
 
-  // Bouton Réouvrir (case vide avec Fermée)
-  const btnReopen = tooltip.querySelector(".tooltip-reopen");
-  if (btnReopen) {
-    btnReopen.onclick = async function(e) {
+    // Bouton Réouvrir (case vide avec Fermée)
+    if (e.target.classList.contains("tooltip-reopen")) {
       e.stopPropagation();
       tooltip.style.display = "none";
       try {
@@ -233,13 +356,10 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       } catch (err) {
         alert("Erreur lors de la suppression du commentaire Fermée : " + err.message);
       }
-    };
-  }
+    }
 
-  // Bouton Ajouter un commentaire (case vide ou avec nom)
-  const btnAddCommentaire = tooltip.querySelector(".tooltip-add-commentaire");
-  if (btnAddCommentaire) {
-    btnAddCommentaire.onclick = async function(e) {
+    // Ajouter un commentaire
+    if (e.target.classList.contains("tooltip-add-commentaire")) {
       e.stopPropagation();
       const commentaire = prompt("Écris le commentaire à ajouter pour cette case :");
       if (!commentaire) return;
@@ -255,13 +375,10 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       } catch (err) {
         alert("Erreur lors de l'ajout du commentaire : " + err.message);
       }
-    };
-  }
+    }
 
-  // Bouton Supprimer le commentaire (case avec nom)
-  const btnDeleteCommentaire = tooltip.querySelector(".tooltip-delete-commentaire");
-  if (btnDeleteCommentaire) {
-    btnDeleteCommentaire.onclick = async function(e) {
+    // Supprimer le commentaire
+    if (e.target.classList.contains("tooltip-delete-commentaire")) {
       e.stopPropagation();
       tooltip.style.display = "none";
       try {
@@ -275,13 +392,10 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       } catch (err) {
         alert("Erreur lors de la suppression du commentaire : " + err.message);
       }
-    };
-  }
+    }
 
-  // Bouton Supprimer le nom (case avec nom)
-  const btnDelete = tooltip.querySelector(".tooltip-delete");
-  if (btnDelete) {
-    btnDelete.onclick = async function(e) {
+    // Supprimer le nom (case avec nom)
+    if (e.target.classList.contains("tooltip-delete")) {
       e.stopPropagation();
       tooltip.style.display = "none";
       try {
@@ -303,13 +417,10 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       } catch (err) {
         alert("Erreur lors de la suppression : " + err.message);
       }
-    };
-  }
+    }
 
-  // Bouton Supprimer sur toute la période (vacance sous-case)
-  const btnDeleteMulti = tooltip.querySelector(".tooltip-delete-multi");
-  if (btnDeleteMulti) {
-    btnDeleteMulti.onclick = async function(e) {
+    // Supprimer sur toute la période (vacance sous-case)
+    if (e.target.classList.contains("tooltip-delete-multi")) {
       e.stopPropagation();
       tooltip.style.display = "none";
       try {
@@ -323,8 +434,34 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       } catch (err) {
         alert("Erreur lors de la suppression sur toute la période : " + err.message);
       }
-    };
-  }
+    }
+
+    // Ajouter une mission
+    if (e.target.classList.contains("tooltip-add-mission")) {
+      e.stopPropagation();
+      const texte = prompt("Écris la mission à ajouter pour cette case :");
+      if (!texte) return;
+      tooltip.style.display = "none";
+      try {
+        const token = localStorage.getItem("token");
+        await fetch('/api/add-mission', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            site_id: siteId,
+            competence_id: competenceId,
+            horaire_id: horaireId,
+            date,
+            nom_id: isCaseVide ? null : nom_id,
+            texte
+          })
+        });
+        await refreshSecondTable();
+      } catch (err) {
+        alert("Erreur lors de l'ajout de la mission : " + err.message);
+      }
+    }
+  };
 
   // Fermer le tooltip si clic ailleurs
   setTimeout(() => {
@@ -337,4 +474,3 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
     document.addEventListener("mousedown", hideTooltip);
   }, 0);
 }
-

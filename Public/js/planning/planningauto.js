@@ -40,7 +40,8 @@ async function displayPlanningWithNames(
   data,
   startDate,
   endDate,
-  vacancesData = {}
+  vacancesData = {},
+  missions = []
 ) {
   const table = document.getElementById("planningTableWithNames");
   const tbody = table.querySelector("tbody");
@@ -206,23 +207,51 @@ async function displayPlanningWithNames(
           dateCell.innerHTML += `<div class="commentaire-block">${commentaireGeneral.commentaire}</div>`;
         }
 
-        if (noms.length > 0) {
-          noms.forEach(({ nom, nom_id }) => {
-            const commentaireNom = commentaires.find((c) => c.nom_id == nom_id);
-            if (commentaireNom) {
-              dateCell.innerHTML += `<div class="commentaire-block">${commentaireNom.commentaire}</div>`;
-            }
-            dateCell.innerHTML += `
-              <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
-                <span class="nom-valeur">${nom}</span>
-              </div>
-            `;
-          });
-          dateCell.classList.add("ws-normal");
-        } else if (!commentaireGeneral) {
-          dateCell.textContent = "";
-          dateCell.classList.add("ws-preline");
+        // Affichage des missions
+        if (missions && missions.length > 0) {
+          // Mission liée à la case (sans nom)
+          const missionCase = missions.find(
+            (m) =>
+              m.competence_id == competence_id &&
+              m.horaire_id == horaire_id &&
+              m.date === date &&
+              (!m.nom_id || m.nom_id === null)
+          );
+          if (missionCase) {
+            dateCell.innerHTML += `<div class="mission-block" data-mission-id="${missionCase.id}">Mission : ${missionCase.texte}</div>`;
+          }
         }
+
+        // Puis les noms
+        noms.forEach(({ nom, nom_id }) => {
+          // Affiche la mission liée à ce nom AVANT le nom
+          if (missions && missions.length > 0) {
+            const missionNom = missions.find(
+              (m) =>
+                m.competence_id == competence_id &&
+                m.horaire_id == horaire_id &&
+                m.date === date &&
+                m.nom_id == nom_id
+            );
+            if (missionNom) {
+              dateCell.innerHTML += `<div class="mission-block" data-mission-id="${missionNom.id}" data-nom-id="${nom_id}">Mission : ${missionNom.texte}</div>`;
+            }
+          }
+
+          // Puis le commentaire lié au nom (si besoin)
+          const commentaireNom = commentaires.find((c) => c.nom_id == nom_id);
+          if (commentaireNom) {
+            dateCell.innerHTML += `<div class="commentaire-block">${commentaireNom.commentaire}</div>`;
+          }
+
+          // Puis le nom
+          dateCell.innerHTML += `
+            <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
+              <span class="nom-valeur">${nom}</span>
+            </div>
+          `;
+        });
+        dateCell.classList.add("ws-normal");
       } else {
         dateCell.dataset.ouverture = "non";
         dateCell.classList.add("cell-fermee");
@@ -498,13 +527,17 @@ async function refreshSecondTable() {
       startDate,
       endDate
     );
-    // Ajoute ici la récupération des vacances pour la période
     const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
+
+    // Récupère les missions pour la période
+    const missions = await fetchMissions(siteId, startDate, endDate);
+
     displayPlanningWithNames(
       competencesWithNames,
       startDate,
       endDate,
-      vacancesData
+      vacancesData,
+      missions // <-- on passe les missions ici
     );
   }
 }
@@ -530,11 +563,15 @@ applyDateFilterButton.addEventListener("click", async () => {
   // Récupérer les vacances pour la période
   const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
 
+  // AJOUTE CETTE LIGNE :
+  const missions = await fetchMissions(siteId, startDate, endDate);
+
   displayPlanningWithNames(
     competencesWithNames,
     startDate,
     endDate,
-    vacancesData
+    vacancesData,
+    missions // <-- on passe bien les missions ici
   );
 });
 
@@ -651,7 +688,15 @@ async function fetchAvailableNames(competence_id, site_id, date) {
     return await res.json(); // [{ nom, nom_id }, ...]
 }
 
-
+async function fetchMissions(siteId, startDate, endDate) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(
+    `/api/missions?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return [];
+  return await res.json();
+}
 
 // Fonction pour calculer le numéro de semaine ISO
 function getWeekNumber(date) {
