@@ -71,7 +71,14 @@ async function applyCompetenceHoraireColorsToPlanningTable() {
         const competenceId = cell.getAttribute("data-competence-id");
         const horaireId = cell.getAttribute("data-horaire-id");
         const key = `${competenceId}-${horaireId}`;
-        cell.style.background = colors[key] || "";
+
+        // On applique la couleur uniquement si la salle est ouverte
+        if (cell.getAttribute("data-ouverture") === "oui" || cell.classList.contains("ws-normal")) {
+            cell.style.background = colors[key] || "";
+        } else {
+            // On ne touche pas au style des cellules fermées ou spéciales
+            cell.style.background = "";
+        }
     });
 }
 
