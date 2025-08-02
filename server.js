@@ -86,6 +86,7 @@ const planningRoutes = require('./routes/planning/planning');
 const compordreRoutes = require('./routes/bdd/compordre');
 const commentaireRoutes = require('./routes/planning/commentaire');
 const statsRoutes = require('./routes/stats/stats');
+const styleRoutes = require('./routes/planning/style');
 
 // Utiliser les routes
 app.use('/api', competencesRoutes);
@@ -105,6 +106,7 @@ app.use('/api', planningRoutes);
 app.use('/api', compordreRoutes);
 app.use('/api', commentaireRoutes);
 app.use('/api', statsRoutes);
+app.use('/api', styleRoutes);
 
 
 

@@ -1,24 +1,47 @@
-// 1. Mapping compétence -> couleur (stocké dans le localStorage)
-function getCompetenceColors() {
-    return JSON.parse(localStorage.getItem("competenceColors") || "{}");
-}
-function setCompetenceColor(competence, color) {
-    const colors = getCompetenceColors();
-    colors[competence] = color;
-    localStorage.setItem("competenceColors", JSON.stringify(colors));
+let competenceHoraireColorsCache = {};
+
+async function getCompetenceHoraireColors(siteId) {
+    if (Object.keys(competenceHoraireColorsCache).length) return competenceHoraireColorsCache;
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/styleload?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return {};
+    competenceHoraireColorsCache = await res.json();
+    return competenceHoraireColorsCache;
 }
 
-// 2. Ajoute un bouton couleur à chaque ligne du tableau
-function addColorPickersToPlanningTable() {
+async function setCompetenceHoraireColor(siteId, competenceId, horaireId, color) {
+    competenceHoraireColorsCache[`${competenceId}-${horaireId}`] = color;
+    const token = localStorage.getItem("token");
+    await fetch('/api/styleupdate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ site_id: siteId, competence_id: competenceId, horaire_id: horaireId, color })
+    });
+}
+
+// Ajoute les color pickers dans la première colonne de chaque ligne
+async function addColorPickersToPlanningTable() {
     const table = document.getElementById("planningTableWithNames");
     if (!table) return;
-    const colors = getCompetenceColors();
+    const siteId = window.siteId || 1;
+    const colors = await getCompetenceHoraireColors(siteId);
 
-    // Pour chaque ligne du tbody
     Array.from(table.querySelectorAll("tbody tr")).forEach(row => {
+        // On prend la première cellule (compétence)
         const competenceCell = row.querySelector("td");
         if (!competenceCell) return;
-        const competence = competenceCell.textContent.trim();
+
+        // Trouve la première cellule planning de la ligne pour récupérer les ids
+        const firstPlanningCell = row.querySelector('td[data-competence-id][data-horaire-id]');
+        if (!firstPlanningCell) return;
+        const competenceId = firstPlanningCell.getAttribute("data-competence-id");
+        const horaireId = firstPlanningCell.getAttribute("data-horaire-id");
+        const key = `${competenceId}-${horaireId}`;
 
         // Ajoute le color picker si pas déjà présent
         if (!competenceCell.querySelector(".competence-color-picker")) {
@@ -26,45 +49,46 @@ function addColorPickersToPlanningTable() {
             picker.type = "color";
             picker.className = "competence-color-picker";
             picker.style.marginLeft = "8px";
-            picker.value = colors[competence] || "#e3f2fd";
-            picker.title = "Changer la couleur de fond pour cette compétence";
-            picker.oninput = (e) => {
-                setCompetenceColor(competence, e.target.value);
-                applyCompetenceColorsToPlanningTable();
+            picker.value = colors[key] || "#e3f2fd";
+            picker.title = "Changer la couleur de fond pour cette compétence/horaire";
+            picker.oninput = async (e) => {
+                await setCompetenceHoraireColor(siteId, competenceId, horaireId, e.target.value);
+                applyCompetenceHoraireColorsToPlanningTable();
             };
             competenceCell.appendChild(picker);
         }
     });
 }
 
-// 3. Applique la couleur de fond à chaque ligne selon la compétence
-function applyCompetenceColorsToPlanningTable() {
+// Applique la couleur sur toutes les cases du planning ayant le même couple competence/horaire
+async function applyCompetenceHoraireColorsToPlanningTable() {
     const table = document.getElementById("planningTableWithNames");
     if (!table) return;
-    const colors = getCompetenceColors();
+    const siteId = window.siteId || 1;
+    const colors = await getCompetenceHoraireColors(siteId);
 
-    Array.from(table.querySelectorAll("tbody tr")).forEach(row => {
-        const competenceCell = row.querySelector("td");
-        if (!competenceCell) return;
-        const competence = competenceCell.textContent.trim();
-        row.style.background = colors[competence] || "";
+    Array.from(table.querySelectorAll("td[data-competence-id][data-horaire-id]")).forEach(cell => {
+        const competenceId = cell.getAttribute("data-competence-id");
+        const horaireId = cell.getAttribute("data-horaire-id");
+        const key = `${competenceId}-${horaireId}`;
+        cell.style.background = colors[key] || "";
     });
 }
 
-// 4. Rafraîchir à chaque affichage du tableau
+// Rafraîchir à chaque affichage du tableau
 function observePlanningTableChanges() {
     const table = document.getElementById("planningTableWithNames");
     if (!table) return;
     const observer = new MutationObserver(() => {
         addColorPickersToPlanningTable();
-        applyCompetenceColorsToPlanningTable();
+        applyCompetenceHoraireColorsToPlanningTable();
     });
     observer.observe(table, { childList: true, subtree: true });
 }
 
-// 5. Initialisation
+// Initialisation
 window.addEventListener("DOMContentLoaded", () => {
     addColorPickersToPlanningTable();
-    applyCompetenceColorsToPlanningTable();
+    applyCompetenceHoraireColorsToPlanningTable();
     observePlanningTableChanges();
 });
