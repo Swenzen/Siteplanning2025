@@ -60,7 +60,6 @@ async function addColorPickersToPlanningTable() {
     });
 }
 
-// Applique la couleur sur toutes les cases du planning ayant le même couple competence/horaire
 async function applyCompetenceHoraireColorsToPlanningTable() {
     const table = document.getElementById("planningTableWithNames");
     if (!table) return;
@@ -74,10 +73,12 @@ async function applyCompetenceHoraireColorsToPlanningTable() {
 
         // On applique la couleur uniquement si la salle est ouverte
         if (cell.getAttribute("data-ouverture") === "oui" || cell.classList.contains("ws-normal")) {
-            cell.style.background = colors[key] || "";
+            const color = colors[key] || "";
+            cell.setAttribute('data-bgcolor', color); // pour la popup
+            cell.style.backgroundColor = color;       // pour l'affichage principal
         } else {
-            // On ne touche pas au style des cellules fermées ou spéciales
-            cell.style.background = "";
+            cell.removeAttribute('data-bgcolor');
+            cell.style.backgroundColor = "";
         }
     });
 }
@@ -99,3 +100,4 @@ window.addEventListener("DOMContentLoaded", () => {
     applyCompetenceHoraireColorsToPlanningTable();
     observePlanningTableChanges();
 });
+

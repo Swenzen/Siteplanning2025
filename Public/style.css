@@ -1610,3 +1610,8 @@ button.danger:hover {
 .tooltip-unavailable {
   color: #888;
 }
+
+@media print {
+  .no-print { display: none !important; }
+}
+
