@@ -362,7 +362,7 @@ CREATE TABLE Tcompetence_horaire_color (
 );
 
 CREATE TABLE IF NOT EXISTS Tmission (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,ez
     site_id INT NOT NULL,
     competence_id INT NOT NULL,
     horaire_id INT NOT NULL,
