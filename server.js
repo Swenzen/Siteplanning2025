@@ -174,7 +174,7 @@ app.post('/login', (req, res) => {
 
     pool.query(query, [email], async (err, results) => {
         if (process.env.NODE_ENV !== 'production') {
-          console.log('Résultat SQL:', results);
+          
         }
         if (err) {
             console.error('Erreur lors de la connexion :', err.message);

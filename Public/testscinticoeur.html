@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>CR automatique - Scinti Cardiaque</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="testscinticoeur.css">
+
+</head>
+<body>
+  <div class="container">
+    <h1>CR automatique - Scinti Cardiaque</h1>
+    <form id="cr-form" autocomplete="off">
+      <label for="examen">Type d'examen</label>
+      <select id="examen">
+        <option value="repos">Repos</option>
+        <option value="effort">Effort</option>
+        <option value="dipyridamole">Dipyridamole</option>
+      </select>
+
+      <label for="perfusion">Perfusion</label>
+      <select id="perfusion">
+        <option value="normale">Normale</option>
+        <option value="hypoperfusion">Hypoperfusion</option>
+        <option value="hyperfixation">Hyperfixation</option>
+      </select>
+
+      <label for="conclusion">Conclusion</label>
+      <select id="conclusion">
+        <option value="normale">Normale</option>
+        <option value="ischémie">Ischémie</option>
+        <option value="nécrose">Nécrose</option>
+      </select>
+    </form>
+
+    <div class="cr-zone" id="cr-zone">
+      Veuillez sélectionner les paramètres pour générer le compte rendu.
+    </div>
+  </div>
+  <div class="footer">
+    &copy; 2025 Projet CR Scinti Cardiaque
+  </div>
+  <script src="testscinticoeur.js"></script>
+</body>
+</html>
