@@ -1,47 +1,5 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>CR automatique - Scinti Cardiaque</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="testscinticoeur.css">
-</head>
-<body>
-  <div class="container">
-    <h1>CR automatique - Scinti Cardiaque</h1>
-    <form id="cr-form" autocomplete="off">
-      <label for="examen">Type d'examen</label>
-      <select id="examen">
-        <option value="repos">Repos</option>
-        <option value="effort">Effort</option>
-        <option value="dipyridamole">Dipyridamole</option>
-      </select>
-
-      <label for="perfusion">Perfusion</label>
-      <select id="perfusion">
-        <option value="normale">Normale</option>
-        <option value="hypoperfusion">Hypoperfusion</option>
-        <option value="hyperfixation">Hyperfixation</option>
-      </select>
-
-      <label for="conclusion">Conclusion</label>
-      <select id="conclusion">
-        <option value="normale">Normale</option>
-        <option value="ischémie">Ischémie</option>
-        <option value="nécrose">Nécrose</option>
-      </select>
-    </form>
-
-    <div class="cr-zone" id="cr-zone">
-      Veuillez sélectionner les paramètres pour générer le compte rendu.
-    </div>
-    <button id="btn-copier-cr" class="btn-copier">Copier le CR</button>
-    <span id="copie-ok" class="copie-ok">Copié !</span>
-  </div>
-  <div class="svg-center">
-    <svg id="myocard-svg" width="1280" height="720" xmlns="http://www.w3.org/2000/svg">
-      <g>
-
+ <svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="hidden">
+	<g><rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
 		<path id="apical" d="M559.5 360.5C559.5 326.811 586.811 299.5 620.5 299.5 654.189 299.5 681.5 326.811 681.5 360.5 681.5 394.189 654.189 421.5 620.5 421.5 586.811 421.5 559.5 394.189 559.5 360.5Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
 		<path id="antéro-apical" d="M533.79 272.963C581.792 225.184 659.401 225.264 707.279 273.143L663.862 316.56C639.922 292.621 601.113 292.586 577.106 316.482Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
 		<path id="septo-apical" d="M533.486 446.733C485.651 398.786 485.641 321.177 533.464 273.243L576.932 316.61C553.02 340.577 553.03 379.387 576.954 403.366Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
@@ -59,14 +17,5 @@
 		<path id="antéro-latéro-basal" d="M749.47 141.823C827.404 187.784 875.011 271.602 874.496 361.946L809.814 361.579C810.198 294.221 774.67 231.733 716.516 197.483Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
 		<path id="inféro-latéro-basal" d="M873.935 361.268C873.451 451.875 824.691 535.357 746.002 580.299L713.983 524.237C772.653 490.728 809.01 428.486 809.374 360.932Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
 		<path id="inféro-basal" d="M746.221 579.939C667.587 625.309 570.661 625.106 492.187 579.406L524.453 524.005C583.057 558.133 655.438 558.292 714.16 524.42Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
-
-
-      </g>
-    </svg>
-  </div>
-  <div class="footer">
-    &copy; 2025 Projet CR Scinti Cardiaque
-  </div>
-  <script src="testscinticoeur.js"></script>
-</body>
-</html>
+	</g>
+</svg>
