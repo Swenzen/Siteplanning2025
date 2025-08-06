@@ -83,3 +83,14 @@ select {
   text-align: center;
   margin-top: 32px;
 }
+
+.slider-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+input[type="range"] {
+  width: 160px;
+  accent-color: #2980b9;
+}

@@ -10,26 +10,54 @@
   <div class="container">
     <h1>CR automatique - Scinti Cardiaque</h1>
     <form id="cr-form" autocomplete="off">
-      <label for="examen">Type d'examen</label>
-      <select id="examen">
-        <option value="repos">Repos</option>
+      <label for="type-stress">Type de stress</label>
+      <select id="type-stress">
         <option value="effort">Effort</option>
-        <option value="dipyridamole">Dipyridamole</option>
+        <option value="pharmacologique">Pharmacologique</option>
+        <option value="mixte">Mixte</option>
       </select>
 
-      <label for="perfusion">Perfusion</label>
-      <select id="perfusion">
-        <option value="normale">Normale</option>
-        <option value="hypoperfusion">Hypoperfusion</option>
-        <option value="hyperfixation">Hyperfixation</option>
+      <label for="betabloquant">Bêtabloquants</label>
+      <select id="betabloquant">
+        <option value="jamais">Jamais débuté</option>
+        <option value="non-arretes">Non-arrêtés</option>
+        <option value="arrete">Arrêté</option>
       </select>
 
-      <label for="conclusion">Conclusion</label>
-      <select id="conclusion">
-        <option value="normale">Normale</option>
-        <option value="ischémie">Ischémie</option>
-        <option value="nécrose">Nécrose</option>
+      <label for="clinique">Cliniquement</label>
+      <select id="clinique">
+        <option value="negative">Négative</option>
+        <option value="positive">Positive</option>
       </select>
+
+      <label for="electrique">Électriquement</label>
+      <select id="electrique">
+        <option value="negative">Négative</option>
+        <option value="positive">Positive</option>
+        <option value="ininterpretable">Ininterprétable</option>
+        <option value="douteuse">Douteuse</option>
+      </select>
+
+      <label for="fevg">FEVG (%)</label>
+      <div class="slider-group">
+        <input type="range" id="fevg" min="5" max="90" value="60" step="1">
+        <input type="number" id="fevg-input" min="5" max="90" value="60" style="width:60px;">
+        <span id="fevg-value">60%</span>
+      </div>
+
+      <label for="vtd">VTD (mL)</label>
+      <div class="slider-group">
+        <input type="range" id="vtd" min="30" max="350" value="100" step="1">
+        <input type="number" id="vtd-input" min="30" max="350" value="100" style="width:60px;">
+        <span id="vtd-value">100 mL</span>
+      </div>
+
+      <label for="vts">VTS (mL)</label>
+      <div class="slider-group">
+        <input type="range" id="vts" min="10" max="300" value="50" step="1">
+        <input type="number" id="vts-input" min="10" max="300" value="50" style="width:60px;">
+        <span id="vts-value">50 mL</span>
+      </div>
     </form>
 
     <div class="cr-zone" id="cr-zone">
@@ -41,7 +69,6 @@
   <div class="svg-center">
     <svg id="myocard-svg" width="1280" height="720" xmlns="http://www.w3.org/2000/svg">
       <g>
-
 		<path id="apical" d="M559.5 360.5C559.5 326.811 586.811 299.5 620.5 299.5 654.189 299.5 681.5 326.811 681.5 360.5 681.5 394.189 654.189 421.5 620.5 421.5 586.811 421.5 559.5 394.189 559.5 360.5Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
 		<path id="antéro-apical" d="M533.79 272.963C581.792 225.184 659.401 225.264 707.279 273.143L663.862 316.56C639.922 292.621 601.113 292.586 577.106 316.482Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
 		<path id="septo-apical" d="M533.486 446.733C485.651 398.786 485.641 321.177 533.464 273.243L576.932 316.61C553.02 340.577 553.03 379.387 576.954 403.366Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
@@ -59,8 +86,6 @@
 		<path id="antéro-latéro-basal" d="M749.47 141.823C827.404 187.784 875.011 271.602 874.496 361.946L809.814 361.579C810.198 294.221 774.67 231.733 716.516 197.483Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
 		<path id="inféro-latéro-basal" d="M873.935 361.268C873.451 451.875 824.691 535.357 746.002 580.299L713.983 524.237C772.653 490.728 809.01 428.486 809.374 360.932Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
 		<path id="inféro-basal" d="M746.221 579.939C667.587 625.309 570.661 625.106 492.187 579.406L524.453 524.005C583.057 558.133 655.438 558.292 714.16 524.42Z" stroke="#000000" stroke-width="2" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
-
-
       </g>
     </svg>
   </div>
