@@ -1,96 +1,175 @@
+/* Base */
+* { box-sizing: border-box; }
 body {
   font-family: Arial, sans-serif;
   background: #f8f9fa;
   margin: 0;
   padding: 0;
+  color: #222;
 }
+
+/* En-tête / formulaire */
 .container {
-  max-width: 600px;
-  margin: 32px auto;
+  max-width: 1100px;
+  margin: 24px auto 12px auto;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 16px #0002;
-  padding: 32px 24px 24px 24px;
+  padding: 24px;
 }
-h1 {
-  text-align: center;
-  margin-bottom: 24px;
+h1 { text-align: center; margin: 0 0 16px 0; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 14px 18px;
 }
-label {
-  display: block;
-  margin-top: 16px;
-  font-weight: bold;
-}
-select {
+label { display: block; font-weight: bold; margin-bottom: 6px; }
+select, input[type="number"] {
   width: 100%;
   padding: 8px;
-  margin-top: 4px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 1em;
-}
-.cr-zone {
-  margin-top: 24px;
-  background: #f1f3f4;
-  border-radius: 8px;
-  padding: 16px;
-  min-height: 48px;
-  font-size: 1.1em;
-  color: #222;
-}
-.btn-copier {
-  display: inline-block;
-  margin: 18px auto 0 auto;
-  padding: 10px 24px;
-  background: #2980b9;
-  color: #fff;
-  border: none;
   border-radius: 6px;
-  font-size: 1.1em;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-  box-shadow: 0 2px 8px #0001;
+  border: 1px solid #ccc;
+  font-size: 14px;
 }
-.btn-copier:hover {
-  background: #1a5a85;
-}
-.copie-ok {
-  margin-left: 16px;
-  color: #27ae60;
-  font-weight: bold;
-  font-size: 1.1em;
-  vertical-align: middle;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-.copie-ok.visible {
-  opacity: 1;
-}
-.zone-svg {
-  cursor: pointer;
-  transition: fill 0.2s, filter 0.2s;
-}
-.footer {
-  text-align: center;
-  margin: 32px 0 0 0;
-  color: #888;
-  font-size: 0.95em;
-}
-
-.svg-center {
-  text-align: center;
-  margin-top: 32px;
-}
-
 .slider-group {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
 }
-input[type="range"] {
-  width: 160px;
-  accent-color: #2980b9;
+input[type="range"] { width: 160px; accent-color: #2980b9; }
+input[type="number"] { width: 80px; }
+
+/* CR + actions */
+.cr-zone {
+  margin-top: 18px;
+  background: #f1f3f4;
+  border-radius: 8px;
+  padding: 14px;
+  min-height: 48px;
+  font-size: 1.05em;
+}
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.btn-copier {
+  display: inline-block;
+  padding: 10px 20px;
+  background: #2980b9;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px #0001;
+}
+.btn-copier:hover { background: #1a5a85; }
+.copie-ok { color: #27ae60; font-weight: bold; opacity: 0; transition: opacity 0.3s; }
+.copie-ok.visible { opacity: 1; }
+
+/* Layout principal (SVG + Table) */
+.layout {
+  max-width: 1100px;
+  margin: 0 auto 24px auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.svg-panel, .table-panel {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px #0002;
+  padding: 16px;
+}
+.svg-panel h2, .table-panel h2 { margin: 8px 0 12px 0; }
+
+/* SVG */
+.svg-panel { overflow: hidden; }
+#myocard-svg {
+  display: block;
+  width: 100%;
+  height: auto;       /* s’adapte en hauteur */
+  max-height: 60vh;   /* ne déborde pas l’écran */
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.zone-svg {
+  transition: fill 0.2s, stroke-width 0.2s, filter 0.2s;
+  cursor: pointer;
+  fill: #d3f9d8; /* vert clair par défaut = "Non" */
+}
+.zone-svg:hover { filter: brightness(1.1) drop-shadow(0 0 4px #ff0a); }
+.zone-svg.active { stroke-width: 3; }
+.fill-green  { fill: #51cf66; } /* Non */
+.fill-orange { fill: #fd7e14; } /* Partiel */
+.fill-red    { fill: #fa5252; } /* Complet */
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  color: #555;
+  font-size: 0.95em;
+}
+.legend-box {
+  display: inline-block;
+  width: 14px; height: 14px; margin-right: 6px;
+  border: 1px solid #bbb; border-radius: 3px;
+  vertical-align: middle;
+}
+.legend .green  { background: #51cf66; }
+.legend .orange { background: #fd7e14; }
+.legend .red    { background: #fa5252; }
+
+/* Table Perfusion */
+.perf-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px,1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.table-perfusion {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table-perfusion th, .table-perfusion td {
+  border: 1px solid #e6e6e6;
+  padding: 8px 10px;
+}
+.table-perfusion thead th {
+  background: #f6f7f8;
+  text-align: left;
+}
+.table-perfusion tbody tr:hover {
+  background: #fafafa;
+}
+.table-perfusion select {
+  width: 100%;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
+/* Coloration des lignes selon l’état */
+.table-perfusion tbody tr.row-orange { background: #fff3e6; } /* Partiel */
+.table-perfusion tbody tr.row-red    { background: #ffe5e5; } /* Complet */
+.table-perfusion tbody tr.row-orange select,
+.table-perfusion tbody tr.row-red select {
+  background: #fff;  /* lisible dans la ligne colorée */
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  margin: 16px 0 24px 0;
+  color: #888;
+  font-size: 0.95em;
 }
