@@ -70,27 +70,15 @@ input[type="number"] { width: 80px; }
 .btn-copier:hover { background: #1a5a85; }
 .copie-ok { color: #27ae60; font-weight: bold; opacity: 0; transition: opacity 0.3s; }
 .copie-ok.visible { opacity: 1; }
-.btn-secondary {
-  padding: 8px 14px;
-  background: #e9ecef;
-  color: #333;
-  border: 1px solid #cfd4da;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-.btn-secondary:hover { background: #dde2e6; }
 
-/* Layout principal (blocs en 2 colonnes) */
+/* Layout principal (SVG + Table) */
 .layout {
   max-width: 1100px;
   margin: 0 auto 24px auto;
   display: grid;
-  /* svg-panel plus large que table-panel (≈60/40) */
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
-.layout.layout-full { grid-template-columns: 1fr; } /* Cinétique pleine largeur */
 .svg-panel, .table-panel {
   background: #fff;
   border-radius: 12px;
@@ -99,19 +87,17 @@ input[type="number"] { width: 80px; }
 }
 .svg-panel h2, .table-panel h2 { margin: 8px 0 12px 0; }
 
-/* SVG responsive */
+/* SVG */
 .svg-panel { overflow: hidden; }
-#svg-perfusion, #svg-ischemie, #svg-necrose {
+#myocard-svg {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: 60vh;
+  height: auto;       /* s’adapte en hauteur */
+  max-height: 60vh;   /* ne déborde pas l’écran */
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
 }
-
-/* Segments Perfusion (3 états) */
 .zone-svg {
   transition: fill 0.2s, stroke-width 0.2s, filter 0.2s;
   cursor: pointer;
@@ -123,15 +109,6 @@ input[type="number"] { width: 80px; }
 .fill-orange { fill: #fd7e14; } /* Partiel */
 .fill-red    { fill: #fa5252; } /* Complet */
 
-/* Segments binaires (Ischémie/Nécrose) */
-.zone-bin {
-  transition: fill 0.2s, stroke-width 0.2s;
-  cursor: pointer;
-  fill: #edf2f7; /* off */
-}
-.zone-bin.on { fill: #fa5252; } /* rouge = sélectionné */
-
-/* Légendes */
 .legend {
   display: flex;
   align-items: center;
@@ -149,7 +126,6 @@ input[type="number"] { width: 80px; }
 .legend .green  { background: #51cf66; }
 .legend .orange { background: #fd7e14; }
 .legend .red    { background: #fa5252; }
-.legend .blue   { background: #74c0fc; }
 
 /* Table Perfusion */
 .perf-controls {
@@ -158,92 +134,37 @@ input[type="number"] { width: 80px; }
   gap: 12px;
   margin-bottom: 10px;
 }
-.perf-filters {
-  grid-template-columns: repeat(3, minmax(160px, 1fr));
-  column-gap: 12px;
-  row-gap: 10px;
-}
 .table-perfusion {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px; /* réduit */
+  font-size: 14px;
 }
 .table-perfusion th, .table-perfusion td {
   border: 1px solid #e6e6e6;
-  padding: 6px 8px; /* réduit */
+  padding: 8px 10px;
 }
 .table-perfusion thead th {
   background: #f6f7f8;
   text-align: left;
-  font-size: 12px; /* réduit */
 }
 .table-perfusion tbody tr:hover {
   background: #fafafa;
 }
 .table-perfusion select {
   width: 100%;
-  padding: 4px;     /* réduit */
+  padding: 6px;
   border-radius: 6px;
   border: 1px solid #ccc;
-  font-size: 12px;  /* réduit */
+  font-size: 13px;
 }
 
 /* Coloration des lignes selon l’état */
 .table-perfusion tbody tr.row-orange { background: #fff3e6; } /* Partiel */
 .table-perfusion tbody tr.row-red    { background: #ffe5e5; } /* Complet */
 .table-perfusion tbody tr.row-orange select,
-.table-perfusion tbody tr.row-red select { background: #fff; }
-
-/* Table Cinétique */
-.table-kine {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
+.table-perfusion tbody tr.row-red select {
+  background: #fff;  /* lisible dans la ligne colorée */
 }
-.table-kine td {
-  border: 1px solid #e6e6e6;
-  padding: 8px 10px;
-  vertical-align: middle;
-}
-.table-kine .lbl {
-  width: 210px;
-  font-weight: bold;
-  background: #f7f7f9;
-}
-.table-kine .subhead td, .table-kine .subhead {
-  background: #f0f2f5;
-  font-weight: bold;
-  text-transform: uppercase;
-  font-size: 12px;
-  letter-spacing: .3px;
-}
-.table-kine select, .table-kine input[type="number"] {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 13px;
-}
-.kine-field {
-  display: grid;
-  grid-template-columns: 100px 1fr;
-  align-items: center;
-  gap: 8px;
-}
-.flag span {
-  display: inline-block;
-  min-width: 22px;
-  text-align: center;
-  padding: 2px 6px;
-  border-radius: 10px;
-  background: #eef3ff;
-  border: 1px solid #d7e2ff;
-  font-weight: bold;
-  color: #3366cc;
-}
-
-/* Légère marge au-dessous de la table cinétique */
-.kine-panel { padding-bottom: 8px; }
 
 /* Footer */
 .footer {
@@ -251,24 +172,4 @@ input[type="number"] { width: 80px; }
   margin: 16px 0 24px 0;
   color: #888;
   font-size: 0.95em;
-}
-
-/* Responsif: empilement vertical si écran étroit */
-@media (max-width: 960px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-  .perf-filters {
-    grid-template-columns: repeat(2, minmax(160px, 1fr));
-  }
-}
-
-/* état caché générique */
-.hidden { display: none !important; }
-
-/* entête post-STRESS / REST */
-.table-kine .colhead td {
-  background: #fafbfc;
-  font-weight: 600;
-  text-align: center;
 }
