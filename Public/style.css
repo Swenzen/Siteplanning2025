@@ -16,6 +16,10 @@ body {
   font-family: Arial, sans-serif;
   margin:0; padding:0;
   background:#f4f4f9;
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  overflow:auto;
 }
 .hidden { display:none !important; }
 .max400-overflow { max-height:400px; overflow:auto; }
@@ -86,19 +90,22 @@ button.danger:hover,
 /* ========== HEADER ========== */
 header {
   width:100%;
-  background:var(--header-bg);
+  background:linear-gradient(135deg,#2c3e50,#1f2d3a 60%,#162029);
   color:#fff;
   padding:10px 20px;
   display:flex;
   justify-content:center;
   align-items:center;
-  box-shadow:0 2px 5px rgba(0,0,0,0.2);
+  box-shadow:0 4px 14px rgba(0,0,0,.35);
+  border-bottom:1px solid rgba(255,255,255,.08);
   position:sticky; top:0; z-index:1000;
+  flex:0 0 auto;
 }
 #header-container {
   width:90%; margin:0 auto;
   display:flex; justify-content:space-between; align-items:center;
   padding:10px 0;
+  gap:24px;
 }
 header nav { flex-grow:1; display:flex; }
 header nav ul {
@@ -153,7 +160,14 @@ header nav ul li a.active {
 .has-dropdown .dropdown-menu li a:hover { background:#e3f2fd; color:#1976d2; }
 
 /* ========== CONTENU & SECTIONS ========== */
-#content { margin-top:70px; padding:20px; }
+#content {
+  margin-top:0 !important;         /* supprime l’ancien décalage */
+  padding:20px;
+  flex:1 1 auto;
+  overflow:auto;                   /* unique scrollbar */
+  position:relative;
+  -webkit-overflow-scrolling:touch;
+}
 .section-container,
 #auth-section,
 #user-info {
@@ -572,7 +586,335 @@ table.grid-freeze .sub-table input[type=checkbox] { cursor:pointer; }
   padding: 12px 18px;
 }
 
-/* Option: si tu veux même hauteur stricte */
-#planning-actions .action-btn:active {
-  transform: translateY(0); /* évite saut vertical perceptible */
+/* === LAYOUT APPLICATION: une seule scrollbar (#content) === */
+html, body {
+  height:100%;
 }
+body {
+  display:flex;
+  flex-direction:column;
+}
+header {
+  flex:0 0 auto;
+}
+#content {
+  flex:1 1 auto;
+  overflow:auto;                   /* unique scrollbar */
+  margin-top:0 !important;         /* supprime l’ancien décalage */
+  padding:20px;
+  position:relative;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Neutralise les scrolls internes existants */
+.sticky-table-container,
+.max400-overflow {
+  max-height:none !important;
+  overflow:visible !important;
+}
+
+/* (Option) si un wrapper force une largeur: conserver */
+.grid-wrapper {
+  overflow:hidden;                 /* garde les coins arrondis */
+}
+
+/* Assure le sticky dans le nouveau conteneur scroll (#content) */
+table.grid-freeze thead th {
+  top:0;
+}
+
+/* Faculatif: limiter largeur totale si très large écran */
+#content > .bdd-section,
+#content > .grid-wrapper {
+  max-width:1800px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+/* === Correction grands tableaux: rétablir scroll horizontal === */
+.sticky-table-container {
+  max-height:none !important;
+  overflow:visible !important; /* plus de scroll interne vertical */
+}
+
+.grid-wrapper {
+  overflow-x:auto !important;   /* scroll horizontal quand nécessaire */
+  overflow-y:visible !important;
+  -webkit-overflow-scrolling:touch;
+}
+
+.grid-wrapper::-webkit-scrollbar {
+  height:10px;
+}
+.grid-wrapper::-webkit-scrollbar-track {
+  background:#eef3f8;
+  border-radius:6px;
+}
+.grid-wrapper::-webkit-scrollbar-thumb {
+  background:#b5c4d4;
+  border-radius:6px;
+}
+.grid-wrapper::-webkit-scrollbar-thumb:hover {
+  background:#8ca3b7;
+}
+
+/* === HEADER RELOOK + DROPDOWN MODERNE === */
+header {
+  background:linear-gradient(135deg,#2c3e50,#1f2d3a 60%,#162029);
+  box-shadow:0 4px 14px rgba(0,0,0,.35);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+#header-container { gap:24px; }
+
+#menu > ul {
+  background:rgba(255,255,255,0.07);
+  padding:6px;
+  border-radius:18px;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  gap:6px;
+  position:relative;
+}
+
+#menu > ul > li {
+  position:relative;
+  display:flex;
+  align-items:stretch;
+}
+
+#menu > ul > li > a {
+  background:transparent !important;
+  box-shadow:none !important;
+  padding:10px 18px;
+  line-height:1;
+  border-radius:14px;
+  font-weight:600;
+  letter-spacing:.3px;
+  color:#f2f6fa;
+  transition:.25s;
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+#menu > ul > li > a:hover {
+  background:rgba(255,255,255,.14) !important;
+  color:#fff;
+  transform:translateY(0);
+}
+
+#menu > ul > li > a.active {
+  background:linear-gradient(135deg,#19c3a5,#12a68b) !important;
+  color:#fff;
+  box-shadow:0 0 0 1px rgba(255,255,255,.25),0 4px 10px -2px rgba(0,0,0,.4);
+}
+
+#user-section select,
+#logoutButton {
+  box-shadow:0 2px 6px rgba(0,0,0,.25);
+}
+
+/* Dropdown : animation + style arrondi */
+.has-dropdown .dropdown-menu {
+  display:block;               /* rendre animable */
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(8px) scale(.96);
+  transition:.25s cubic-bezier(.25,.6,.25,1);
+  background:#ffffff;
+  background:
+    linear-gradient(145deg,#ffffff 0%,#f5f8fb 90%);
+  border:1px solid #e3e9ef;
+  border-radius:16px;
+  padding:8px 0;
+  min-width:210px;
+  box-shadow:
+    0 4px 18px -4px rgba(20,32,46,.35),
+    0 2px 4px rgba(20,32,46,.15);
+  overflow:hidden;
+}
+
+.has-dropdown:hover .dropdown-menu,
+.has-dropdown:focus-within .dropdown-menu {
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+  z-index:1200;
+}
+
+/* Petite flèche */
+.has-dropdown .dropdown-menu:before {
+  content:"";
+  position:absolute;
+  top:-8px;
+  left:18px;
+  width:14px; height:14px;
+  background:#fff;
+  transform:rotate(45deg);
+  border-left:1px solid #e3e9ef;
+  border-top:1px solid #e3e9ef;
+  box-shadow: -2px -2px 3px -2px rgba(0,0,0,.08);
+}
+
+.has-dropdown .dropdown-menu li + li {
+  border-top:1px solid #f0f3f6;
+}
+
+.has-dropdown .dropdown-menu li a {
+  font-weight:500;
+  padding:9px 18px;
+  color:#2c3e50;
+  background:transparent;
+  transition:.2s;
+  border-radius:0;
+}
+
+.has-dropdown .dropdown-menu li a:hover {
+  background:#e7f3ff;
+  color:#0d5ea8;
+}
+
+.has-dropdown .dropdown-menu li a:active {
+  background:#d3e9ff;
+}
+
+/* Transition focus clavier sur liens */
+#menu a:focus-visible {
+  outline:2px solid #1abc9c;
+  outline-offset:2px;
+  border-radius:14px;
+}
+
+/* Réduction légère sur écrans étroits */
+@media (max-width:1100px) {
+  #menu > ul > li > a { padding:8px 14px; font-size:13px; }
+  .has-dropdown .dropdown-menu { min-width:180px; }
+}
+
+/* Mode contraste foncé sur hover parent */
+.has-dropdown:hover > a:not(.active) {
+  background:rgba(255,255,255,.10) !important;
+  color:#fff;
+}
+
+/* --- HEADER MODERNE, COMPACT & HARMONIEUX --- */
+header {
+  min-height: 0;
+  padding: 6px 0 4px 0 !important;
+}
+#header-container {
+  padding: 0 !important;
+  min-height: 0;
+  height: 54px;
+  align-items: center;
+}
+#menu > ul {
+  min-height: 0;
+  height: 42px;
+  align-items: center;
+}
+#menu > ul > li > a {
+  padding: 7px 14px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+#menu > ul > li > a.active {
+  font-weight: bold;
+}
+#user-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 4px 12px 4px 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #19c3a5 60%, #12a68b 100%);
+  color: #fff;
+  font-weight: bold;
+  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(20,32,46,.10);
+  margin-right: 6px;
+  letter-spacing: 1px;
+}
+.user-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.user-mail {
+  font-size: 14px;
+  color: #f2f6fa;
+  font-weight: 500;
+  letter-spacing: .2px;
+  margin-bottom: 1px;
+}
+#siteSelector {
+  background: #fff;
+  color: #222;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  padding: 3px 10px 3px 8px;
+  margin-top: 0;
+  margin-bottom: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  transition: border .2s;
+}
+#siteSelector:focus {
+  outline: 2px solid #19c3a5;
+}
+#logoutButton {
+  background: linear-gradient(135deg, #e74c3c 60%, #c0392b 100%);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 7px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  margin-left: 8px;
+  box-shadow: 0 2px 8px rgba(231,76,60,0.08);
+  transition: background .2s, box-shadow .2s;
+}
+#logoutButton:hover {
+  background: linear-gradient(135deg, #c0392b 60%, #e74c3c 100%);
+  box-shadow: 0 4px 16px rgba(231,76,60,0.18);
+}
+@media (max-width: 900px) {
+  #header-container { width: 98%; }
+  #menu > ul > li > a { font-size: 13px; padding: 6px 10px; }
+  .user-avatar { width: 28px; height: 28px; font-size: 15px; }
+  #user-section { padding: 3px 6px 3px 4px; }
+}
+
+/* Pour tous les thead de tes tableaux */
+thead tr th {
+  background: var(--blue) !important;
+  color: #fff !important;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Cases fermées très visibles dans le planning : fond gris clair, texte noir */
+.cell-fermee {
+  background: #e5e7eb !important;      /* gris clair */
+  color: #222 !important;              /* texte noir */
+  font-weight: bold !important;
+  font-size: 1.15em !important;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+}
+

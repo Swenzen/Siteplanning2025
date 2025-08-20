@@ -56,7 +56,7 @@ async function displayPlanningWithNames(
   // Créer l'en-tête du tableau
   const headerRow = document.createElement("tr");
   const competenceHeader = document.createElement("th");
-  competenceHeader.textContent = "Compétence";
+  competenceHeader.textContent = "Compétences";
   headerRow.appendChild(competenceHeader);
 
   const horairesHeader = document.createElement("th");
@@ -286,7 +286,7 @@ async function displayPlanningWithNames(
   const vacanceAutreRow = document.createElement("tr");
   vacanceAutreRow.id = "vacance-autre-row";
   const thVacance = document.createElement("th");
-  thVacance.textContent = "Vacance";
+  thVacance.textContent = "Vacances";
   vacanceAutreRow.appendChild(thVacance);
   const thAutre = document.createElement("th");
   thAutre.textContent = "Autre";
