@@ -28,9 +28,11 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
     `;
 
     // Puis positionne le tooltip :
+    tooltip.style.position = "fixed"; // Ajoute cette ligne
+
     const margin = 10;
-    let x = event.pageX + margin;
-    let y = event.pageY + margin;
+    let x = event.clientX + margin;
+    let y = event.clientY + margin;
     const rect = tooltip.getBoundingClientRect();
     if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - margin;
     if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - margin;
@@ -299,9 +301,11 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
     }
 
     // Puis positionne le tooltip :
+    tooltip.style.position = "fixed"; // Ajoute cette ligne
+
     const margin = 10;
-    let x = event.pageX + margin;
-    let y = event.pageY + margin;
+    let x = event.clientX + margin;
+    let y = event.clientY + margin;
     const rect = tooltip.getBoundingClientRect();
     if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - margin;
     if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - margin;
