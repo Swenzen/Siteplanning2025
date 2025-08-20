@@ -14,18 +14,7 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
     tooltip.className = "tooltip-clicdroit";
     document.body.appendChild(tooltip);
 
-    // Positionnement intelligent
-    const margin = 10;
-    let x = event.clientX + margin;
-    let y = event.clientY + margin;
-    setTimeout(() => {
-      const rect = tooltip.getBoundingClientRect();
-      if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - margin;
-      if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - margin;
-      tooltip.style.left = x + "px";
-      tooltip.style.top = y + "px";
-    }, 0);
-
+    // ... d'abord, mets le contenu du tooltip :
     tooltip.innerHTML = `
       <div class="tooltip-header">
         <span class="tooltip-title">Mission</span>
@@ -37,6 +26,16 @@ document.getElementById("planningTableWithNames").addEventListener("contextmenu"
         <button class="tooltip-delete-mission" data-mission-id="${missionId}">Supprimer la mission</button>
       </div>
     `;
+
+    // Puis positionne le tooltip :
+    const margin = 10;
+    let x = event.pageX + margin;
+    let y = event.pageY + margin;
+    const rect = tooltip.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - margin;
+    if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - margin;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
 
     // Fermeture tooltip
     tooltip.querySelector(".tooltip-close").onclick = function() {
@@ -206,63 +205,8 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
   tooltip.className = "tooltip-clicdroit";
   document.body.appendChild(tooltip);
 
-  // Positionnement intelligent (évite de sortir de l'écran)
-  const margin = 10;
-  let x = event.clientX + margin;
-  let y = event.clientY + margin;
-  setTimeout(() => {
-    const rect = tooltip.getBoundingClientRect();
-    if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - margin;
-    if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - margin;
-    tooltip.style.left = x + "px";
-    tooltip.style.top = y + "px";
-  }, 0);
-
-  // CASE VACANCE SOUS-CASE
-  if (isVacanceSousCase) {
-    tooltip.innerHTML = `
-      <div class="tooltip-header">
-        <span class="tooltip-title">${nom}</span>
-        <div class="tooltip-actions">
-          <button class="tooltip-delete-multi" title="Supprimer">Supprimer sur toute la période</button>
-          <span class="tooltip-close">&times;</span>
-        </div>
-      </div>
-      <div class="tooltip-details">
-        <div><b>Site ID :</b> ${siteId}</div>
-        <div><b>Période :</b> ${dateHeaders ? dateHeaders.join(" / ") : ""}</div>
-      </div>
-    `;
-  }
-  // CASE VIDE
-  else if (isCaseVide) {
-    let isFermee = commentaireNom && commentaireNom.trim().toLowerCase() === "fermée";
-    tooltip.innerHTML = `
-      <div class="tooltip-header">
-        <span class="tooltip-title">Case vide</span>
-        <span class="tooltip-close">&times;</span>
-      </div>
-      <div class="tooltip-content">
-        ${
-          isFermee
-            ? `<button class="tooltip-reopen">Réouvrir</button>`
-            : `
-              ${commentaireNom
-                ? `<div class="tooltip-comment-label">Commentaire :</div>
-                   <div class="tooltip-comment">${commentaireNom}</div>
-                   <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>`
-                : `<button class="tooltip-fermee">Fermée</button>
-                   <button class="tooltip-add-commentaire">Ajouter un commentaire</button>`
-              }
-              <button class="tooltip-add-mission">Ajouter une mission</button>
-            `
-        }
-      </div>
-    `;
-  }
-  // CASE AVEC NOM
-  else {
-    let html = `
+  // ... d'abord, mets le contenu du tooltip :
+  tooltip.innerHTML = `
       <div class="tooltip-header">
         <span class="tooltip-title">${nom}</span>
         <div class="tooltip-actions">
@@ -273,31 +217,96 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
       <div class="tooltip-content">
     `;
 
-    // Ajoute le commentaire s'il existe
-    if (commentaireNom) {
-      html += `
-        <div class="tooltip-comment-label">Commentaire :</div>
-        <div class="tooltip-comment">${commentaireNom}</div>
-        <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>
+    // CASE VACANCE SOUS-CASE
+    if (isVacanceSousCase) {
+      tooltip.innerHTML = `
+        <div class="tooltip-header">
+          <span class="tooltip-title">${nom}</span>
+          <div class="tooltip-actions">
+            <button class="tooltip-delete-multi" title="Supprimer">Supprimer sur toute la période</button>
+            <span class="tooltip-close">&times;</span>
+          </div>
+        </div>
+        <div class="tooltip-details">
+          <div><b>Site ID :</b> ${siteId}</div>
+          <div><b>Période :</b> ${dateHeaders ? dateHeaders.join(" / ") : ""}</div>
+        </div>
       `;
-    } else {
-      html += `<button class="tooltip-add-commentaire">Ajouter un commentaire</button>`;
+    }
+    // CASE VIDE
+    else if (isCaseVide) {
+      let isFermee = commentaireNom && commentaireNom.trim().toLowerCase() === "fermée";
+      tooltip.innerHTML = `
+        <div class="tooltip-header">
+          <span class="tooltip-title">Case vide</span>
+          <span class="tooltip-close">&times;</span>
+        </div>
+        <div class="tooltip-content">
+          ${
+            isFermee
+              ? `<button class="tooltip-reopen">Réouvrir</button>`
+              : `
+                ${commentaireNom
+                  ? `<div class="tooltip-comment-label">Commentaire :</div>
+                     <div class="tooltip-comment">${commentaireNom}</div>
+                     <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>`
+                  : `<button class="tooltip-fermee">Fermée</button>
+                     <button class="tooltip-add-commentaire">Ajouter un commentaire</button>`
+                }
+                <button class="tooltip-add-mission">Ajouter une mission</button>
+              `
+          }
+        </div>
+      `;
+    }
+    // CASE AVEC NOM
+    else {
+      let html = `
+        <div class="tooltip-header">
+          <span class="tooltip-title">${nom}</span>
+          <div class="tooltip-actions">
+            <button class="tooltip-delete" title="Supprimer">Supprimer</button>
+            <span class="tooltip-close">&times;</span>
+          </div>
+        </div>
+        <div class="tooltip-content">
+      `;
+
+      // Ajoute le commentaire s'il existe
+      if (commentaireNom) {
+        html += `
+          <div class="tooltip-comment-label">Commentaire :</div>
+          <div class="tooltip-comment">${commentaireNom}</div>
+          <button class="tooltip-delete-commentaire">Supprimer le commentaire</button>
+        `;
+      } else {
+        html += `<button class="tooltip-add-commentaire">Ajouter un commentaire</button>`;
+      }
+
+      // Ajoute la mission liée au nom s'il y en a une
+      if (missionNom) {
+        html += `
+          <div class="tooltip-mission-label">Mission :</div>
+          <div class="tooltip-mission">${missionNom.texte}</div>
+          <button class="tooltip-delete-mission" data-mission-id="${missionNom.id}">Supprimer la mission</button>
+        `;
+      } else {
+        html += `<button class="tooltip-add-mission">Ajouter une mission</button>`;
+      }
+
+      html += `</div>`;
+      tooltip.innerHTML = html;
     }
 
-    // Ajoute la mission liée au nom s'il y en a une
-    if (missionNom) {
-      html += `
-        <div class="tooltip-mission-label">Mission :</div>
-        <div class="tooltip-mission">${missionNom.texte}</div>
-        <button class="tooltip-delete-mission" data-mission-id="${missionNom.id}">Supprimer la mission</button>
-      `;
-    } else {
-      html += `<button class="tooltip-add-mission">Ajouter une mission</button>`;
-    }
-
-    html += `</div>`;
-    tooltip.innerHTML = html;
-  }
+    // Puis positionne le tooltip :
+    const margin = 10;
+    let x = event.pageX + margin;
+    let y = event.pageY + margin;
+    const rect = tooltip.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - margin;
+    if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - margin;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
 
   // Gestion des boutons du tooltip
   tooltip.onclick = async function(e) {
