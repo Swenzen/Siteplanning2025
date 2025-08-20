@@ -1,1626 +1,578 @@
-/* Styles pour la base de données */
-
-.hidden { display: none !important; }
-.max400-overflow { max-height: 400px; overflow: auto; }
-.float-right { float: right; }
-.cursor-pointer { cursor: pointer; }
-
-
-
-.hidden { display: none !important; }
-
-
-
-.box {
-    border: 1px solid #ccc;
-    padding: 20px;
+/* ========== UTILITAIRES & BASE ========== */
+:root {
+  --blue:#3498db;
+  --blue-dark:#2980b9;
+  --blue-alt:#2f80c2;
+  --green:#28a745;
+  --red:#e74c3c;
+  --red-dark:#c0392b;
+  --gray-border:#ddd;
+  --shadow:0 4px 10px rgba(0,0,0,0.1);
+  --radius:10px;
+  --trans:0.3s;
+  --header-bg:#2c3e50;
 }
-.mb-20 {
-    margin-bottom: 20px;
-}
-.mt-20 {
-    margin-top: 20px;
-}
-.competence-list {
-    min-height: 200px;
-    border: 1px solid #ccc;
-    padding: 8px;
-}
-
-
-.flex-row {
-    display: flex;
-}
-.gap-32 {
-    gap: 32px;
-}
-.gap-24 {
-    gap: 24px;
-}
-.flex-1 {
-    flex: 1;
-}
-.flex-2 {
-    flex: 2;
-}
-.wrap {
-    flex-wrap: wrap;
-}
-.mt-40 {
-    margin-top: 40px;
-}
-
-
-
-.cell-fermee {
-  background: #e0e0e0 !important;
-  color: #888 !important;
-}
-.simu-table {
-    border-collapse: collapse;
-    width: 100%;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-.simu-table th, .simu-table td {
-    border: 1px solid #ddd;
-    padding: 12px;
-    text-align: center;
-}
-
-/* Style global pour le body */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f9;
-    display: block; /* Empile les éléments verticalement */
-}
-
-
-.hidden { display: none !important; }
-.tooltip-hidden {
-    display: none;
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    z-index: 1000;
-    min-width: 200px;
-}
-.evolution-visualization {
-    margin: 32px 0;
-}
-.evolution-nav {
-    margin: 10px 0;
-}
-
-/* ========================= */
-/* STYLE DES TABLEAUX        */
-/* ========================= */
-
-/* Conteneur des tableaux */
-table {
-    width: 90%; /* Largeur ajustée pour un meilleur rendu */
-    margin: 20px auto; /* Centre le tableau horizontalement */
-    border-collapse: collapse; /* Fusionne les bordures pour des lignes internes visibles */
-    background-color: #ffffff; /* Fond blanc */
-    border-radius: 10px; /* Coins arrondis */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
-    overflow: hidden; /* Empêche les débordements */
-}
-
-/* Ajouter des bordures internes */
-table th,
-table td {
-    border: 1px solid #ddd; /* Bordure grise claire entre les cellules */
-    padding: 12px; /* Espacement interne */
-    text-align: center; /* Centre le texte */
-}
-
-/* Couleur des en-têtes de colonnes des tableaux */
-table thead {
-    background-color: #3498db; /* Bleu utilisé dans les boutons du header */
-    color: white; /* Texte blanc */
-    font-weight: bold;
-    text-align: center;
-}
-
-/* Cellules de l'en-tête */
-table thead th {
-    padding: 15px; /* Espacement interne */
-    font-size: 16px; /* Taille du texte */
-    text-transform: uppercase; /* Texte en majuscules */
-}
-
-/* Lignes du corps du tableau */
-table tbody tr {
-    border-bottom: 1px solid #ddd; /* Ligne de séparation */
-    transition: background-color 0.3s; /* Transition pour le survol */
-}
-
-/* Cellules du corps du tableau */
-table tbody td {
-    padding: 12px; /* Espacement interne */
-    text-align: center; /* Centre le texte */
-    font-size: 14px; /* Taille du texte */
-    color: #333; /* Couleur du texte */
-}
-
-/* Effet au survol des lignes */
-table tbody tr:hover {
-    background-color: #f9f9f9; /* Fond gris clair au survol */
-}
-
-/* Dernière ligne sans bordure */
-table tbody tr:last-child {
-    border-bottom: none;
-}
-
-/* Boutons dans les tableaux */
-table tbody td button {
-    background-color: #e74c3c; /* Couleur rouge */
-    color: white; /* Texte blanc */
-    border: none; /* Supprime la bordure */
-    padding: 8px 12px; /* Espacement interne */
-    border-radius: 5px; /* Coins arrondis */
-    cursor: pointer; /* Change le curseur en pointeur */
-    font-size: 12px; /* Taille du texte */
-    transition: background-color 0.3s; /* Transition pour le survol */
-}
-
-/* Effet au survol des boutons */
-table tbody td button:hover {
-    background-color: #c0392b; /* Rouge plus sombre au survol */
-}
-
-
-
-
-#planningTableWithNames tfoot th {
-  background: #f5f5f5;
-  font-weight: bold;
-  border-top: 2px solid #ccc;
-}
-
-
-
-
-
-
-
-
-
-
-
-/* ========================= */
-/* HEADER (Bandeau en haut)  */
-/* ========================= */
-
-/* Conteneur principal du header */
-#header-container {
-    width: 90%; /* Le conteneur occupe 90% de la largeur */
-    margin: 0 auto; /* Centre le conteneur horizontalement */
-    display: flex; /* Active le mode flexbox */
-    justify-content: space-between; /* Place les éléments aux extrémités */
-    align-items: center; /* Aligne verticalement les éléments */
-    padding: 10px 0; /* Espacement vertical */
-}
-
-/* Style général du header */
-header {
-    width: 100%;
-    background-color: #2c3e50; /* Couleur de fond sombre */
-    color: white; /* Texte blanc */
-    padding: 10px 20px;
-    display: flex;
-    justify-content: center; /* Centre le contenu horizontalement */
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Légère ombre */
-    position: sticky; /* Reste en haut même en scrollant */
-    top: 0;
-    z-index: 1000; /* S'assurer qu'il est au-dessus des autres éléments */
-}
-
-/* Conteneur du menu (à gauche) */
-header nav {
-    flex-grow: 1; /* Permet au menu de prendre tout l'espace disponible */
-    display: flex;
-    justify-content: flex-start; /* Aligne les boutons à gauche */
-}
-
-/* Liste des boutons dans le menu */
-header nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 15px; /* Espacement entre les boutons */
-}
-
-/* Style des boutons du menu */
-header nav ul li a {
-    display: inline-block;
-    background-color: #3498db; /* Couleur de fond des boutons */
-    color: white; /* Texte blanc */
-    text-decoration: none; /* Supprime le soulignement */
-    font-weight: bold;
-    padding: 10px 15px; /* Espacement interne */
-    border-radius: 5px; /* Coins arrondis */
-    transition: background-color 0.3s, transform 0.2s; /* Transition pour le survol */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Légère ombre */
-    white-space: nowrap; /* Empêche les boutons de se couper sur plusieurs lignes */
-}
-
-/* Effet au survol des boutons */
-header nav ul li a:hover {
-    background-color: #2980b9; /* Couleur plus sombre au survol */
-    transform: translateY(-2px); /* Légère élévation au survol */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Ombre plus marquée */
-}
-
-/* Effet pour les boutons cliqués */
-header nav ul li a:active {
-    transform: translateY(0); /* Réinitialise l'élévation */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Réduit l'ombre */
-}
-
-/* Style pour le bouton actif (page actuelle) */
-header nav ul li a.active {
-    background-color: #1abc9c; /* Couleur verte pour le bouton actif */
-    color: white; /* Texte blanc pour le bouton actif */
-    pointer-events: none; /* Désactive les clics sur le bouton actif */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Ombre plus marquée */
-}
-
-/* Section utilisateur (en ligne, en haut à droite) */
-header #user-section {
-    display: flex; /* Affiche les éléments en ligne */
-    flex-direction: row; /* Aligne les éléments horizontalement */
-    align-items: center; /* Aligne verticalement les éléments */
-    justify-content: flex-end; /* Place les éléments à droite */
-    gap: 10px; /* Espacement entre le texte et le bouton */
-    color: #22222c; /* Texte gris clair pour être visible sur le fond sombre */
-}
-
-/* Style pour le bouton "Se déconnecter" */
-header #user-section #logoutButton {
-    background-color: #e74c3c; /* Couleur rouge */
-    color: white; /* Texte blanc */
-    border: none; /* Supprime la bordure */
-    padding: 8px 15px; /* Espacement interne */
-    border-radius: 20px; /* Coins arrondis */
-    cursor: pointer; /* Change le curseur en pointeur */
-    font-size: 14px; /* Taille du texte */
-    transition: background-color 0.3s; /* Transition pour le survol */
-}
-
-/* Effet au survol du bouton */
-header #user-section #logoutButton:hover {
-    background-color: #c0392b; /* Rouge plus sombre au survol */
-}
-
-
-
-
-
-#user-info-container {
-    display: flex;
-    flex-direction: column; /* Empile les éléments verticalement */
-    align-items: flex-start; /* Aligne les éléments à gauche */
-    margin-top: 10px; /* Ajoute un espace entre le nom et le menu déroulant */
-}
-
-/* Style pour le menu déroulant */
-#siteSelector {
-    margin-top: 5px; /* Ajoute un petit espace au-dessus du menu déroulant */
-    padding: 5px; /* Ajoute un peu de padding pour un meilleur rendu */
-    font-size: 14px; /* Ajuste la taille de la police */
-}
-
-
-
-/* Menu déroulant pour le header */
-.has-dropdown {
-    position: relative;
-}
-
-.has-dropdown .dropdown-menu {
-    display: none;
-    position: absolute;
-    left: 0;
-    top: 100%;
-    background: #f5f5f5;
-    min-width: 180px;
-    box-shadow: 0 2px 8px #0002;
-    border-radius: 0 0 8px 8px;
-    z-index: 100;
-    padding: 0;
-    margin: 0;
-}
-
-.has-dropdown:hover .dropdown-menu,
-.has-dropdown:focus-within .dropdown-menu {
-    display: block;
-}
-
-.has-dropdown .dropdown-menu li {
-    display: block;
-    width: 100%;
-}
-
-.has-dropdown .dropdown-menu li a {
-    display: block;
-    padding: 10px 18px;
-    color: #222;
-    background: none;
-    border-radius: 0;
-    font-weight: normal;
-    text-decoration: none;
-}
-
-.has-dropdown .dropdown-menu li a:hover {
-    background: #e3f2fd;
-    color: #1976d2;
-}
-
-/* ========================= */
-/* container dans bdd        */
-/* ========================= */
-
-
-
-
-
-.collapsible-header {
-    cursor: pointer;
-    background: #e9e9e9;
-    padding: 10px;
-    font-weight: bold;
-    border-radius: 5px 5px 0 0;
-    margin-bottom: 0;
-}
-.collapsible-content {
-    display: none;
-    padding: 10px;
-    border: 1px solid #e9e9e9;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-}
-.collapsible-section.active .collapsible-content {
-    display: block;
-}
-
-
-.scrollable-container {
-    max-height: 400px;      /* Ajuste la hauteur selon ton besoin */
-    overflow-y: auto;
-    overflow-x: auto;       /* Ajoute aussi un scroll horizontal si besoin */
-    padding-right: 8px;     /* Pour éviter que la barre de scroll ne cache le contenu */
-}
-
-
-.collapsible-section {
-    display: none;
-}
-.collapsible-section.active {
-    display: block;
-}
-
-
-/* ========================= */
-/* modal horaires      */
-/* ========================= */
-
-
-
-
-.modalh {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0; top: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.3);
-}
-.modalh-content {
-  background: #fff;
-  margin: 10% auto;
-  padding: 20px;
-  border-radius: 8px;
-  width: 300px;
-  position: relative;
-}
-
-
-/* ========================= */
-/* CONTENU PRINCIPAL         */
-/* ========================= */
-#content {
-    margin-top: 70px; /* Laisser de l'espace pour le header */
-    padding: 20px;
-}
-
-
-
-
-
-/* ========================= */
-/* TOOLTIP                   */
-/* ========================= */
-#tooltip {
-    display: none;
-    position: absolute;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    pointer-events: auto; /* Permet au tooltip de recevoir des événements de souris */
-}
-
-.tooltip-date {
-    cursor: pointer; /* Change le curseur en pointeur */
-    margin: 5px 0; /* Espacement entre les dates */
-}
-
-/* ========================= */
-/* TOOLTIP (Style général)   */
-/* ========================= */
-#emptyTooltip {
-    position: absolute;
-    background-color: white;
-    border: 1px solid black;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
-    width: 250px; /* Largeur fixe pour un affichage cohérent */
-    display: flex;
-    flex-direction: column; /* Affichage en colonne */
-    gap: 10px; /* Espacement entre les éléments */
-    z-index: 1000; /* S'assurer qu'il est au-dessus des autres éléments */
-}
-
-/* Style pour chaque élément du tooltip */
-.tooltip-item {
-    display: flex;
-    flex-direction: column; /* Affichage en colonne */
-    gap: 10px; /* Espacement entre les sous-éléments */
-}
-
-/* Style pour les dates dans le tooltip */
-.tooltip-date {
-    font-weight: bold;
-    color: #2c3e50; /* Couleur sombre */
-    margin-bottom: 5px;
-}
-
-/* Style pour les commentaires */
-.tooltip-comment {
-    background-color: #f9f9f9; /* Fond clair pour différencier */
-    border: 1px solid #ddd;
-    padding: 5px;
-    border-radius: 5px;
-}
-
-/* Style pour chaque commentaire individuel */
-.comment-item {
-    display: flex;
-    justify-content: space-between; /* Espacement entre le texte et le bouton */
-    align-items: center;
-    gap: 10px;
-}
-
-/* Style pour le texte du commentaire */
-.comment-text {
-    font-size: 14px;
-    color: #333;
-}
-
-/* Style pour le bouton de suppression des commentaires */
-.delete-comment-button {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background-color 0.3s;
-}
-
-.delete-comment-button:hover {
-    background-color: #c0392b;
-}
-
-/* Style pour les options du tooltip */
-.tooltip-options {
-    display: flex;
-    flex-direction: column; /* Affichage en colonne */
-    gap: 10px; /* Espacement entre les boutons */
-}
-
-/* Style pour les boutons dans le tooltip */
-.tooltip-option {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background-color 0.3s;
-}
-
-.tooltip-option:hover {
-    background-color: #2980b9;
-}
-
-
-/* ========================= */
-/* MODAL                     */
-/* ========================= */
-.modal {
-    display: none; /* Caché par défaut */
-    position: fixed; /* Reste en place */
-    z-index: 1; /* Au-dessus des autres éléments */
-    left: 0;
-    top: 0;
-    width: 100%; /* Largeur complète */
-    height: 100%; /* Hauteur complète */
-    overflow: auto; /* Permet le défilement si nécessaire */
-    background-color: rgba(0, 0, 0, 0.4); /* Fond noir avec opacité */
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* Centré verticalement et horizontalement */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Largeur ajustable */
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* ========================= */
-/* MODAL POUR LES DATES      */
-/* ========================= */
-.date-modal {
-    display: none; /* Caché par défaut */
-    position: fixed; /* Reste en place */
-    z-index: 2000; /* Plus élevé pour être au-dessus des autres éléments */
-    left: 0;
-    top: 0;
-    width: 100%; /* Largeur complète */
-    height: 100%; /* Hauteur complète */
-    overflow: auto; /* Permet le défilement si nécessaire */
-    background-color: rgba(0, 0, 0, 0.4); /* Fond noir avec opacité */
-}
-
-.date-modal-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* Centré verticalement et horizontalement */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Largeur ajustable */
-    border-radius: 10px; /* Coins arrondis */
-}
-
-.date-close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.date-close:hover,
-.date-close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-
-
-
-
-
-
-/* Modale personnalisée pour les indisponibilités */
-.indisponibilites-modal {
-    display: none;
-    position: fixed;
-    z-index: 1050;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
-.indisponibilites-modal-content {
-    background-color: #fff;
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 70%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.indisponibilites-close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.indisponibilites-close:hover,
-.indisponibilites-close:focus {
-    color: black;
-    text-decoration: none;
-}
-
-#calendarContainer {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#saveIndisponibilitesButton {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-#saveIndisponibilitesButton:hover {
-    background-color: #0056b3;
-}
-
-
-/* ========================= */
-/* SECTION STATS  */
-/* ========================= */
-
-/* --- Groupes (compétences ET horaires) : style unifié --- */
-.group-card {
-    min-width: 220px;
-    min-height: 120px;
-    border: 1.5px solid #1976d2;
-    border-radius: 12px;
-    padding: 12px 14px 14px 14px;
-    margin-bottom: 18px;
-    background: #f7fbff;
-    box-shadow: 0 2px 8px #1976d233;
-    transition: box-shadow 0.2s, border-color 0.2s;
-    position: relative;
-}
-.group-card:hover {
-    box-shadow: 0 4px 16px #1976d244;
-    border-color: #125ea8;
-}
-.group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-.group-title {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: #1976d2;
-}
-.delete-group-btn {
-    background: #e57373;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    font-size: 1.1em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-.delete-group-btn:hover {
-    background: #c62828;
-}
-
-/* Liste interne pour compétences ET horaires */
-.group-list {
-    min-height: 60px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-.group-list li {
-    background: #e3f2fd;
-    color: #1976d2;
-    border-radius: 8px;
-    margin: 4px 0;
-    padding: 6px 10px;
-    font-size: 1em;
-    cursor: grab;
-    transition: background 0.2s;
-    box-shadow: 0 1px 3px #1976d211;
-}
-.group-list li.dragging {
-    opacity: 0.5;
-}
-
-/* Dropzone effet */
-.groupe-dropzone.over,
-.groupe-dropzone-horaire.over {
-    background: #e3f2fd;
-    border-color: #42a5f5;
-}
-
-/* --- Groupes d'horaires : même style que compétences --- */
-.horaire-groupe-list {
-    min-height: 60px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-.horaire-groupe-list li {
-    background: #e3f2fd;
-    color: #1976d2;
-    border-radius: 8px;
-    margin: 4px 0;
-    padding: 6px 10px;
-    font-size: 1em;
-    cursor: grab;
-    transition: background 0.2s;
-}
-.horaire-groupe-list li.dragging {
-    opacity: 0.5;
-}
-.groupe-dropzone-horaire.over {
-    background: #e3f2fd;
-    border-color: #42a5f5;
-}
-
-
-
-/* Harmonise le titre et la carte */
-.groupe-dropzone-horaire .group-title {
-    color: #1976d2;
-}
-.groupe-dropzone-horaire.group-card {
-    border: 1.5px solid #1976d2;
-    background: #f7fbff;
-    box-shadow: 0 2px 8px #1976d233;
-}
-
-/* ========================= */
-/* SECTION groupe compétence stats  */
-/* ========================= */
-
-/* --- Groupes de compétences et d'horaires --- */
-.group-card {
-    min-width: 220px;
-    min-height: 120px;
-    border: 1.5px solid #1976d2;
-    border-radius: 12px;
-    padding: 12px 14px 14px 14px;
-    margin-bottom: 18px;
-    background: #f7fbff;
-    box-shadow: 0 2px 8px #1976d233;
-    transition: box-shadow 0.2s, border-color 0.2s;
-    position: relative;
-}
-.group-card:hover {
-    box-shadow: 0 4px 16px #1976d244;
-    border-color: #125ea8;
-}
-.group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-.group-title {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: #1976d2;
-}
-.delete-group-btn,
-.delete-group-btn-horaire {
-    background: #e57373;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    font-size: 1.1em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-.delete-group-btn:hover,
-.delete-group-btn-horaire:hover {
-    background: #c62828;
-}
-
-/* Liste interne pour compétences ET horaires */
-.competence-groupe-list,
-.horaire-groupe-list,
-.group-list {
-    min-height: 60px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-.competence-groupe-list li,
-.horaire-groupe-list li,
-.group-list li {
-    background: #e3f2fd;
-    color: #1976d2;
-    border-radius: 8px;
-    margin: 4px 0;
-    padding: 6px 10px;
-    font-size: 1em;
-    cursor: grab;
-    transition: background 0.2s;
-    box-shadow: 0 1px 3px #1976d211;
-}
-.competence-groupe-list li.dragging,
-.horaire-groupe-list li.dragging,
-.group-list li.dragging {
-    opacity: 0.5;
-}
-
-/* Dropzone effet */
-.groupe-dropzone.over,
-.groupe-dropzone-horaire.over {
-    background: #e3f2fd;
-    border-color: #42a5f5;
-}
-
-/* Harmonise la liste des horaires et compétences */
-#liste-horaires.competence-list,
-#liste-competences.competence-list {
-    min-height: 200px;
-    border: 1.5px solid #1976d2;
-    border-radius: 12px;
-    background: #f7fbff;
-    box-shadow: 0 2px 8px #1976d233;
-    padding: 14px 10px;
-    margin-bottom: 18px;
-    list-style: none;
-    transition: box-shadow 0.2s, border-color 0.2s;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-#liste-horaires.competence-list.over,
-#liste-competences.competence-list.over {
-    background: #e3f2fd;
-    border-color: #42a5f5;
-}
-#liste-horaires.competence-list li,
-#liste-competences.competence-list li,
-.draggable-horaire,
-.draggable-competence {
-    background: #e3f2fd;
-    color: #1976d2;
-    border-radius: 8px;
-    margin: 0;
-    padding: 6px 10px;
-    font-size: 1em;
-    cursor: grab;
-    transition: background 0.2s;
-    box-shadow: 0 1px 3px #1976d211;
-}
-#liste-horaires.competence-list li.dragging,
-#liste-competences.competence-list li.dragging,
-.draggable-horaire.dragging,
-.draggable-competence.dragging {
-    opacity: 0.5;
-}
-
-
-
-/* ========================= */
-/* SECTION AUTHENTIFICATION  */
-/* ========================= */
-
-/* Conteneur principal pour la section d'authentification */
-#auth-section {
-    width: 400px; /* Largeur fixe pour un design cohérent */
-    margin: 50px auto; /* Centre horizontalement et ajoute un espacement vertical */
-    background-color: #ffffff; /* Fond blanc */
-    border-radius: 10px; /* Coins arrondis */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
-    padding: 20px; /* Espacement interne */
-    text-align: center; /* Centre le texte */
-}
-
-/* Titres des formulaires */
-#auth-section h2 {
-    color: #2c3e50; /* Couleur sombre pour les titres */
-    margin-bottom: 20px; /* Espacement sous le titre */
-}
-
-/* Champs de formulaire */
-#auth-section input[type="text"],
-#auth-section input[type="password"],
-#auth-section input[type="email"] {
-    width: 90%; /* Champs presque aussi larges que le conteneur */
-    padding: 10px; /* Espacement interne */
-    margin: 10px 0; /* Espacement vertical entre les champs */
-    border: 1px solid #ddd; /* Bordure légère */
-    border-radius: 5px; /* Coins arrondis */
-    font-size: 14px; /* Taille du texte */
-}
-
-/* Boutons des formulaires */
-#auth-section button {
-    background-color: #3498db; /* Couleur bleue */
-    color: white; /* Texte blanc */
-    border: none; /* Supprime la bordure */
-    padding: 10px 15px; /* Espacement interne */
-    border-radius: 5px; /* Coins arrondis */
-    cursor: pointer; /* Change le curseur en pointeur */
-    font-size: 14px; /* Taille du texte */
-    transition: background-color 0.3s; /* Transition pour le survol */
-    margin-top: 10px; /* Espacement au-dessus des boutons */
-}
-
-/* Effet au survol des boutons */
-#auth-section button:hover {
-    background-color: #2980b9; /* Couleur bleue plus sombre au survol */
-}
-
-/* Section utilisateur (après connexion) */
-#user-info {
-    width: 400px; /* Largeur fixe pour correspondre à la section d'authentification */
-    margin: 50px auto; /* Centre horizontalement et ajoute un espacement vertical */
-    background-color: #ffffff; /* Fond blanc */
-    border-radius: 10px; /* Coins arrondis */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
-    padding: 20px; /* Espacement interne */
-    text-align: center; /* Centre le texte */
-}
-
-/* Texte de bienvenue */
-#user-info p {
-    color: #2c3e50; /* Couleur sombre */
-    font-size: 16px; /* Taille du texte */
-    margin-bottom: 20px; /* Espacement sous le texte */
-}
-
-/* Bouton "Se déconnecter" */
-#user-info button {
-    background-color: #e74c3c; /* Couleur rouge */
-    color: white; /* Texte blanc */
-    border: none; /* Supprime la bordure */
-    padding: 10px 15px; /* Espacement interne */
-    border-radius: 20px; /* Coins arrondis */
-    cursor: pointer; /* Change le curseur en pointeur */
-    font-size: 14px; /* Taille du texte */
-    transition: background-color 0.3s; /* Transition pour le survol */
-}
-
-/* Effet au survol du bouton "Se déconnecter" */
-#user-info button:hover {
-    background-color: #c0392b; /* Rouge plus sombre au survol */
-}
-
-.user-btn {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 8px 16px;
-    margin: 0 4px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    text-decoration: none;
-}
-.user-btn:hover {
-    background-color: #2980b9;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-
-
-/* ========================= */
-/* STYLE DES CONTENEURS      */
-/* ========================= */
-
-/* Conteneur principal pour chaque section */
-.section-container {
-    background-color: #ffffff; /* Fond blanc */
-    border-radius: 10px; /* Coins arrondis */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Légère ombre */
-    margin: 20px auto; /* Espacement autour du conteneur */
-    padding: 20px; /* Espacement interne */
-    width: 90%; /* Largeur ajustée */
-}
-
-/* Titre des sections */
-.section-container h2 {
-    color: #2c3e50; /* Couleur sombre */
-    margin-bottom: 20px; /* Espacement sous le titre */
-    text-align: center; /* Centre le titre */
-}
-
-/* ========================= */
-/* STYLE DES FORMULAIRES     */
-/* ========================= */
-
-/* Conteneur pour les champs de formulaire */
-.form-container {
-    display: flex;
-    justify-content: center; /* Centre les éléments horizontalement */
-    align-items: center; /* Aligne les éléments verticalement */
-    gap: 10px; /* Espacement entre les champs */
-    margin-top: 20px; /* Espacement au-dessus du formulaire */
-}
-
-/* Champs de saisie */
-.form-container input[type="text"] {
-    width: 70%; /* Largeur ajustée */
-    padding: 10px; /* Espacement interne */
-    border: 1px solid #ddd; /* Bordure légère */
-    border-radius: 5px; /* Coins arrondis */
-    font-size: 14px; /* Taille du texte */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Légère ombre */
-}
-
-/* ========================= */
-/* STYLE DES BOUTONS         */
-/* ========================= */
-
-/* Boutons généraux */
-button {
-    background-color: #3498db; /* Couleur bleue */
-    color: white; /* Texte blanc */
-    border: none; /* Supprime la bordure */
-    padding: 10px 15px; /* Espacement interne */
-    border-radius: 5px; /* Coins arrondis */
-    cursor: pointer; /* Change le curseur en pointeur */
-    font-size: 14px; /* Taille du texte */
-    transition: background-color 0.3s, transform 0.2s; /* Transition pour le survol */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Légère ombre */
-}
-
-/* Effet au survol des boutons */
-button:hover {
-    background-color: #2980b9; /* Couleur bleue plus sombre au survol */
-    transform: translateY(-2px); /* Légère élévation au survol */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Ombre plus marquée */
-}
-
-/* Boutons spécifiques (rouge) */
-button.danger {
-    background-color: #e74c3c; /* Couleur rouge */
-}
-
-button.danger:hover {
-    background-color: #c0392b; /* Rouge plus sombre au survol */
-}
-
-.btn-blink {
-  animation: blink 0.8s linear infinite;
-}
-@keyframes blink {
-  0% { box-shadow: 0 0 8px #007bff; }
-  50% { box-shadow: 0 0 24px #007bff; }
-  100% { box-shadow: 0 0 8px #007bff; }
-}
-
-
-.actions-container {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 24px 0;
-}
-
-.action-btn {
-    padding: 10px 18px;
-    font-weight: bold;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s, transform 0.2s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.action-btn:hover {
-    background-color: #2980b9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-.btn-active {
-    background: #28a745 !important;
-    color: #fff !important;
-}
-
-.btn-blink {
-    animation: blink 0.8s linear infinite;
-}
-@keyframes blink {
-    0% { box-shadow: 0 0 8px #007bff; }
-    50% { box-shadow: 0 0 24px #007bff; }
-    100% { box-shadow: 0 0 8px #007bff; }
-}
-
-.progress-bar-container {
-    position: relative;
-    width: 100%;
-    height: 18px;
-    background-color: #eee;
-    border-radius: 8px;
-    overflow: hidden;
-    margin: 12px 0;
-    display: none;
-}
-
-.progress-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 0%;
-    background-color: #007bff;
-    transition: width 0.2s;
-}
-
-
-.cell-empty {
-    background: #eee;
-}
-.highlight-switch {
-    box-shadow: 0 0 8px #007bff;
-    border: 2px solid #007bff;
-}
-
-
-.cell-fermee {
-    background-color: #d3d3d3;
-}
-.cell-normal {
-    white-space: normal;
-}
-
-.cursor-pointer { cursor: pointer; }
-.bg-vacance { background: #f8fcff; }
-.ws-normal { white-space: normal; }
-.ws-preline { white-space: pre-line; }
-
-.fw-bold { font-weight: bold; }
-.fs-18 { font-size: 18px; }
-.ta-center { text-align: center; }
-.delta-blue { color: #007bff; }
-.delta-red { color: #c00; }
-.vacance-title-cell { font-weight: bold; cursor: pointer; }
-
-.bg-ponderation { background: #f8fcff; }
-
-
-
-.ponderationia-panel {
-    margin-top: 32px;
-}
-.ponderation-table {
-    border-collapse: collapse;
-    width: 100%;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    overflow: hidden;
-}
-.ponderation-table th, .ponderation-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-}
-.bg-ponderation {
-    background: #f8fcff;
-}
-.ponderation-input {
-    width: 60px;
-}
+  font-family: Arial, sans-serif;
+  margin:0; padding:0;
+  background:#f4f4f9;
+}
+.hidden { display:none !important; }
+.max400-overflow { max-height:400px; overflow:auto; }
+.float-right { float:right; }
+.cursor-pointer { cursor:pointer; }
+.mb-20 { margin-bottom:20px; }
+.mt-20 { margin-top:20px; }
+.mt-40 { margin-top:40px; }
+.flex-row { display:flex; }
+.flex-1 { flex:1; } .flex-2 { flex:2; }
+.wrap { flex-wrap:wrap; }
+.gap-24 { gap:24px; } .gap-32 { gap:32px; }
+.fw-bold { font-weight:bold; }
+.fs-18 { font-size:18px; }
+.ta-center { text-align:center; }
+.ws-normal { white-space:normal; }
+.ws-preline { white-space:pre-line; }
+.delta-blue { color:#007bff; }
+.delta-red { color:#c00; }
+.bg-vacance { background:#f8fcff; }
+.bg-ponderation { background:#f8fcff; }
+.cell-fermee { background:#d3d3d3; }
+.cell-empty { background:#eee; }
+.cell-normal { white-space:normal; }
+.highlight-switch { box-shadow:0 0 8px #007bff; border:2px solid #007bff; }
+.vacance-title-cell { font-weight:bold; cursor:pointer; }
+
+/* ========== BOUTONS GÉNÉRAUX ========== */
+button,
+.action-btn,
+.user-btn,
 .btn-ponderation {
-    margin-top: 8px;
-    padding: 8px 16px;
-    font-weight: bold;
-    background: #3498db;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  background:var(--blue);
+  color:#fff;
+  border:none;
+  padding:10px 15px;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:bold;
+  transition:background var(--trans), transform .2s, box-shadow var(--trans);
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
+button:hover,
+.action-btn:hover,
+.user-btn:hover,
 .btn-ponderation:hover {
-    background: #2980b9;
+  background:var(--blue-dark);
+  transform:translateY(-2px);
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+}
+button.danger, .tooltip-delete, .tooltip-delete-multi,
+.tooltip-delete-commentaire { background:var(--red); }
+button.danger:hover,
+.tooltip-delete:hover,
+.tooltip-delete-multi:hover,
+.tooltip-delete-commentaire:hover { background:var(--red-dark); }
+.btn-active { background:var(--green) !important; }
+.btn-ponderation { padding:8px 16px; }
+.btn-ponderation:hover { background:var(--blue-dark); }
+.btn-blink { animation:blink .8s linear infinite; }
+@keyframes blink {
+  0% { box-shadow:0 0 8px #007bff; }
+  50% { box-shadow:0 0 24px #007bff; }
+  100% { box-shadow:0 0 8px #007bff; }
 }
 
-
-.stats-score {
-    margin-bottom: 8px;
+/* ========== HEADER ========== */
+header {
+  width:100%;
+  background:var(--header-bg);
+  color:#fff;
+  padding:10px 20px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  box-shadow:0 2px 5px rgba(0,0,0,0.2);
+  position:sticky; top:0; z-index:1000;
 }
-.stats-table {
-    border-collapse: collapse;
-    width: 100%;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    overflow: hidden;
+#header-container {
+  width:90%; margin:0 auto;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0;
 }
-.stats-table th, .stats-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
+header nav { flex-grow:1; display:flex; }
+header nav ul {
+  list-style:none; margin:0; padding:0;
+  display:flex; gap:15px;
 }
-
-.cell-empty {
-    background: #eee;
+header nav ul li a {
+  display:inline-block;
+  background:var(--blue);
+  color:#fff;
+  text-decoration:none;
+  font-weight:bold;
+  padding:10px 15px;
+  border-radius:5px;
+  transition:background var(--trans), transform .2s, box-shadow var(--trans);
+  box-shadow:0 2px 5px rgba(0,0,0,0.2);
+  white-space:nowrap;
 }
-
-.cell-fermee { background-color: #d3d3d3; }
-.ws-normal { white-space: normal; }
-.ws-preline { white-space: pre-line; }
-.cursor-pointer { cursor: pointer; }
-.bg-vacance { background: #f8fcff; }
-.fw-bold { font-weight: bold; }
-.fs-18 { font-size: 18px; }
-.ta-center { text-align: center; }
-.delta-blue { color: #007bff; }
-.delta-red { color: #c00; }
-
-
-/* Modal pour roulement */
-.roulement-modal {
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translate(-50%, 0);
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 24px;
-    z-index: 9999;
-    border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    min-width: 320px;
+header nav ul li a:hover {
+  background:var(--blue-dark);
+  transform:translateY(-2px);
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
 }
-
-.roulement-vignette {
-    display: inline-block;
-    background: #e3e6f7;
-    color: #222;
-    border-radius: 8px;
-    padding: 2px 8px;
-    margin: 2px 2px;
-    font-size: 13px;
-    font-weight: bold;
+header nav ul li a.active {
+  background:#1abc9c;
+  pointer-events:none;
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
 }
-
-
-.roulement-modal {
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translate(-50%, 0);
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 24px;
-    z-index: 9999;
-    border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    min-width: 320px;
+#user-section {
+  display:flex; flex-direction:row; align-items:center; gap:10px;
+  color:#eee;
 }
-.roulement-vignette {
-    display: inline-block;
-    background: #e3e6f7;
-    color: #222;
-    border-radius: 8px;
-    padding: 2px 8px;
-    margin: 2px 2px;
-    font-size: 13px;
-    font-weight: bold;
+#logoutButton {
+  background:var(--red); border:none; border-radius:20px;
+  padding:8px 15px; font-weight:bold;
 }
-
-
-
-/* Pour le tableau noms */
-.roulement-nom-table {
-    border-collapse: collapse;
-    margin-bottom: 24px;
+#logoutButton:hover { background:var(--red-dark); }
+.has-dropdown { position:relative; }
+.has-dropdown .dropdown-menu {
+  display:none; position:absolute; left:0; top:100%;
+  background:#f5f5f5; min-width:180px;
+  box-shadow:0 2px 8px #0002;
+  border-radius:0 0 8px 8px; z-index:100; padding:0; margin:0;
 }
+.has-dropdown:hover .dropdown-menu,
+.has-dropdown:focus-within .dropdown-menu { display:block; }
+.has-dropdown .dropdown-menu li { width:100%; }
+.has-dropdown .dropdown-menu li a {
+  display:block; padding:10px 18px; color:#222;
+  text-decoration:none; border-radius:0; font-weight:normal;
+}
+.has-dropdown .dropdown-menu li a:hover { background:#e3f2fd; color:#1976d2; }
 
-/* Pour le tooltip */
-.tooltip-hidden {
-    display: none;
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    z-index: 1000;
-    min-width: 200px;
+/* ========== CONTENU & SECTIONS ========== */
+#content { margin-top:70px; padding:20px; }
+.section-container,
+#auth-section,
+#user-info {
+  background:#fff;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  width:90%;
+  margin:20px auto;
+  padding:20px;
+}
+#auth-section,#user-info { width:400px; }
+#auth-section input[type=text],
+#auth-section input[type=password],
+#auth-section input[type=email] {
+  width:90%; padding:10px; margin:10px 0;
+  border:1px solid var(--gray-border);
+  border-radius:5px; font-size:14px;
+}
+.form-container {
+  display:flex; justify-content:center; align-items:center;
+  gap:10px; margin-top:20px;
+}
+.form-container input[type=text] {
+  width:70%; padding:10px; border:1px solid var(--gray-border);
+  border-radius:5px; font-size:14px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
+/* ========== TABLEAUX GÉNÉRAUX (petits) ========== */
+table:not(.grid-freeze) {
+  width:90%; margin:20px auto;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+table:not(.grid-freeze) th,
+table:not(.grid-freeze) td {
+  border:1px solid var(--gray-border);
+  padding:12px;
+  text-align:center;
+  font-size:14px;
+  color:#333;
+  white-space:nowrap;
+}
+table:not(.grid-freeze) thead {
+  background:var(--blue);
+  color:#fff;
+  font-weight:bold;
+  text-align:center;
+}
+table:not(.grid-freeze) thead th {
+  padding:15px; font-size:16px; text-transform:uppercase;
+}
+table:not(.grid-freeze) tbody tr {
+  border-bottom:1px solid var(--gray-border);
+  transition:background-color var(--trans);
+}
+table:not(.grid-freeze) tbody tr:hover { background:#f9f9f9; }
+table:not(.grid-freeze) tbody tr:last-child { border-bottom:none; }
+table:not(.grid-freeze) tbody td button {
+  background:var(--red); color:#fff; border:none;
+  padding:8px 12px; border-radius:5px; cursor:pointer;
+  font-size:12px; transition:background var(--trans);
+}
+table:not(.grid-freeze) tbody td button:hover { background:var(--red-dark); }
 
-.stats-groupe-col {
-    background: #e3f2fd;
+/* ========== GRANDES GRILLES FIGÉES ========== */
+.grid-wrapper {
+  width:90%; margin:20px auto;
+  background:#fff;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  position:relative;
+}
+.sticky-table-container {
+  max-height:70vh;
+  overflow:auto;
+  position:relative;
+}
+table.grid-freeze {
+  border-collapse:collapse;
+  width:max-content;
+  min-width:100%;
+  background:#fff;
+  border-spacing:0;
+  margin:0;
+}
+table.grid-freeze th,
+table.grid-freeze td {
+  border:1px solid var(--gray-border);
+  padding:12px;
+  text-align:center;
+  font-size:14px;
+  color:#333;
+  white-space:nowrap;
+}
+table.grid-freeze thead th {
+  position:sticky;
+  top:0;
+  background:var(--blue);
+  color:#fff;
+  font-weight:bold;
+  font-size:15px;
+  text-transform:uppercase;
+  z-index:30;
+  box-shadow:0 2px 0 #e0e6eb;
+}
+table.grid-freeze th:first-child,
+table.grid-freeze td:first-child {
+  position:sticky;
+  left:0;
+  background:#fff;
+  z-index:25;
+  box-shadow:2px 0 0 #e0e6eb;
+}
+table.grid-freeze thead th:first-child {
+  background:var(--blue-alt);
+  z-index:40;
+}
+table.grid-freeze tbody tr:hover td { background:#f9f9f9; }
+table.grid-freeze tbody tr:hover td:first-child { background:#f3f6fa; }
+
+/* Sous-tableaux internes (jours / dates) */
+table.grid-freeze .sub-table {
+  border-collapse:collapse;
+  background:transparent;
+  margin:0 auto;
+}
+table.grid-freeze .sub-table thead th {
+  position:static;
+  background:var(--blue);
+  color:#fff;
+  font-size:11px;
+  padding:4px 6px;
+  box-shadow:none;
+  text-transform:none;
+  white-space:nowrap;
+}
+table.grid-freeze .sub-table td {
+  position:static;
+  background:#fff;
+  padding:2px 4px;
+  border:1px solid var(--gray-border);
+}
+table.grid-freeze .sub-table input[type=checkbox] { cursor:pointer; }
+
+/* ========== PROGRESS BAR ========== */
+.progress-bar-container {
+  position:relative;
+  width:100%;
+  height:18px;
+  background:#eee;
+  border-radius:8px;
+  overflow:hidden;
+  margin:12px 0;
+  display:none;
+}
+.progress-bar {
+  position:absolute; top:0; left:0;
+  height:100%; width:0%;
+  background:#007bff;
+  transition:width .2s;
 }
 
-
-/* Tooltip principal */
-.tooltip-content {
-    position: relative;
-    padding-bottom: 10px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid #eee;
-    text-align: right;
+/* ========== TOOLTIP ========== */
+#tooltip, #emptyTooltip, .tooltip-clicdroit {
+  position:absolute;
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:6px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  padding:10px;
+  font-size:13px;
+  z-index:10000;
+  display:none;
 }
-.tooltip-close {
-    cursor: pointer;
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    text-align: center;
-    line-height: 20px;
-    font-size: 18px;
-    font-weight: bold;
+.tooltip-clicdroit { display:block; }
+.tooltip-header, .tooltip-content {
+  position:relative;
+  padding-bottom:10px;
+  margin-bottom:8px;
+  border-bottom:1px solid #eee;
+  text-align:right;
 }
-.tooltip-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.tooltip-close { cursor:pointer; font-size:18px; font-weight:bold; display:inline-block; }
+.tooltip-title { font-weight:bold; margin-bottom:6px; }
+.tooltip-list, .tooltip-list-item, .tooltip-list li {
+  list-style:none; padding:0; margin:0;
 }
-.tooltip-list li {
-    cursor: pointer;
-    padding: 2px 0;
-}
-.tooltip-list li.unavailable {
-    color: #888;
-}
-.tooltip-title {
-    font-weight: bold;
-    margin-bottom: 6px;
-}
-.tooltip-table {
-    border-collapse: collapse;
-    width: 100%;
-    font-size: 13px;
-}
-.tooltip-table th {
-    border-bottom: 1px solid #ccc;
-    padding: 2px 4px;
-}
-.tooltip-table td {
-    padding: 2px 4px;
-    text-align: center;
-}
-.tooltip-table .cell-x {
-    color: red;
-    font-weight: bold;
-}
-.tooltip-error {
-    color: #c00;
-}
-.tooltip-loading {
-    color: #888;
-    font-size: 13px;
-}
-
-.tooltip-clicdroit {
-    position: fixed;
-    z-index: 10000;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    padding: 10px;
-    min-width: 180px;
-    max-width: 300px;
-    font-family: Arial, sans-serif;
-    display: block;
-}
-.tooltip-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-}
-.tooltip-title {
-    font-weight: bold;
-}
-.tooltip-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-.tooltip-close {
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
-    display: inline-block;
-}
-.tooltip-details {
-    font-size: 13px;
-    color: #555;
-}
-.tooltip-content {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.tooltip-comment-label {
-    font-weight: bold;
-    color: #007bff;
-    margin-bottom: 4px;
-}
-.tooltip-comment {
-    margin-bottom: 6px;
-}
+.tooltip-list li, .tooltip-list-item { cursor:pointer; padding:2px 0; }
+.tooltip-list li.unavailable { color:#888; }
+.tooltip-details { font-size:13px; color:#555; }
+.tooltip-comment-label { font-weight:bold; color:#007bff; margin-bottom:4px; }
 .tooltip-delete,
 .tooltip-delete-multi,
 .tooltip-delete-commentaire,
 .tooltip-reopen,
 .tooltip-fermee,
 .tooltip-add-commentaire {
-    background: #fff;
-    border-radius: 3px;
-    padding: 2px 8px;
-    cursor: pointer;
-    font-size: 13px;
-    border: 1px solid #ccc;
-    margin-right: 4px;
+  background:#fff;
+  border-radius:3px;
+  padding:2px 8px;
+  cursor:pointer;
+  font-size:13px;
+  border:1px solid #ccc;
+  margin-right:4px;
 }
 .tooltip-delete,
 .tooltip-delete-multi,
-.tooltip-delete-commentaire {
-    color: #ff4d4f;
-    border-color: #ff4d4f;
+.tooltip-delete-commentaire { color:#ff4d4f; border-color:#ff4d4f; }
+.tooltip-reopen { color:#28a745; border-color:#28a745; }
+.tooltip-fermee { color:#c00; border-color:#c00; }
+.tooltip-add-commentaire { color:#007bff; border-color:#007bff; }
+.tooltip-table { border-collapse:collapse; width:100%; font-size:13px; }
+.tooltip-table th {
+  border-bottom:1px solid #ccc; padding:2px 4px;
 }
-.tooltip-reopen {
-    color: #28a745;
-    border-color: #28a745;
+.tooltip-table td {
+  padding:2px 4px; text-align:center;
 }
-.tooltip-fermee {
-    color: #c00;
-    border-color: #c00;
+.tooltip-table .cell-x { color:red; font-weight:bold; }
+
+/* ========== MODALES ========== */
+.modal, .date-modal, .modalh, .indisponibilites-modal, .roulement-modal {
+  display:none;
+  position:fixed;
+  left:0; top:0;
+  width:100%; height:100%;
+  overflow:auto;
+  background:rgba(0,0,0,0.4);
+  z-index:1050;
 }
-.tooltip-add-commentaire {
-    color: #007bff;
-    border-color: #007bff;
+.modal-content, .date-modal-content,
+.modalh-content, .indisponibilites-modal-content,
+.roulement-modal {
+  background:#fff;
+  margin:10% auto;
+  padding:20px;
+  border:1px solid #ccc;
+  border-radius:10px;
+  width:70%;
+  max-width:800px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.15);
+}
+.modalh-content { width:300px; }
+.indisponibilites-modal-content { width:70%; }
+.roulement-modal {
+  position:fixed;
+  top:20%;
+  left:50%;
+  transform:translate(-50%,0);
+  min-width:320px;
+}
+.close, .date-close, .indisponibilites-close {
+  float:right; font-size:28px; font-weight:bold; color:#aaa; cursor:pointer;
+}
+.close:hover, .date-close:hover, .indisponibilites-close:hover { color:#000; }
+
+/* ========== GROUPES / DRAG ========== */
+.group-card {
+  min-width:220px; min-height:120px;
+  border:1.5px solid #1976d2;
+  border-radius:12px;
+  padding:12px 14px 14px;
+  margin-bottom:18px;
+  background:#f7fbff;
+  box-shadow:0 2px 8px #1976d233;
+  transition:box-shadow .2s, border-color .2s;
+  position:relative;
+}
+.group-card:hover { box-shadow:0 4px 16px #1976d244; border-color:#125ea8; }
+.group-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.group-title { font-weight:bold; font-size:1.1em; color:#1976d2; }
+.delete-group-btn,
+.delete-group-btn-horaire {
+  background:#e57373;
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:28px; height:28px;
+  font-size:1.1em;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s;
+}
+.delete-group-btn:hover,
+.delete-group-btn-horaire:hover { background:#c62828; }
+.group-list,
+.competence-groupe-list,
+.horaire-groupe-list {
+  min-height:60px; padding:0; margin:0; list-style:none;
+}
+.group-list li,
+.competence-groupe-list li,
+.horaire-groupe-list li,
+.draggable-horaire,
+.draggable-competence {
+  background:#e3f2fd;
+  color:#1976d2;
+  border-radius:8px;
+  margin:4px 0;
+  padding:6px 10px;
+  font-size:1em;
+  cursor:grab;
+  transition:background .2s;
+  box-shadow:0 1px 3px #1976d211;
+}
+.group-list li.dragging,
+.competence-groupe-list li.dragging,
+.horaire-groupe-list li.dragging,
+.draggable-horaire.dragging,
+.draggable-competence.dragging { opacity:.5; }
+.groupe-dropzone.over,
+.groupe-dropzone-horaire.over {
+  background:#e3f2fd;
+  border-color:#42a5f5;
+}
+#liste-horaires.competence-list,
+#liste-competences.competence-list {
+  min-height:200px;
+  border:1.5px solid #1976d2;
+  border-radius:12px;
+  background:#f7fbff;
+  box-shadow:0 2px 8px #1976d233;
+  padding:14px 10px;
+  margin-bottom:18px;
+  list-style:none;
+  transition:box-shadow .2s, border-color .2s;
+  display:flex; flex-direction:column; gap:8px;
+}
+#liste-horaires.competence-list.over,
+#liste-competences.competence-list.over {
+  background:#e3f2fd; border-color:#42a5f5;
 }
 
+/* ========== TABLES STATS / PONDERATION / SIMU ========== */
+.simu-table,
+.ponderation-table,
+.stats-table {
+  border-collapse:collapse;
+  width:100%;
+  background:#fff;
+  border-radius:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+  overflow:hidden;
+}
+.simu-table th, .simu-table td,
+.ponderation-table th, .ponderation-table td,
+.stats-table th, .stats-table td {
+  border:1px solid var(--gray-border);
+  padding:10px;
+  text-align:center;
+}
+.ponderation-input { width:60px; }
+.stats-score { margin-bottom:8px; }
 
-/* ========================= */
-/* pour tableau second      */
-/* ========================= */
-
-
-/* Pour le planning simulé : noms bloqués */
+/* ========== ROULMENT / PLANNING ========== */
+.roulement-vignette {
+  display:inline-block;
+  background:#e3e6f7;
+  color:#222;
+  border-radius:8px;
+  padding:2px 8px;
+  margin:2px;
+  font-size:13px;
+  font-weight:bold;
+}
 #planning-evolution-content .simu-locked {
-    background: #ffe0e0;
-    border: 2px solid #d32f2f;
-    border-radius: 6px;
-    opacity: 0.85;
-    padding: 2px 6px;
+  background:#ffe0e0;
+  border:2px solid #d32f2f;
+  border-radius:6px;
+  opacity:.85;
+  padding:2px 6px;
 }
 
-
-
-
-
-
-.sticky-table-container {
-    max-height: 1000px;      /* Hauteur max, scroll vertical si besoin */
-    overflow-x: auto;       /* Scroll horizontal si le tableau déborde */
-    overflow-y: auto;       /* Scroll vertical si besoin */
-    width: 100%;            /* Prend toute la largeur disponible */
-    box-sizing: border-box;
-}
-
-/* Tableau à 100% de la largeur du conteneur */
-#horaireCompetenceDaysTable {
-    width: 100%;
-    min-width: 900px;       /* Optionnel : largeur minimale pour forcer le scroll si trop de colonnes */
-    table-layout: auto;     /* Permet aux colonnes de s'adapter */
-}
-
-.progress-bar-container {
-    position: relative;
-    width: 100%;
-    height: 20px;
-    background-color: #f3f3f3;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 10px;
-}
-
-.progress-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background-color: #4caf50;
-    transition: width 0.4s ease;
-}
-
-.tooltip-header {
-  position: relative;
-  padding-bottom: 10px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #eee;
-  text-align: right;
-}
-.tooltip-close {
-  cursor: pointer;
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  text-align: center;
-  line-height: 20px;
-  font-size: 18px;
-  font-weight: bold;
-}
-.tooltip-title {
-  font-weight: bold;
-  margin-bottom: 6px;
-}
-.tooltip-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.tooltip-list-item {
-  cursor: pointer;
-  padding: 2px 0;
-}
-.tooltip-unavailable {
-  color: #888;
-}
-
-@media print {
-  .no-print { display: none !important; }
-}
-
+/* ========== MISC ========== */
 .mission-block {
-  background: #ffe9b3;
-  color: #333;
-  border-radius: 4px;
-  padding: 2px 6px;
-  margin: 2px 0;
-  font-size: 0.95em;
-  font-style: italic;
+  background:#ffe9b3;
+  color:#333;
+  border-radius:4px;
+  padding:2px 6px;
+  margin:2px 0;
+  font-size:.95em;
+  font-style:italic;
+}
+
+/* ========== PRINT ========== */
+@media print {
+  header, .no-print { display:none !important; }
+  .grid-wrapper .sticky-table-container { box-shadow:none !important; }
+  .grid-wrapper, table, table.grid-freeze {
+    box-shadow:none !important;          /* on retire l’ombre si tu veux */
+    border-radius:10px !important;
+  }
+}
+
+/* === Mise en forme du bloc d’actions planning === */
+#planning-actions {
+  display: flex;
+  flex-wrap: wrap;          /* Passe à la ligne si l’écran rétrécit */
+  gap: 14px;                /* Espace entre les boutons */
+  margin: 20px auto;
+  width: 90%;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+#planning-actions .action-btn {
+  flex: 1 1 240px;          /* Largeur flexible min 240px */
+  text-align: center;
+  white-space: normal;      /* Permet retour à la ligne propre */
+  line-height: 1.2;
+  padding: 12px 18px;
+}
+
+/* Option: si tu veux même hauteur stricte */
+#planning-actions .action-btn:active {
+  transform: translateY(0); /* évite saut vertical perceptible */
 }

@@ -1,259 +1,243 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base de Donnée</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="header.js" defer></script>
-    <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/main.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Base de Donnée</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="header.js" defer></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/main.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.css" rel="stylesheet">
 </head>
 <body>
-    <div id="content">
-        <div id="section-noms" class="bdd-section hidden">
-            <h2>Noms</h2>
-            <div class="sticky-table-container">
-            <table id="databaseTable">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Date de début</th>
-                        <th>Date de fin</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Les lignes seront ajoutées dynamiquement -->
-                </tbody>
-            </table>
-            </div>
-            <div class="form-container">
-                <button id="addNameButton">Ajouter un nom</button>
-            </div>
-        </div>
-
-        <div id="section-compétences" class="bdd-section hidden">
-            <h2>Compétences</h2>
-            <div class="sticky-table-container">
-            <table id="competencesTable">
-                <thead>
-                    <tr>
-                        <th>Compétence</th>
-                        <th>Date de début</th>
-                        <th>Date de fin</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Les lignes seront ajoutées dynamiquement -->
-                </tbody>
-            </table>
-            </div>
-            <div class="form-container">
-                <button id="addCompetenceButton">Ajouter une compétence</button>
-            </div>
-        </div>
-
-        <div id="section-horaires" class="bdd-section hidden">
-            <h2>Horaires</h2>
-            <div class="sticky-table-container">
-            <table id="horairesTable">
-                <thead>
-                    <tr>
-                        <th>Horaire début</th>
-                        <th>Horaire fin</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Les lignes seront ajoutées dynamiquement -->
-                </tbody>
-            </table>
-            </div>
-            <div class="form-container">
-                <button id="addHoraireButton">Ajouter un horaire</button>
-            </div>
-        </div>
-
-        <div id="section-horaires par compétence" class="bdd-section hidden">
-            <h2>Horaires par compétence</h2>
-            <div class="max400-overflow">
-            <div class="sticky-table-container">
-                <table id="horairescompetenceTable" class="sticky-table">
-                    <thead>
-                        <tr>
-                            <th>Horaires</th>
-                            <!-- Colonnes dynamiques -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Lignes dynamiques -->
-                    </tbody>
-                </table>
-            </div>
-            </div>
-        </div>
-
-        <div id="section-horaires par compétence et jours" class="bdd-section hidden">
-            <h2>Horaires par compétence et jours</h2>
-            <div class="sticky-table-container">
-            <table id="horaireCompetenceDaysTable" class="sticky-table">
-                <thead>
-                    <tr>
-                        <th>Horaires</th>
-                        <!-- Colonnes dynamiques -->
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Lignes dynamiques -->
-                </tbody>
-            </table>
-            </div>
-        </div>
-
-        <div id="section-horaires par compétence avec dates" class="bdd-section hidden">
-            <h2>Horaires par compétence avec dates</h2>
-            <div class="sticky-table-container">
-            <table id="horaireCompetenceDatesTable">
-                <thead>
-                    <tr>
-                        <th>Horaires</th>
-                        <!-- Colonnes dynamiques -->
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Lignes dynamiques -->
-                </tbody>
-            </table>
-            </div>
-        </div>
-
-        <div id="section-compétences par nom" class="bdd-section hidden">
-            <h2>Compétences par nom</h2>
-            <div class="sticky-table-container">
-            <table id="competencesPersonnesTable">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <!-- Colonnes dynamiques -->
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Lignes dynamiques -->
-                </tbody>
-            </table>
-            </div>
-        </div>
-
-        <div id="section-ordre compétences par nom" class="bdd-section hidden">
-            <h2>Ordre compétences par nom</h2>
-            <div class="sticky-table-container">
-            <table id="ordrecomptableau">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <!-- Colonnes dynamiques -->
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Lignes dynamiques -->
-                </tbody>
-            </table>
-            </div>
-        </div>
-
-        <div id="section-jours repos" class="bdd-section hidden">
-            <h2>Jours repos</h2>
-            <div class="sticky-table-container">
-            <table id="joursrepos">
-                <thead>
-                    <!-- Colonnes dynamiques -->
-                </thead>
-                <tbody>
-                    <!-- Lignes dynamiques -->
-                </tbody>
-            </table>
-            </div>
-        </div>
-
-        <div id="section-gérer les indisponibilités par compétence" class="bdd-section hidden">
-            <h2>Gérer les indisponibilités par compétence</h2>
-            <div class="sticky-table-container">
-            <table id="competenceIndisponibilitesTable">
-                <thead>
-                    <tr>
-                        <th>Compétence</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Lignes dynamiques -->
-                </tbody>
-            </table>
-            </div>
-        </div>
+  <div id="content">
+    <div id="section-noms" class="bdd-section hidden">
+      <h2>Noms</h2>
+      <div class="sticky-table-container">
+        <table id="databaseTable">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Date de début</th>
+              <th>Date de fin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="form-container">
+        <button id="addNameButton">Ajouter un nom</button>
+      </div>
     </div>
 
-    <!-- Modales -->
-    <div id="myModal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Modifier le nom</h2>
-            <input type="text" id="newName" placeholder="Entrez le nouveau nom">
-            <button id="saveName">Sauvegarder</button>
-        </div>
+    <div id="section-compétences" class="bdd-section hidden">
+      <h2>Compétences</h2>
+      <div class="sticky-table-container">
+        <table id="competencesTable">
+          <thead>
+            <tr>
+              <th>Compétence</th>
+              <th>Date de début</th>
+              <th>Date de fin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="form-container">
+        <button id="addCompetenceButton">Ajouter une compétence</button>
+      </div>
     </div>
-    <div id="dateModal" class="date-modal hidden">
-        <div class="date-modal-content">
-            <span class="date-close">&times;</span>
-            <h2>Modifier les dates</h2>
-            <label for="dateDebutInput">Date de début :</label>
-            <input type="date" id="dateDebutInput">
-            <label for="dateFinInput">Date de fin :</label>
-            <input type="date" id="dateFinInput">
-            <button id="saveDatesButton">Sauvegarder</button>
-        </div>
+
+    <div id="section-horaires" class="bdd-section hidden">
+      <h2>Horaires</h2>
+      <div class="sticky-table-container">
+        <table id="horairesTable">
+          <thead>
+            <tr>
+              <th>Horaire début</th>
+              <th>Horaire fin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="form-container">
+        <button id="addHoraireButton">Ajouter un horaire</button>
+      </div>
     </div>
-    <div id="indisponibilitesModal" class="indisponibilites-modal hidden">
-        <div class="indisponibilites-modal-content">
-            <span class="indisponibilites-close">&times;</span>
-            <h3>Gérer les indisponibilités</h3>
-            <table id="indisponibilitesTable">
-                <thead>
-                    <tr>
-                        <th>Date de début</th>
-                        <th>Date de fin</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Lignes dynamiques -->
-                </tbody>
-            </table>
-            <button id="addIndisponibiliteButton">Ajouter une indisponibilité</button>
+
+    <div id="section-horaires par compétence" class="bdd-section hidden">
+      <h2>Horaires par compétence</h2>
+      <div class="max400-overflow">
+        <div class="sticky-table-container">
+          <table id="horairescompetenceTable" class="grid-freeze">
+            <thead>
+              <tr>
+                <th>Horaires</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
+      </div>
     </div>
-    <div id="horaireModal" class="modalh hidden">
-        <div class="modalh-content">
-            <span id="closeHoraireModal" class="float-right cursor-pointer">&times;</span>
-            <h3>Ajouter un horaire</h3>
-            <label for="horaireDebutInput">Début :</label>
-            <input type="time" id="horaireDebutInput" required>
-            <br>
-            <label for="horaireFinInput">Fin :</label>
-            <input type="time" id="horaireFinInput" required>
-            <br><br>
-            <button id="confirmAddHoraire">Ajouter</button>
+
+    <div id="section-horaires par compétence et jours" class="bdd-section hidden">
+      <h2>Horaires par compétence et jours</h2>
+      <div class="grid-wrapper">
+        <div class="sticky-table-container">
+          <table id="horaireCompetenceDaysTable" class="grid-freeze">
+            <thead>
+              <tr>
+                <th>Horaires</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
+      </div>
     </div>
-    <script src="js/bdd/horaires.js"></script>
-    <script src="js/bdd/competencespersonnes.js"></script>
-    <script src="js/bdd/tableaucompetences.js"></script>
-    <script src="js/bdd/competenceshoraires.js"></script>
-    <script src="js/bdd/tableaureposrttforma.js"></script>
-    <script src="js/bdd/tableaunom.js"></script>
-    <script src="js/bdd/ordrecomp.js"></script>
-    <script src="js/bdd/bddhtml.js"></script>
+
+    <div id="section-horaires par compétence avec dates" class="bdd-section hidden">
+      <h2>Horaires par compétence avec dates</h2>
+      <div class="grid-wrapper">
+        <div class="sticky-table-container">
+          <table id="horaireCompetenceDatesTable" class="grid-freeze">
+            <thead>
+              <tr>
+                <th>Horaires</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-compétences par nom" class="bdd-section hidden">
+      <h2>Compétences par nom</h2>
+      <div class="grid-wrapper">
+        <div class="sticky-table-container">
+          <table id="competencesPersonnesTable" class="grid-freeze">
+            <thead>
+              <tr>
+                <th>Nom</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-ordre compétences par nom" class="bdd-section hidden">
+      <h2>Ordre compétences par nom</h2>
+      <div class="sticky-table-container">
+        <table id="ordrecomptableau">
+          <thead>
+            <tr>
+              <th>Nom</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="section-jours repos" class="bdd-section hidden">
+      <h2>Jours repos</h2>
+      <div class="sticky-table-container">
+        <table id="joursrepos">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="section-gérer les indisponibilités par compétence" class="bdd-section hidden">
+      <h2>Gérer les indisponibilités par compétence</h2>
+      <div class="sticky-table-container">
+        <table id="competenceIndisponibilitesTable">
+          <thead>
+            <tr>
+              <th>Compétence</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale édition nom -->
+  <div id="myModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editNameTitle">
+    <div class="modal-content">
+      <span class="close" data-close-modal="myModal">&times;</span>
+      <h2 id="editNameTitle">Modifier le nom</h2>
+      <input type="text" id="newName" placeholder="Entrez le nouveau nom">
+      <button id="saveName">Sauvegarder</button>
+    </div>
+  </div>
+
+  <!-- Modale dates -->
+  <div id="dateModal" class="date-modal hidden" role="dialog" aria-modal="true" aria-labelledby="editDatesTitle">
+    <div class="date-modal-content">
+      <span class="date-close" data-close-modal="dateModal">&times;</span>
+      <h2 id="editDatesTitle">Modifier les dates</h2>
+      <label for="dateDebutInput">Date de début :</label>
+      <input type="date" id="dateDebutInput">
+      <label for="dateFinInput">Date de fin :</label>
+      <input type="date" id="dateFinInput">
+      <button id="saveDatesButton">Sauvegarder</button>
+    </div>
+  </div>
+
+  <!-- Modale indisponibilités -->
+  <div id="indisponibilitesModal" class="indisponibilites-modal hidden" role="dialog" aria-modal="true" aria-labelledby="indispoTitle">
+    <div class="indisponibilites-modal-content">
+      <span class="indisponibilites-close" data-close-modal="indisponibilitesModal">&times;</span>
+      <h3 id="indispoTitle">Gérer les indisponibilités</h3>
+      <table id="indisponibilitesTable">
+        <thead>
+          <tr>
+            <th>Date de début</th>
+            <th>Date de fin</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="addIndisponibiliteButton">Ajouter une indisponibilité</button>
+    </div>
+  </div>
+
+  <!-- Modale ajout horaire -->
+  <div id="horaireModal" class="modalh hidden" role="dialog" aria-modal="true" aria-labelledby="horaireModalTitle">
+    <div class="modalh-content">
+      <span id="closeHoraireModal" class="float-right cursor-pointer" data-close-modal="horaireModal">&times;</span>
+      <h3 id="horaireModalTitle">Ajouter un horaire</h3>
+      <label for="horaireDebutInput">Début :</label>
+      <input type="time" id="horaireDebutInput" required>
+      <br>
+      <label for="horaireFinInput">Fin :</label>
+      <input type="time" id="horaireFinInput" required>
+      <br><br>
+      <button id="confirmAddHoraire">Ajouter</button>
+    </div>
+  </div>
+
+  <script src="js/bdd/horaires.js"></script>
+  <script src="js/bdd/competencespersonnes.js"></script>
+  <script src="js/bdd/tableaucompetences.js"></script>
+  <script src="js/bdd/competenceshoraires.js"></script>
+  <script src="js/bdd/tableaureposrttforma.js"></script>
+  <script src="js/bdd/tableaunom.js"></script>
+  <script src="js/bdd/ordrecomp.js"></script>
+  <script src="js/bdd/bddhtml.js"></script>
 </body>
 </html>
