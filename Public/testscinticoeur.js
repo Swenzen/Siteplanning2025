@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const clinique     = q('#clinique');
   const electrique   = q('#electrique');
 
-  const fmt      = q('#fmt');
+  // fmt : on accepte soit un slider soit seulement le champ numérique (on supprime le slider côté HTML)
+  const fmt      = q('#fmt') || q('#fmt-input');
   const fmtInput = q('#fmt-input');
   const fmtValue = q('#fmt-value');
 
@@ -39,14 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const kineGlob  = q('#kine-globale');
   const kineDilat = q('#kine-dilat');
 
-  const fevgS = q('#fevg-stress'), fevgR = q('#fevg-rest');
-  const vtdS  = q('#vtd-stress'),  vtdR  = q('#vtd-rest');
-  const vtsS  = q('#vts-stress'),  vtsR  = q('#vts-rest');
+  // si les sliders ont été retirés, on prend en fallback les champs numériques
+  const fevgS = null;
+  const fevgR = null;
+  const vtdS  = q('#vtd-stress') || q('#vtd-stress-input');
+  const vtdR  = q('#vtd-rest')  || q('#vtd-rest-input');
+  const vtsS  = q('#vts-stress') || q('#vts-stress-input');
+  const vtsR  = q('#vts-rest')  || q('#vts-rest-input');
 
-  const flagPerte10 = q('#flag-perte10');
-  const flagDilat20 = q('#flag-dilat20');
-  const flagDilat10 = q('#flag-dilat10');
-  const flagVts70   = q('#flag-vts70');
+  const flagPerte10 = q('#flag-perte10'), flagPerte10Alt = q('#flag-perte10-2'), flagDilat20 = q('#flag-dilat20'), flagDilat10 = q('#flag-dilat10'), flagVts70 = q('#flag-vts70');
 
   // Segments
   const SEGMENTS = [
@@ -227,32 +229,42 @@ document.addEventListener('DOMContentLoaded', () => {
     fmtInput.addEventListener('input', () => { fmt.value = fmtInput.value; updateFmtDisplay(); genererCR(); });
     updateFmtDisplay();
   }
-  connectSlider('fevg-stress','fevg-stress-input','fevg-stress-value','%', () => { updateKineFlags(); genererCR(); });
-  connectSlider('fevg-rest','fevg-rest-input','fevg-rest-value','%', () => { updateKineFlags(); genererCR(); });
   connectSlider('vtd-stress','vtd-stress-input','vtd-stress-value',' mL', () => { updateKineFlags(); genererCR(); });
   connectSlider('vtd-rest','vtd-rest-input','vtd-rest-value',' mL', () => { updateKineFlags(); genererCR(); });
   connectSlider('vts-stress','vts-stress-input','vts-stress-value',' mL', () => { updateKineFlags(); genererCR(); });
   connectSlider('vts-rest','vts-rest-input','vts-rest-value',' mL', () => { updateKineFlags(); genererCR(); });
 
   function num(v){ const n = Number(v); return isFinite(n) ? n : 0; }
-  const isEmpty = el => !el || el.dataset.empty === "1";
+  // considère vide si l'élément n'existe pas, si sa valeur est vide ou s'il a le flag data-empty (pour sliders)
+  const isEmpty = el => !el || String(el.value || '').trim() === '' || el.dataset.empty === "1";
 
   function updateKineFlags(){
     if (!flagPerte10 || !flagDilat20 || !flagDilat10 || !flagVts70) return;
-    if (!fevgS || !fevgR || !vtdS || !vtdR || !vtsS || !vtsR ||
-        isEmpty(fevgS) || isEmpty(fevgR) || isEmpty(vtdS) || isEmpty(vtdR) || isEmpty(vtsS) || isEmpty(vtsR)) {
+    // On calcule la FEVG ONLY à partir des VTD/VTS ; si manquant, on réinitialise les flags
+    if (!vtdS || !vtdR || !vtsS || !vtsR || isEmpty(vtdS) || isEmpty(vtdR) || isEmpty(vtsS) || isEmpty(vtsR)) {
       flagPerte10.textContent = "0";
       flagDilat20.textContent = "0";
       flagDilat10.textContent = "0";
       flagVts70.textContent   = "0";
       return;
     }
-    const dFE  = num(fevgR.value) - num(fevgS.value);
+    const autoFEVGStress = computeFEVGFromInputs(vtdS, vtsS);
+    const autoFEVGRest   = computeFEVGFromInputs(vtdR, vtsR);
+    if (autoFEVGStress === null || autoFEVGRest === null) {
+      flagPerte10.textContent = "0";
+      flagDilat20.textContent = "0";
+      flagDilat10.textContent = "0";
+      flagVts70.textContent   = "0";
+      return;
+    }
+    const dFE  = num(autoFEVGRest) - num(autoFEVGStress);
     const dVTD = num(vtdS.value)  - num(vtdR.value);
     const dVTS = num(vtsS.value)  - num(vtsR.value);
     const vtsStress = num(vtsS.value);
 
-    flagPerte10.textContent = dFE >= 10 ? "1" : "0";
+    const perteVal = dFE >= 10 ? "1" : "0";
+    flagPerte10.textContent = perteVal;
+    if (flagPerte10Alt) flagPerte10Alt.textContent = perteVal;
     flagDilat20.textContent = dVTD >= 20 ? "1" : "0";
     flagDilat10.textContent = dVTS >= 10 ? "1" : "0";
     flagVts70.textContent   = vtsStress > 70 ? "1" : "0";
@@ -361,9 +373,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    const allKineNums = !isEmpty(fevgS) && !isEmpty(fevgR) && !isEmpty(vtdS) && !isEmpty(vtdR) && !isEmpty(vtsS) && !isEmpty(vtsR);
-    if(allKineNums){
-      cine += `\n- Fraction d'éjection ventriculaire gauche estimée à ${fevgS.value}% en post-stress et ${fevgR.value}% au repos. ` +
+    // FEVG utilisée pour le CR = uniquement la FEVG calculée à partir des VTD/VTS
+    const autoFEVGStress = computeFEVGFromInputs(vtdS, vtsS);
+    const autoFEVGRest   = computeFEVGFromInputs(vtdR, vtsR);
+    if (autoFEVGStress !== null && autoFEVGRest !== null && !isEmpty(vtdS) && !isEmpty(vtdR) && !isEmpty(vtsS) && !isEmpty(vtsR)) {
+      cine += `\n- Fraction d'éjection ventriculaire gauche estimée à ${autoFEVGStress}% en post-stress et ${autoFEVGRest}% au repos. ` +
               `Les VTD et VTS du ventricule gauche sont respectivement estimés à ${vtdS.value}mL et ${vtsS.value}mL en post-stress, ` +
               `et à ${vtdR.value}mL et ${vtsR.value}mL au repos.`;
       const sumFlags = Number(flagPerte10?.textContent || 0) + Number(flagDilat20?.textContent || 0) + Number(flagDilat10?.textContent || 0) + Number(flagVts70?.textContent || 0);
@@ -427,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
    typeStress, betabloquant, clinique, electrique,
    fmt, fmtInput,
    kineTerr, kineType, kineEtend, kineRev, kineNorm, kineGlob, kineDilat,
-   fevgS, fevgR, vtdS, vtdR, vtsS, vtsR
+   vtdS, vtdR, vtsS, vtsR
   ].forEach(el => {
     if(!el) return;
     el.addEventListener('change', ()=>{ updateKineFlags(); genererCR(); });

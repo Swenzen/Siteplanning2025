@@ -65,8 +65,7 @@
         <div>
           <label for="fmt">% de FMT atteint</label>
           <div class="slider-group">
-            <input type="range" id="fmt" min="0" max="120" value="0" step="1">
-            <input type="number" id="fmt-input" min="0" max="120" value="0">
+            <input type="number" id="fmt-input" min="0" max="120" value="">
             <span id="fmt-value">—%</span>
           </div>
         </div>
@@ -257,39 +256,18 @@
             <td></td>
           </tr>
 
-          <tr>
-            <td class="lbl">FEVG (%)</td>
-            <td>
-              <div class="slider-group">
-                <input type="range" id="fevg-stress" min="5" max="90" step="1" value="5" data-empty="1">
-                <input type="number" id="fevg-stress-input" min="5" max="90" value="">
-                <span id="fevg-stress-value">—%</span>
-              </div>
-            </td>
-            <td>
-              <div class="slider-group">
-                <input type="range" id="fevg-rest" min="5" max="90" step="1" value="5" data-empty="1">
-                <input type="number" id="fevg-rest-input" min="5" max="90" value="">
-                <span id="fevg-rest-value">—%</span>
-              </div>
-            </td>
-            <td class="flag">
-              perte 10 pts <span id="flag-perte10">0</span>
-            </td>
-          </tr>
+          <!-- Ligne FEVG manuelle supprimée (les flags restent dans la ligne "FEVG (auto)" ci-dessous) -->
 
           <tr>
             <td class="lbl">VTD (mL)</td>
             <td>
               <div class="slider-group">
-                <input type="range" id="vtd-stress" min="10" max="400" step="1" value="10" data-empty="1">
                 <input type="number" id="vtd-stress-input" min="10" max="400" value="">
                 <span id="vtd-stress-value">— mL</span>
               </div>
             </td>
             <td>
               <div class="slider-group">
-                <input type="range" id="vtd-rest" min="10" max="400" step="1" value="10" data-empty="1">
                 <input type="number" id="vtd-rest-input" min="10" max="400" value="">
                 <span id="vtd-rest-value">— mL</span>
               </div>
@@ -303,14 +281,12 @@
             <td class="lbl">VTS (mL)</td>
             <td>
               <div class="slider-group">
-                <input type="range" id="vts-stress" min="5" max="350" step="1" value="5" data-empty="1">
                 <input type="number" id="vts-stress-input" min="5" max="350" value="">
                 <span id="vts-stress-value">— mL</span>
               </div>
             </td>
             <td>
               <div class="slider-group">
-                <input type="range" id="vts-rest" min="5" max="350" step="1" value="5" data-empty="1">
                 <input type="number" id="vts-rest-input" min="5" max="350" value="">
                 <span id="vts-rest-value">— mL</span>
               </div>
@@ -324,7 +300,7 @@
             <td class="lbl">FEVG (auto)</td>
             <td><div id="fevg-stress-auto" class="fevg-auto"></div></td>
             <td><div id="fevg-rest-auto" class="fevg-auto"></div></td>
-            <td class="flag">perte 10 pts <span id="flag-perte10-2">0</span></td>
+            <td class="flag">perte 10 pts <span id="flag-perte10">0</span></td>
           </tr>
         </tbody>
       </table>
