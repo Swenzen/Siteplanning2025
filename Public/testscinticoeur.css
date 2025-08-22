@@ -411,4 +411,78 @@ body{
 /* petites finitions */
 .footer{ text-align:center; color:var(--muted); font-size:0.9rem; margin:18px 0 28px; }
 .hidden{ display:none; }
+/* --- Uniformisation conclusions = mêmes règles que bulls-container/bulls-grid --- */
+.conclusions-container{ padding:14px; } /* si besoin d'un padding dédié */
+
+/* légendes spécifiques pour Ischémie (gris / orange / rouge) */
+.legend-box.isch-none     { background:#e9eef3; border:1px solid rgba(0,0,0,0.06); } /* gris clair */
+.legend-box.isch-partial  { background:#f39c12; }
+.legend-box.isch-complete { background:#e74c3c; }
+
+/* légendes spécifiques pour Nécrose (dégradé de gris) */
+.legend-box.nec-none      { background:#d6d8db !important; border:1px solid rgba(0,0,0,0.06) !important; } /* gris clair */
+.legend-box.nec-partial   { background:#7a8086 !important; } /* gris moyen */
+.legend-box.nec-complete  { background:#303234 !important; } /* gris foncé */
+
+/* Etat par défaut du bull-eye nécrose : gris clair (comme reversibilité) */
+#svg-necrose path.zone-bin {
+  fill:#eceff1 !important;
+  fill-opacity:0.95 !important;
+  stroke:#c0c7cc !important;
+}
+
+/* Couleurs appliquées quand on clique (classes .nec-xxx.on) — nuances de gris prononcées */
+#svg-necrose path.zone-bin.nec-none.on {
+  fill:#d6d8db !important;
+  stroke:#bfc6cb !important;
+  fill-opacity:0.98 !important;
+}
+#svg-necrose path.zone-bin.nec-partial.on {
+  fill:#9aa0a6 !important;
+  stroke:#7a8086 !important;
+  fill-opacity:0.96 !important;
+}
+#svg-necrose path.zone-bin.nec-complete.on {
+  fill:#50555a !important;
+  stroke:#303234 !important;
+  fill-opacity:0.98 !important;
+}
+
+/* Garantir priorité sur d'autres sélecteurs */
+.zone-bin.nec-none.on     { fill:#d6d8db !important; stroke:#bfc6cb !important; }
+.zone-bin.nec-partial.on  { fill:#9aa0a6 !important; stroke:#7a8086 !important; }
+.zone-bin.nec-complete.on { fill:#50555a !important; stroke:#303234 !important; }
+
+/* base des conclusion-bull-eyes : chemins gris clair par défaut (comme reversibilité) */
+#svg-ischemie path.zone-bin,
+#svg-necrose path.zone-bin {
+  fill: transparent; /* laisser JS gérer mais fallback */
+  stroke:#777;
+  transition: fill .15s, fill-opacity .15s;
+}
+
+/* forcer look "gris clair" via .fill-gray (appliquée dans HTML initial) */
+.fill-gray { fill:#eceff1 !important; fill-opacity:0.95 !important; stroke:#c0c7cc !important; }
+
+/* priorité : quand JS active isch/nec (classe .on + isch-partial / isch-complete / nec-partial / nec-complete),
+   les règles suivantes prennent le dessus (déjà présentes mais on répète la spécificité pour sécurité) */
+#svg-ischemie path.zone-bin.isch-partial.on  { fill:#f39c12 !important; stroke:#b26b07 !important; fill-opacity:0.92 !important; }
+#svg-ischemie path.zone-bin.isch-complete.on { fill:#e74c3c !important; stroke:#a4281a !important; fill-opacity:0.92 !important; }
+#svg-ischemie path.zone-bin.isch-none.on     { fill:#e9eef3 !important; stroke:#c0c7cc !important; fill-opacity:0.95 !important; }
+
+#svg-necrose path.zone-bin.nec-partial.on    { fill:#7a8086 !important; stroke:#7a8086 !important; fill-opacity:0.92 !important; }
+#svg-necrose path.zone-bin.nec-complete.on   { fill:#303234 !important; stroke:#303234 !important; fill-opacity:0.92 !important; }
+#svg-necrose path.zone-bin.nec-none.on       { fill:#f3f5f7 !important; stroke:#dcdfe3 !important; fill-opacity:0.95 !important; }
+
+/* garantir l'uniformité d'espacement identique à la section perfusion */
+.bulls-container.conclusions-container .bulls-grid,
+.bulls-container .bulls-grid,
+.conclusions-container .bulls-grid {
+  gap:18px;
+  align-items:start;
+}
+
+/* s'assurer que panels / svg ont même hauteur / padding que perfusion */
+.bulls-container.conclusions-container .bull-svg,
+.bulls-container .bull-svg { min-height:320px; max-height:360px; }
 
