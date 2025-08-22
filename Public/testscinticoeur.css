@@ -388,6 +388,26 @@ body{
   .cr-sticky-panel{ position:fixed; left:50%; transform:translateX(-50%); top:auto; bottom:12px; width:92%; max-width:680px; }
 }
 
+/* Conclusions : 2 colonnes; chaque colonne empile svg puis controls */
+.conclusions-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  align-items:start;
+}
+.conclusion-column{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.conclusion-column .svg-panel{ order:0; }
+.conclusion-column .table-panel{ order:1; }
+
+/* responsive : empile sur petit écran */
+@media(max-width:1000px){
+  .conclusions-grid{ grid-template-columns:1fr; }
+}
+
 /* petites finitions */
 .footer{ text-align:center; color:var(--muted); font-size:0.9rem; margin:18px 0 28px; }
 .hidden{ display:none; }
