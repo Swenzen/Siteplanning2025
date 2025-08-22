@@ -85,6 +85,23 @@ document.addEventListener('DOMContentLoaded', () => {
   populateTerritoires();
   populateEtendues();
 
+  // --- Ajout : peupler le select "profondeur-perfusion" (corrige le menu déroulant qui ne fonctionnait plus) ---
+  const PROFONDEURS = [
+    "Sous‑endocardique",
+    "Transmural",
+    "Épicardique"
+  ];
+  function populateProfondeurs(){
+    const selects = Array.from(document.querySelectorAll('select[id*="profondeur"]'));
+    selects.forEach(sel=>{
+      sel.innerHTML = '';
+      const opt0 = document.createElement('option'); opt0.value = ''; opt0.textContent = '—'; sel.appendChild(opt0);
+      PROFONDEURS.forEach(p=>{ const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o); });
+    });
+  }
+  populateProfondeurs();
+  // --- fin ajout ---
+
   // Etats
   // stressState: {etat:0|1|2, profondeur, etendue}
   const stressState = new Map(); SEGMENTS.forEach(s => stressState.set(s, { etat:0, profondeur:'', etendue:'' }));
@@ -395,6 +412,18 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (typeStress && typeStress.value === "effort") concl += "Après une épreuve d'effort sur bicyclette ergométrique, ";
     else concl += "Après une épreuve, ";
 
+    // --- AJOUT : insérer description selon % de FMT atteint (affecte le CR) ---
+    if (typeStress && typeStress.value === "effort") {
+      const fmtVal = Number(fmtInput?.value || fmt?.value || 0);
+      if (!isNaN(fmtVal) && fmtVal > 0) {
+        if (fmtVal < 85) concl += "sous‑maximale non significative ";
+        else if (fmtVal < 95) concl += "sous‑maximale significative ";
+        else if (fmtVal < 100) concl += "quasi‑maximale ";
+        else concl += "maximale ";
+      }
+    }
+    // --- fin ajout ---
+    
     // clinique / electrique
     const parts = [];
     if (clinique && clinique.value) parts.push(`cliniquement ${clinique.value === "positive" ? "positive" : "négative"}`);
