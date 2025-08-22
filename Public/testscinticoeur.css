@@ -60,12 +60,14 @@ svg{ width:100%; height:auto; max-height:420px; border:1px solid #eee; backgroun
 .fevg-auto{ font-weight:700; color:#2c7fb8; font-size:1rem; margin-top:6px; }
 
 /* Restaurer rendu visuel des SVG "isch"/"nec" lorsqu'on les sélectionne */
-.zone-bin{ fill: none; transition: fill .15s, fill-opacity .15s; }
+.zone-bin{ fill: transparent; transition: fill .15s, fill-opacity .15s; }
 .zone-bin.on{ fill: #3498db !important; /* bleu = segment inclus */ fill-opacity: 0.95 !important; stroke:#0b5fa8 !important; }
 /* rendre les zones cliquables (CSP safe, évite style inline) */
 .zone-svg,
 .zone-bin,
 .rev-path {
+  fill: transparent; 
+  transition: fill .15s, fill-opacity .15s;
   cursor: pointer;
   pointer-events: auto;
 }
@@ -78,25 +80,71 @@ svg .rev-path {
   pointer-events: auto;
 }
 
-/* zones SVG : par défaut transparent, cliquable ; la classe .on affiche la couleur */
+/* Légendes et couleurs tri-état pour ischémie / nécrose (non = gris) */
+.legend-box.isch-none   { background: #d9d9d9; }
+.legend-box.isch-partial{ background: #f39c12; }
+.legend-box.isch-complete{ background: #e74c3c; }
+
+.legend-box.nec-none    { background: #d9d9d9; }
+.legend-box.nec-partial { background: #f39c12; }
+.legend-box.nec-complete{ background: #e74c3c; }
+
+/* Zones SVG : par défaut transparent (CSS gère couleur via classes) */
 .zone-svg,
-.zone-bin {
-  fill: transparent !important;
+.zone-bin,
+.rev-path {
+  fill: transparent; 
   transition: fill .15s, fill-opacity .15s;
   cursor: pointer;
   pointer-events: auto;
 }
 
-/* état sélectionné pour isch/nec */
-.zone-bin.on {
-  fill: #3498db !important; /* bleu */
-  fill-opacity: 0.95 !important;
-  stroke: #0b5fa8 !important;
-}
+/* ISCHEMIE : override selon classe appliquée */
+.zone-bin.isch-partial.on   { fill:#f39c12 !important; fill-opacity:0.92 !important; stroke:#b26b07 !important; }
+.zone-bin.isch-complete.on  { fill:#e74c3c !important; fill-opacity:0.92 !important; stroke:#a4281a !important; }
+.zone-bin.isch-none.on      { fill:#d9d9d9 !important; fill-opacity:0.95 !important; stroke:#bbb !important; }
 
-/* si besoin, override final pour réversibilité / perfusion */
-.fill-green  { fill:#27ae60 !important; fill-opacity:0.9 !important; }
-.fill-orange { fill:#f39c12 !important; fill-opacity:0.9 !important; }
-.fill-red    { fill:#e74c3c !important; fill-opacity:0.9 !important; }
-.fill-gray   { fill:#d9d9d9 !important; fill-opacity:0.95 !important; stroke:#bbb !important; }
+/* NECROSE : override selon classe appliquée */
+.zone-bin.nec-partial.on    { fill:#f39c12 !important; fill-opacity:0.92 !important; stroke:#b26b07 !important; }
+.zone-bin.nec-complete.on   { fill:#e74c3c !important; fill-opacity:0.92 !important; stroke:#a4281a !important; }
+.zone-bin.nec-none.on       { fill:#d9d9d9 !important; fill-opacity:0.95 !important; stroke:#bbb !important; }
+
+/* fallback général si aucune classe spécifique */
+.zone-bin.on { fill:#3498db !important; fill-opacity:0.95 !important; stroke:#0b5fa8 !important; }
+
+/* petites badges/légendes (optionnel) */
+.legend-badge { display:inline-block; min-width:26px; text-align:center; background:#fff; border-radius:12px; padding:2px 6px; border:1px solid rgba(0,0,0,0.06); font-weight:700; margin-left:6px; }
+
+/* Overrides prioritaires par SVG pour restaurer les couleurs */
+#svg-perfusion path.fill-green    { fill:#27ae60 !important; stroke:#1f8b47 !important; }
+#svg-perfusion path.fill-orange   { fill:#f39c12 !important; stroke:#b26b07 !important; }
+#svg-perfusion path.fill-red      { fill:#e74c3c !important; stroke:#a4281a !important; }
+
+#svg-ischemie path.zone-bin.isch-partial.on  { fill:#f39c12 !important; stroke:#b26b07 !important; }
+#svg-ischemie path.zone-bin.isch-complete.on { fill:#e74c3c !important; stroke:#a4281a !important; }
+#svg-ischemie path.zone-bin.isch-none.on     { fill:#d9d9d9 !important; stroke:#bbb !important; }
+
+#svg-necrose path.zone-bin.nec-partial.on    { fill:#f39c12 !important; stroke:#b26b07 !important; }
+#svg-necrose path.zone-bin.nec-complete.on   { fill:#e74c3c !important; stroke:#a4281a !important; }
+#svg-necrose path.zone-bin.nec-none.on       { fill:#d9d9d9 !important; stroke:#bbb !important; }
+
+/* sécurité : garantir le curseur/pointer events sur les paths cliquables */
+#svg-ischemie path, #svg-necrose path, #svg-perfusion path { cursor: pointer; pointer-events: auto; }
+
+/* Empêche tout rect ou calque d'intercepter les clics */
+#svg-reversibilite > rect { pointer-events: none; }
+
+/* Clarifie le comportement pointer pour rev-path */
+.rev-path { cursor: pointer; }
+.rev-path.rev-active  { pointer-events: auto; cursor: pointer; opacity: 1; }
+.rev-path.rev-inactive{ pointer-events: none; cursor: default; opacity: 0.55; }
+
+/* conclusions pairées — deux bull-eyes côte à côte */
+.conclusions-pair{ display:flex; gap:18px; align-items:flex-start; justify-content:space-between; margin:12px 8px; flex-wrap:wrap; }
+.conclusion-block{ flex:1 1 48%; display:flex; gap:12px; align-items:flex-start; }
+.conclusion-block .svg-panel{ flex:1 1 60%; }
+.conclusion-block .table-panel{ flex:1 1 40%; min-width:220px; }
+
+/* style pour selects territoire (uniforme) */
+select[id*="territoire"]{ width:100%; padding:6px 8px; border-radius:6px; border:1px solid #ccc; background:#fff; }
 
