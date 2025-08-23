@@ -878,7 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
               `Les VTD et VTS du ventricule gauche sont respectivement estimés à ${vtdS.value}mL et ${vtsS.value}mL en post-stress, ` +
               `et à ${vtdR.value}mL et ${vtsR.value}mL au repos.`;
       const sumFlags = Number(flagPerte10?.textContent || 0) + Number(flagDilat20?.textContent || 0) + Number(flagDilat10?.textContent || 0) + Number(flagVts70?.textContent || 0);
-      cine += (sumFlags === 0) ? " Absence de signe de désadaptation ventriculaire gauche de stress." : " Aspect de désadaptation ventriculaire gauche de stress,";
+      cine += (sumFlags === 0) ? " Absence de signe de désadaptation ventriculaire gauche de stress." : " Aspect de désadaptation ventriculaire gauche de stress.";
     }
 
     // isch/nec counts for conclusion — use weighted counts
