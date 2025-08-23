@@ -337,8 +337,7 @@ select{
   border:1px solid rgba(30,60,100,0.12);
   box-shadow:0 10px 24px rgba(12,30,60,0.15);
   border-radius:8px;
-  overflow:auto;
-  max-height:280px;
+  overflow:visible;
   min-width:180px;
   pointer-events:auto;
 }
@@ -352,12 +351,14 @@ select{
 .drag-wrap{ position:relative; display:block; width:100%; }
 .drag-wrap .drag-select-overlay{ width:100%; min-width:180px; }
 .drag-select-overlay.open-up{ top:auto; bottom:calc(100% + 4px); }
+.drag-select-overlay.align-right{ left:auto; right:0; }
 .drag-option.disabled{ color:#8aa0b5; cursor:not-allowed; }
 .drag-option.disabled.active{ background:transparent; color:#8aa0b5; }
 
 /* FMT two-pane overlay */
-.fmt-overlay{ display:flex; flex-direction:row; gap:0; overflow:hidden; max-height:320px; }
-.fmt-pane{ overflow:auto; max-height:inherit; }
+.fmt-overlay{ display:flex; flex-direction:row; gap:0; overflow:visible; max-height:none; }
+.fmt-overlay.row-reverse{ flex-direction:row-reverse; }
+.fmt-pane{ overflow:visible; max-height:none; }
 .fmt-pane.left{ min-width:160px; border-right:1px solid rgba(30,60,100,0.12); }
 .fmt-pane.right{ min-width:180px; }
 .fmt-option{ padding:8px 12px; cursor:pointer; }

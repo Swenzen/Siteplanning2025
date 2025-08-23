@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.addEventListener('mouseup', onUp);
       current.onMove = onMove;
       current.onUp = onUp;
-      // Placement: ouvrir vers le haut si l'espace en bas est insuffisant, et tenter d'afficher tout (territoire)
+      // Placement: ouvrir vers le haut si l'espace en bas est insuffisant
       try {
         const rectSel = select.getBoundingClientRect();
         // Mesurer la hauteur totale désirée d'après les options
@@ -111,11 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const spaceAbove = Math.max(0, rectSel.top - 8);
         const preferUp = spaceBelow < Math.min(desired, spaceAbove);
         if(preferUp){ overlay.classList.add('open-up'); } else { overlay.classList.remove('open-up'); }
-        // Pour territoire: prioriser l'affichage complet si possible
-        const isTerr = /territoire/i.test(select.id || '') || /territoire/i.test(select.getAttribute('name')||'');
-        const avail = preferUp ? spaceAbove : spaceBelow;
-        const maxH = isTerr ? Math.min(desired, Math.max(180, avail)) : Math.min(Math.max(180, avail), 320);
-        overlay.style.maxHeight = maxH + 'px';
+        // Forcer l'ouverture de toutes les options: fixer la hauteur et désactiver le scroll interne
+        overlay.style.maxHeight = 'none';
+        overlay.style.height = desired + 'px';
+        overlay.style.overflowY = 'hidden';
+        // Alignement horizontal: si l’overlay dépasse à droite, coller à droite
+        const rectOv = overlay.getBoundingClientRect();
+        if(rectSel.left + rectOv.width > window.innerWidth - 8){ overlay.classList.add('align-right'); } else { overlay.classList.remove('align-right'); }
       } catch {}
       // Click directly on an option also commits
       overlay.addEventListener('mousedown', (e)=>{
@@ -1292,6 +1294,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2) FMT: overlay deux panneaux (dizaines puis valeur exacte)
   (function initFmtOverlay(){
     if(!fmtInput) return;
+    let fmtIsOpen = false;
+    let suppressNextFocusOpen = false;
     // Build overlay on demand
     function openFmtOverlay(){
       closeFmtOverlay();
@@ -1304,6 +1308,30 @@ document.addEventListener('DOMContentLoaded', () => {
       const right = document.createElement('div'); right.className = 'fmt-pane right';
       body.appendChild(left); body.appendChild(right); overlay.appendChild(body);
       wrap.appendChild(overlay);
+      fmtIsOpen = true;
+      // Largeur minimale pour accueillir deux panneaux (garder lisible)
+      try {
+        const rectSel = fmtInput.getBoundingClientRect();
+        const minContentWidth = 360; // ~ left 160 + right 180 + marges
+        overlay.style.width = Math.max(rectSel.width, minContentWidth) + 'px';
+        // Placement vertical: ouvrir vers le haut si l'espace en bas est insuffisant
+        const spaceBelow = Math.max(0, window.innerHeight - rectSel.bottom - 8);
+        const spaceAbove = Math.max(0, rectSel.top - 8);
+        // hauteur: supprimer les ascenseurs -> pas de max-height
+        const desired = 99999;
+        const preferUp = spaceBelow < Math.min(320, spaceAbove);
+        overlay.classList.toggle('open-up', !!preferUp);
+        // Désactiver le scroll interne et laisser la hauteur s’adapter au contenu
+        overlay.style.maxHeight = 'none';
+        overlay.style.overflow = 'visible';
+        // Alignement horizontal: si dépassera à droite, coller à droite
+        // On doit mesurer après width appliquée
+        const ovRect = overlay.getBoundingClientRect();
+        const wouldOverflowRight = rectSel.left + ovRect.width > window.innerWidth - 8;
+        overlay.classList.toggle('align-right', !!wouldOverflowRight);
+        // Si aligné à droite, inverser les panneaux pour garder la colonne des dizaines sous le clic
+        body.classList.toggle('row-reverse', !!wouldOverflowRight);
+      } catch {}
       const ranges = [ [0,9], [10,19], [20,29], [30,39], [40,49], [50,59], [60,69] ];
       let currentRange = null; let activeLeft = -1; let activeRight = -1;
       ranges.forEach((r,idx)=>{
@@ -1329,8 +1357,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if(fmt) fmt.value = String(v);
         if(fmtValue) fmtValue.textContent = `${v}%`;
         fmtInput.dispatchEvent(new Event('input', { bubbles:true }));
+        suppressNextFocusOpen = true;
         closeFmtOverlay();
-        fmtInput.focus({ preventScroll:true });
+        // Rendre le focus sans ré-ouvrir immédiatement
+        try { fmtInput.focus({ preventScroll:true }); } catch {}
+        setTimeout(()=>{ suppressNextFocusOpen = false; }, 50);
       }
       left.addEventListener('mousemove', (e)=>{
         const item = e.target.closest('.fmt-option'); if(!item) return;
@@ -1346,6 +1377,8 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightRightVal(item.dataset.val);
       });
       document.addEventListener('mouseup', onUpFmt);
+      const onKeyFmt = (e)=>{ if(e.key==='Escape'){ closeFmtOverlay(); document.removeEventListener('keydown', onKeyFmt); } };
+      document.addEventListener('keydown', onKeyFmt);
       function onUpFmt(ev){
         const el = document.elementFromPoint(ev.clientX, ev.clientY);
         const rv = el && el.closest ? el.closest('.fmt-pane.right .fmt-option') : null;
@@ -1353,14 +1386,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if(rv && rv.dataset.val){ commitFmt(Number(rv.dataset.val)); }
         else if(lv){ // si on relâche côté gauche seulement, prendre le bas de la fourchette
           const i = Number(lv.dataset.idx||-1); if(i>=0){ const r = ranges[i]; commitFmt(r[0]); }
+        } else {
+          // Relâchement hors des panneaux: fermer
+          closeFmtOverlay();
         }
         document.removeEventListener('mouseup', onUpFmt);
+        document.removeEventListener('keydown', onKeyFmt);
       }
-      // Init left from current value
+      // Init: afficher uniquement les dizaines au départ (pas de liste précise)
       const cur = Number(fmtInput.value||0);
       const idx = Math.min(ranges.length-1, Math.max(0, Math.floor(cur/10)));
       highlightLeft(idx);
-      currentRange = ranges[idx]; populateRight(currentRange); highlightRightVal(cur);
     }
     function ensureWrap(input){
       let w = input.parentElement; if(!w) return input;
@@ -1372,8 +1408,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeFmtOverlay(){
       const w = ensureWrap(fmtInput); const ov = w && w.querySelector ? w.querySelector('.drag-select-overlay') : null;
       if(ov) ov.remove();
+      fmtIsOpen = false;
     }
     fmtInput.addEventListener('mousedown', (e)=>{ e.preventDefault(); openFmtOverlay(); });
-    fmtInput.addEventListener('focus', ()=>{ openFmtOverlay(); });
+    fmtInput.addEventListener('focus', ()=>{ if(!suppressNextFocusOpen && !fmtIsOpen) openFmtOverlay(); });
   })();
 });
