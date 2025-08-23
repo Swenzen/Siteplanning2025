@@ -401,6 +401,18 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBottomCounters();
         updateCounts(); if(typeof genererCR === 'function') genererCR();
       });
+      // clic droit: décrémenter (cycle inverse)
+      clone.addEventListener('contextmenu', (e)=>{ e.preventDefault(); });
+      clone.addEventListener('mousedown', (e)=>{
+        if(e.button !== 2) return;
+        e.preventDefault();
+        const cur = map.get(segId) || 0;
+        const prev = (cur + 2) % 3;
+        map.set(segId, prev);
+        applyClassesToPath(mode, segId, prev);
+        updateBottomCounters();
+        updateCounts(); if(typeof genererCR === 'function') genererCR();
+      });
     });
   }
 
@@ -517,6 +529,18 @@ document.addEventListener('DOMContentLoaded', () => {
         updateReversibiliteAvailabilityFor(key);
         genererCR();
       });
+      // clic droit: décrémenter (cycle inverse)
+      clone.addEventListener('contextmenu', (e)=>{ e.preventDefault(); });
+      clone.addEventListener('mousedown', (e)=>{
+        if(e.button !== 2) return;
+        e.preventDefault();
+        const cur = st.stress.get(seg) || 0;
+        const prev = (cur + 2) % 3; // -1 modulo 3
+        st.stress.set(seg, prev);
+        setPerfColor(clone, prev);
+        updateReversibiliteAvailabilityFor(key);
+        genererCR();
+      });
     });
     // init reversibilite paths
     SEGMENTS.forEach(seg => {
@@ -534,6 +558,20 @@ document.addEventListener('DOMContentLoaded', () => {
         st.rev.set(seg, next);
         clone.classList.add(REV_CLASSES[next]);
         e.stopPropagation();
+        genererCR();
+      });
+      // clic droit: décrémenter (cycle inverse) si actif
+      clone.addEventListener('contextmenu', (e)=>{ e.preventDefault(); });
+      clone.addEventListener('mousedown', (e)=>{
+        if(e.button !== 2) return;
+        e.preventDefault();
+        const active = (st.stress.get(seg) || 0) > 0;
+        if(!active) return;
+        const cur = st.rev.get(seg) || 0;
+        clone.classList.remove(REV_CLASSES[cur]);
+        const prev = (cur + 2) % 3;
+        st.rev.set(seg, prev);
+        clone.classList.add(REV_CLASSES[prev]);
         genererCR();
       });
     });
@@ -560,12 +598,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if(fmt && fmtInput && fmtValue){
     const updateFmtDisplay = () => {
-      const val = Number(fmt.value || 0);
+      let val = Number(fmt.value || 0);
+      if (isNaN(val)) val = 0;
+      val = Math.max(0, val); // pas de borne max
+      fmt.value = String(val);
       fmtInput.value = String(val);
-      fmtValue.textContent = val > 0 ? `${val}%` : "—%";
+      // Ne pas dupliquer la valeur: n’afficher que l’unité
+      fmtValue.textContent = '%';
     };
     fmt.addEventListener('input', () => { updateFmtDisplay(); genererCR(); });
-    fmtInput.addEventListener('input', () => { fmt.value = fmtInput.value; updateFmtDisplay(); genererCR(); });
+    fmtInput.addEventListener('input', () => { let v = Number(fmtInput.value||0); if(isNaN(v)) v=0; v=Math.max(0,v); fmt.value = String(v); updateFmtDisplay(); genererCR(); });
+    // Valider à Enter et au blur
+    fmtInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); fmt.blur(); } });
+    fmtInput.addEventListener('blur', ()=>{ let v = Number(fmtInput.value||0); if(isNaN(v)) v=0; v=Math.max(0,v); fmt.value = String(v); updateFmtDisplay(); genererCR(); });
     updateFmtDisplay();
   }
   connectSlider('vtd-stress','vtd-stress-input','vtd-stress-value',' mL', () => { updateKineFlags(); genererCR(); });
@@ -760,9 +805,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const terr = territoirePerf && territoirePerf.value ? ` du territoire ${lc(territoirePerf.value)}` : "";
         const etnd = etenduePerf && etenduePerf.value ? ` ${lc(etenduePerf.value)}` : "";
 
-        let line = `- Hypofixation ${prof}${terr}${etnd} (segment(s)`;
-        if(complete.length) line += " " + joinFr(listSegments(complete));
-        if(partial.length) line += ` et dans une moindre mesure ${joinFr(listSegments(partial))}`;
+  const totalSegs = complete.length + partial.length;
+  const segLabel = totalSegs > 1 ? 'segments' : 'segment';
+  let line = `- Hypofixation ${prof}${terr}${etnd} (${segLabel}`;
+  if(complete.length) line += " " + joinFr(listSegments(complete));
+  if(partial.length) line += ` et dans une moindre mesure ${joinFr(listSegments(partial))}`;
         line += ") au stress,";
 
         const abnormal = complete.concat(partial);
@@ -816,10 +863,10 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (kineGlob?.value === "non") cine += " Pas d'anomalie de la cinétique globale.";
 
     if (kineDilat?.value) {
-      if (kineDilat.value === "non") cine += "\n- Absence de dilatation ventriculaire gauche";
+      if (kineDilat.value === "non") cine += "\n- Absence de dilatation ventriculaire gauche.";
       else {
         const mapD = { discrete: "discrète", moderee: "modérée", importante: "importante" };
-        cine += `\n- Dilatation ventriculaire gauche ${mapD[kineDilat.value] || ""}`;
+        cine += `\n- Dilatation ventriculaire gauche ${mapD[kineDilat.value] || ""}.`;
       }
     }
 
@@ -855,7 +902,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // type stress / betabloquant / effort handling
     if (typeStress && typeStress.value === "pharmacologique") concl += "Après une épreuve de stress pharmacologique, ";
     else if (typeStress && typeStress.value === "mixte") concl += "Après une épreuve de stress mixte sur bicyclette ergométrique, ";
-    else if (typeStress && typeStress.value === "effort") concl += "Après une épreuve d'effort sur bicyclette ergométrique, ";
+    else if (typeStress && typeStress.value === "effort") {
+      concl += "Après une épreuve d'effort sur bicyclette ergométrique, ";
+      const bb = betabloquant && betabloquant.value;
+      if (bb === 'jamais') concl += 'non maquillée ';
+      else if (bb === 'non-arretes') concl += 'maquillée ';
+      else if (bb === 'arrete') concl += 'démaquillée ';
+    }
     else concl += "Après une épreuve, ";
 
     // FMT handling (inchangé)
@@ -1332,7 +1385,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si aligné à droite, inverser les panneaux pour garder la colonne des dizaines sous le clic
         body.classList.toggle('row-reverse', !!wouldOverflowRight);
       } catch {}
-      const ranges = [ [0,9], [10,19], [20,29], [30,39], [40,49], [50,59], [60,69] ];
+  // Ranges 0–9, 10–19, ... jusqu'à 110–119
+  const ranges = Array.from({length: 12}, (_,i)=>[i*10, i*10+9]);
       let currentRange = null; let activeLeft = -1; let activeRight = -1;
       ranges.forEach((r,idx)=>{
         const o = document.createElement('div'); o.className='fmt-option'; o.textContent = `${r[0]}–${r[1]}`; o.dataset.idx = String(idx);
@@ -1410,7 +1464,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if(ov) ov.remove();
       fmtIsOpen = false;
     }
-    fmtInput.addEventListener('mousedown', (e)=>{ e.preventDefault(); openFmtOverlay(); });
-    fmtInput.addEventListener('focus', ()=>{ if(!suppressNextFocusOpen && !fmtIsOpen) openFmtOverlay(); });
+  // Ouverture du sélecteur rapide via clic sur l’affichage du pourcentage, pas sur le champ
+    if(fmtValue){ try{ fmtValue.style.cursor='pointer'; fmtValue.title='Ouvrir le sélecteur rapide'; }catch{} fmtValue.addEventListener('mousedown', (e)=>{ e.preventDefault(); openFmtOverlay(); }); }
+    // Drag-and-drop sur l'input numérique: ouvre l'overlay seulement s'il y a un vrai glisser
+    fmtInput.addEventListener('mousedown', (e)=>{
+      if(e.button!==0) return; // clic gauche only
+      const startX = e.clientX, startY = e.clientY; let opened = false;
+      const threshold = 6;
+      const onMove = (ev)=>{
+        if(Math.abs(ev.clientX-startX)>threshold || Math.abs(ev.clientY-startY)>threshold){
+          document.removeEventListener('mousemove', onMove);
+          if(!fmtIsOpen){ openFmtOverlay(); opened = true; }
+        }
+      };
+      const onUp = ()=>{
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
   })();
 });
