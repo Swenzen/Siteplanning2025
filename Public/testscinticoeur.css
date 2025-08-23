@@ -332,7 +332,7 @@ select{
 .drag-select-overlay{
   position:absolute;
   left:0; top:calc(100% + 4px);
-  z-index:1500;
+  z-index:3000;
   background:#fff;
   border:1px solid rgba(30,60,100,0.12);
   box-shadow:0 10px 24px rgba(12,30,60,0.15);
@@ -340,9 +340,10 @@ select{
   overflow:auto;
   max-height:280px;
   min-width:180px;
+  pointer-events:auto;
 }
 .drag-select-list{ display:flex; flex-direction:column; max-height:inherit; }
-.drag-option{ padding:8px 12px; line-height:1.25; cursor:pointer; font-size:0.95rem; color:#223244; }
+.drag-option{ padding:8px 12px; line-height:1.25; cursor:pointer; font-size:0.95rem; color:#223244; user-select:none; }
 .drag-option:hover,
 .drag-option.active{ background:#eef5fb; color:#0f3758; }
 .drag-option[aria-selected="true"]{ font-weight:700; }
@@ -354,7 +355,8 @@ select{
 .drag-option.disabled.active{ background:transparent; color:#8aa0b5; }
 
 /* Optionnel: harmoniser le style du select (quand menu natif) avec l’overlay */
-select{ border-radius:8px; }
+select{ border-radius:8px; border:1px solid rgba(30,60,100,0.2); background-color:#fff; }
+select:focus{ outline:2px solid rgba(16,112,202,0.25); outline-offset:1px; }
 
 /* Controls below bull-eyes */
 .bulls-controls{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:14px; padding-top:12px; border-top:1px dashed rgba(20,40,80,0.03); }

@@ -12,14 +12,22 @@ document.addEventListener('DOMContentLoaded', () => {
   let clickStopper = null;
 
     function buildOverlay(select){
-      const wrap = document.createElement('div');
-      wrap.className = 'drag-wrap';
-      // Insert wrapper around select to anchor the overlay absolutely
+      // Reuse existing wrapper or create one
       if(!select.parentElement) return null;
-      if(!select.parentElement.classList.contains('drag-wrap')){
+      let wrap;
+      if(select.parentElement.classList.contains('drag-wrap')){
+        wrap = select.parentElement;
+      } else {
+        wrap = document.createElement('div');
+        wrap.className = 'drag-wrap';
         select.parentElement.insertBefore(wrap, select);
         wrap.appendChild(select);
       }
+      // Remove any residual overlay in this wrapper
+      try {
+        const existing = wrap.querySelector('.drag-select-overlay');
+        if(existing) existing.remove();
+      } catch {}
       const overlay = document.createElement('div');
       overlay.className = 'drag-select-overlay';
       overlay.setAttribute('role','listbox');
@@ -41,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return { overlay, list };
     }
 
-  function openOverlay(select){
+  function openOverlay(select, trigger = 'generic'){
       closeOverlay();
       const built = buildOverlay(select);
       if(!built) return;
@@ -52,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.style.width = rectSel.width + 'px';
       } catch {}
   select.classList.add(OPEN_CLASS);
-  current = { select, overlay, list, options: Array.from(list.querySelectorAll('.drag-option')), activeIndex: -1 };
+  current = { select, overlay, list, options: Array.from(list.querySelectorAll('.drag-option')), activeIndex: -1, ignoreFirstUp: (trigger !== 'drag') };
       // Positioning is handled via CSS .drag-wrap
       // Activate drag mode
   const onMove = (ev)=>{
@@ -69,9 +77,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         highlightIndex(idx);
       };
+      // Pré-surligner l'option actuellement sélectionnée
+      try {
+        const si = select.selectedIndex;
+        if(si>=0) highlightIndex(si);
+      } catch {}
   if(current) current.onMove = onMove;
   const onUp = (ev)=>{
         if(!current) { return; }
+        if(current.ignoreFirstUp){ current.ignoreFirstUp = false; return; }
         // Si relâchement au-dessus d'une option valide, on la choisit
         const x = ev.clientX, y = ev.clientY;
         const el = document.elementFromPoint(x, y);
@@ -83,7 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
         closeOverlay();
       };
       document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp, { once:true });
+      document.addEventListener('mouseup', onUp);
+      current.onMove = onMove;
+      current.onUp = onUp;
       // Click directly on an option also commits
       overlay.addEventListener('mousedown', (e)=>{
         const opt = e.target.closest('.drag-option');
@@ -104,8 +120,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const next = clamp((current.activeIndex>=0?current.activeIndex:0)+delta, 0, current.options.length-1);
         highlightIndex(next);
       }, { passive:false });
-      // Escape to cancel
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeOverlay(); } }, { once:true });
+  // Escape to cancel
+  const onKey = (e)=>{ if(e.key==='Escape'){ closeOverlay(); } };
+  document.addEventListener('keydown', onKey);
+  current.onKey = onKey;
     }
 
     function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
@@ -125,13 +143,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const optDiv = current.options[idx];
       if(!optDiv || optDiv.classList.contains('disabled')) return;
       const i = Number(optDiv.dataset.index || -1);
-      if(i>=0){ current.select.selectedIndex = i; current.select.dispatchEvent(new Event('change', { bubbles:true })); }
+      if(i>=0){
+        current.select.selectedIndex = i;
+        // Dispatch change + input pour réagir partout
+        current.select.dispatchEvent(new Event('input', { bubbles:true }));
+        current.select.dispatchEvent(new Event('change', { bubbles:true }));
+        // Rendre le focus au select pour réouverture rapide
+        try { current.select.focus({ preventScroll: true }); } catch {}
+      }
     }
     function closeOverlay(){
       if(!current) return;
       current.select.classList.remove(OPEN_CLASS);
-      try{ current.overlay.remove(); }catch{}
-      try{ if(current.onMove) document.removeEventListener('mousemove', current.onMove); }catch{}
+  try{ current.overlay.remove(); }catch{}
+  try{ if(current.onMove) document.removeEventListener('mousemove', current.onMove); }catch{}
+  try{ if(current.onUp) document.removeEventListener('mouseup', current.onUp); }catch{}
+  try{ if(current.onKey) document.removeEventListener('keydown', current.onKey); }catch{}
       if(clickStopper){
         try{ document.removeEventListener('click', clickStopper, true); }catch{}
         clickStopper = null;
@@ -141,8 +168,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function enhance(select){
       if(select.classList.contains('no-drag-select')) return;
-      if(select.dataset.dragSelect==='1') return;
-      select.dataset.dragSelect = '1';
+      if(select.dataset.dragWired==='1') return; // interne: évite double-binding
+      // Forcer l'overlay au clic pour un style homogène partout
+      select.classList.add('overlay-click');
+      select.dataset.dragWired = '1';
       let dragging = false;
       let startX = 0, startY = 0;
       let moveHandler = null;
@@ -164,10 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      select.addEventListener('mousedown', (e)=>{
+  select.addEventListener('mousedown', (e)=>{
         if(e.button !== 0) return;
         // Mode optionnel: forcer l'overlay dès le clic (style homogène) si classe overlay-click
-        if(select.classList.contains('overlay-click')){ e.preventDefault(); openOverlay(select); return; }
+        if(select.classList.contains('overlay-click')){ e.preventDefault(); openOverlay(select, 'drag'); return; }
         // Sinon, ne pas empêcher le comportement par défaut ici pour garder le menu natif si pas de drag
         dragging = true;
         startX = e.clientX; startY = e.clientY;
@@ -179,6 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
           document.removeEventListener('mouseup', upOnce);
         };
         document.addEventListener('mouseup', upOnce);
+      });
+      // Au focus via clavier, si overlay-click, ouvrir overlay pour éditer rapidement
+      select.addEventListener('focus', ()=>{
+        if(select.classList.contains('overlay-click')) openOverlay(select, 'focus');
       });
       // Laisser le clavier gérer le menu natif (pas d'interception)
     }
