@@ -33,10 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <li><a href="stats.html">Stats</a></li>
       </ul>
     </nav>
-    <div id="user-section">
+        <div id="user-section">
       <span class="user-avatar">P</span>
       <div class="user-info-block">
-        <span class="user-mail">p@gmail.com</span>
+                <span class="user-mail">Non connecté</span>
         <select id="siteSelector">
           <option value="1">Amiens</option>
           <option value="4">StVictor</option>
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <option value="6">Médecine nucléaire</option>
         </select>
       </div>
-      <button id="logoutButton">Se déconnecter</button>
+            <button id="headerLogoutButton">Se déconnecter</button>
     </div>
   </div>
     `;
@@ -83,34 +83,49 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Gestion utilisateur
-    const username = localStorage.getItem("username");
-    const userInfo = document.getElementById("user-info");
-    const logoutButton = document.getElementById("logoutButton");
-    const siteSelector = document.getElementById("siteSelector");
+    // Gestion utilisateur (basée uniquement sur le token)
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
+    const isLogged = !!token;
+    const userInfo = document.getElementById('user-info'); // facultatif selon pages
+    const logoutButton = document.getElementById('headerLogoutButton');
+    const siteSelector = document.getElementById('siteSelector');
+    const userMail = document.querySelector('#main-header .user-mail');
 
-    if (username) {
-        userInfo.textContent = `${username}`;
-        logoutButton.style.display = "inline-block";
-        siteSelector.style.display = "inline-block";
-        logoutButton.classList.remove("hidden");
-        siteSelector.classList.remove("hidden");
-        loadSiteOptions();
-    } else if (window.location.pathname.includes("index.html")) {
-        userInfo.innerHTML = `
-    <button class="user-btn" id="loginBtn">Connexion</button>
-    <button class="user-btn" id="registerBtn">Inscription</button>
-`;
+    if (isLogged) {
+        if (userMail) userMail.textContent = username || 'Connecté';
+        if (userInfo) userInfo.textContent = username || '';
+        if (logoutButton) {
+            logoutButton.classList.remove('hidden');
+            logoutButton.style.display = 'inline-block';
+        }
+        if (siteSelector) {
+            siteSelector.classList.remove('hidden');
+            siteSelector.style.display = 'inline-block';
+        }
+        loadSiteOptions().catch(() => {});
     } else {
-        userInfo.textContent = "Non connecté";
+        // Non connecté
+        if (userMail) userMail.textContent = 'Non connecté';
+        if (userInfo && window.location.pathname.includes('index.html')) {
+            // Sur index, laisser la page gérer ses formulaires (#auth-section)
+        } else if (userInfo) {
+            userInfo.textContent = 'Non connecté';
+        }
+        if (logoutButton) { logoutButton.classList.add('hidden'); logoutButton.style.display = 'none'; }
+        if (siteSelector) { siteSelector.classList.add('hidden'); siteSelector.style.display = 'none'; }
     }
 
-    logoutButton.addEventListener("click", () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        localStorage.removeItem("site_id");
-        window.location.href = "index.html";
-    });
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            // Nettoyage session
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('site_id');
+            sessionStorage.removeItem('selectedSite');
+            window.location.href = 'index.html';
+        });
+    }
 
     // Forcer le rechargement à chaque clic sur le menu BDD
     document.querySelectorAll('nav#menu .dropdown-menu a').forEach(link => {
@@ -146,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadSiteOptions() {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) return; // Pas connecté: ne rien faire
     try {
         const response = await fetch('/api/site', {
             method: 'GET',
@@ -155,26 +170,28 @@ async function loadSiteOptions() {
                 'Content-Type': 'application/json'
             }
         });
-        if (!response.ok) throw new Error(`Erreur lors de la récupération des sites : ${response.status}`);
+        if (!response.ok) return; // API indisponible ou non autorisée
         const data = await response.json();
-        if (!Array.isArray(data.site)) throw new Error('La réponse de /api/site ne contient pas un tableau de sites.');
+        if (!data || !Array.isArray(data.site)) return;
         const siteSelector = document.getElementById('siteSelector');
+        if (!siteSelector) return; // Pas de sélecteur sur cette page
         siteSelector.innerHTML = '';
         data.site.forEach(site => {
             const option = document.createElement('option');
-            option.value = site.site_id;
-            option.textContent = site.site_name;
+            option.value = String(site.site_id ?? site.id ?? '');
+            option.textContent = site.site_name ?? site.name ?? 'Site';
             siteSelector.appendChild(option);
         });
-        const savedSite = sessionStorage.getItem("selectedSite");
+        const savedSite = sessionStorage.getItem('selectedSite');
         if (savedSite) {
             siteSelector.value = savedSite;
         } else if (data.site.length > 0) {
-            siteSelector.value = data.site[0].site_id;
-            sessionStorage.setItem("selectedSite", data.site[0].site_id);
+            const def = String(data.site[0].site_id ?? data.site[0].id ?? '');
+            siteSelector.value = def;
+            sessionStorage.setItem('selectedSite', def);
         }
         siteSelector.addEventListener('change', (event) => {
-            sessionStorage.setItem("selectedSite", event.target.value);
+            sessionStorage.setItem('selectedSite', event.target.value);
             window.location.reload();
         });
     } catch (error) {

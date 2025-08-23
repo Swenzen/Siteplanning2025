@@ -32,7 +32,15 @@
     </div>
 
     
-    <script src="js/auth.js"></script>
+        <script src="js/auth.js"></script>
+        <script>
+            // Masquer l'auth si déjà connecté (au cas où header est très tôt)
+            document.addEventListener('DOMContentLoaded', function(){
+                const token = localStorage.getItem('token');
+                const el = document.getElementById('auth-section');
+                if (token && el) el.style.display = 'none';
+            });
+        </script>
     
 </body>
 
