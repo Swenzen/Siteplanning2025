@@ -21,6 +21,28 @@ body{ font-family: Arial, Helvetica, sans-serif; margin:0; padding:0; color:#222
 .copie-ok{ font-weight:700; color:#2a7f2a; }
 .hidden{ display:none !important; }
 
+/* Titre visuel pour chaque panel de perfusion (Territoire N) */
+.territoire-title{ font-weight:700; color:#183248; margin:6px 0 8px; font-size:1rem; }
+
+/* Grille d'export des images copiées (2 colonnes gauche/droite) */
+.export-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
+.export-grid img{ width:100%; height:auto; border:1px solid #eef3f8; border-radius:6px; background:#fff; }
+.export-section{ margin:10px 0 18px; }
+.export-section h3{ margin:0 0 8px; font-size:1.05rem; color:#183248; }
+
+/* Aligne la rangée "+ Ajouter territoire" avec le contenu des panels et ajoute un espace sous le bouton */
+#perfusion-panels .add-territoire-row{
+  /* même retrait horizontal que l'intérieur des panels (padding:14px) */
+  padding-left:14px;
+  padding-right:14px;
+  /* garder la même largeur que le parent et le flux naturel */
+  width:100%;
+  box-sizing:border-box;
+  /* respiration au-dessus et en dessous */
+  margin-top:8px;
+  margin-bottom:16px;
+}
+
 /* Bulls container full width */
 .bulls-container{ /* utiliser le panneau comme conteneur de la grille (pas flex) */
   width:100%;
@@ -136,6 +158,24 @@ svg .rev-path {
 #svg-necrose path.zone-bin.nec-complete.on   { fill:#e74c3c !important; stroke:#a4281a !important; }
 #svg-necrose path.zone-bin.nec-none.on       { fill:#d9d9d9 !important; stroke:#bbb !important; }
 
+/* Supporte aussi les clones (ids suffixés: svg-perfusion-t2, -t3, ...) */
+svg[id^="svg-perfusion"] path.fill-green  { fill:#27ae60 !important; stroke:#1f8b47 !important; }
+svg[id^="svg-perfusion"] path.fill-orange { fill:#f39c12 !important; stroke:#b26b07 !important; }
+svg[id^="svg-perfusion"] path.fill-red    { fill:#e74c3c !important; stroke:#a4281a !important; }
+
+/* Uniformise l’épaisseur des traits et évite l’épaississement perçu avec le scaling */
+.bull-svg .zone-svg,
+.bull-svg .rev-path,
+.bull-svg .zone-bin {
+  stroke-width: var(--bull-stroke-width, 1) !important;
+  vector-effect: non-scaling-stroke; /* garde l'épaisseur visuelle stable au redimensionnement */
+}
+
+/* utilitaires pour modifier l'épaisseur des traits sans toucher au CSS */
+.stroke-thin  { --bull-stroke-width: 1 !important; }
+.stroke-normal{ --bull-stroke-width: 1.5 !important; }
+.stroke-bold  { --bull-stroke-width: 2 !important; }
+
 /* sécurité : garantir le curseur/pointer events sur les paths cliquables */
 #svg-ischemie path, #svg-necrose path, #svg-perfusion path { cursor: pointer; pointer-events: auto; }
 
@@ -153,8 +193,7 @@ svg .rev-path {
 .conclusion-block .svg-panel{ flex:1 1 60%; }
 .conclusion-block .table-panel{ flex:1 1 40%; min-width:220px; }
 
-/* style pour selects territoire (uniforme) */
-select[id*="territoire"]{ width:100%; padding:6px 8px; border-radius:6px; border:1px solid #ccc; background:#fff; }
+/* (supprimé) Laisse les selects "territoire" hériter du style global des selects */
 
 
 /* Thème : fun & sérieux - neutre, aéré, moderne */
@@ -171,6 +210,8 @@ select[id*="territoire"]{ width:100%; padding:6px 8px; border-radius:6px; border
   --max-width:1200px;
   --shadow: 0 10px 30px rgba(15,35,60,0.06);
   --panel-border: rgba(30,60,100,0.04);
+  /* épaisseur des contours des segments (configurable) */
+  --bull-stroke-width: 1; /* plus fin par défaut */
   font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
 }
 
@@ -287,6 +328,34 @@ select{
 .bull-svg{ width:100%; height:360px; max-height:360px; min-height:320px; border-radius:8px; background:#fff; border:1px solid #eef3f8; }
 .svg-panel svg{ width:100%; height:320px; max-height:320px; }
 
+/* Drag-select overlay for selects (click-hold-drag-release) */
+.drag-select-overlay{
+  position:absolute;
+  left:0; top:calc(100% + 4px);
+  z-index:1500;
+  background:#fff;
+  border:1px solid rgba(30,60,100,0.12);
+  box-shadow:0 10px 24px rgba(12,30,60,0.15);
+  border-radius:8px;
+  overflow:auto;
+  max-height:280px;
+  min-width:180px;
+}
+.drag-select-list{ display:flex; flex-direction:column; max-height:inherit; }
+.drag-option{ padding:8px 12px; line-height:1.25; cursor:pointer; font-size:0.95rem; color:#223244; }
+.drag-option:hover,
+.drag-option.active{ background:#eef5fb; color:#0f3758; }
+.drag-option[aria-selected="true"]{ font-weight:700; }
+
+/* Wrapper to anchor overlay under the select without inline styles */
+.drag-wrap{ position:relative; display:block; width:100%; }
+.drag-wrap .drag-select-overlay{ width:100%; min-width:180px; }
+.drag-option.disabled{ color:#8aa0b5; cursor:not-allowed; }
+.drag-option.disabled.active{ background:transparent; color:#8aa0b5; }
+
+/* Optionnel: harmoniser le style du select (quand menu natif) avec l’overlay */
+select{ border-radius:8px; }
+
 /* Controls below bull-eyes */
 .bulls-controls{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:14px; padding-top:12px; border-top:1px dashed rgba(20,40,80,0.03); }
 .perf-controls > div{ min-width:140px; }
@@ -327,7 +396,7 @@ select{
 .top-left{ width:100%; box-sizing:border-box; }
 
 /* CR mini fixe à droite — 30% de la fenêtre en hauteur, toujours en haut */
-.top-right{ /* conteneur logique, le .cr-mini sera fixé */ }
+.top-right{ /* conteneur logique, le .cr-mini sera fixé */ position:relative; }
 .cr-mini{
   position:fixed;
   left:0;

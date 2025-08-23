@@ -66,6 +66,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// CSP plus souple uniquement pour les fichiers testscinticoeur (HTML/CSS/JS)
+const relaxedCsp = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data:; object-src 'none'";
+app.get(['/testscinticoeur.html','/testscinticoeur.js','/testscinticoeur.css'], (req, res, next) => {
+    try {
+        res.setHeader('Content-Security-Policy', relaxedCsp);
+        const file = req.path.replace(/^\//, '');
+        // Servir explicitement depuis le dossier public (insensible à la casse sous Windows)
+        res.sendFile(path.join(__dirname, 'public', file));
+    } catch (e) {
+        next(e);
+    }
+});
+
 // Servir les fichiers statiques 
 app.use(express.static(path.join(__dirname, 'Public')));
 
