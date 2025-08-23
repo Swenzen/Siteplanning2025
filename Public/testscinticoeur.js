@@ -11,11 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnGen    = q('#btn-gen-cr');
   const copieOkEl = q('#copie-ok');
 
-  const territoirePerf   = q('#territoire-perfusion');
-  const profondeurPerf   = q('#profondeur-perfusion');
-  const etenduePerf      = q('#etendue-perfusion');
-  const artefactuelSelect= q('#artefactuel');
-  const normalParAilleurs= q('#normal-par-ailleurs');
+  // Perfusion (multi-panels) — ces éléments seront résolus par panel via IDs suffixés
 
   const territoireIsch = q('#territoire-ischemie');
   const territoireNec  = q('#territoire-necrose');
@@ -103,13 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- fin ajout ---
 
   // Etats
-  // stressState: {etat:0|1|2, profondeur, etendue}
-  const stressState = new Map(); SEGMENTS.forEach(s => stressState.set(s, { etat:0, profondeur:'', etendue:'' }));
-  // tri-état pour isch/nec : 0 = none, 1 = partial, 2 = complete
+  // tri-état pour isch/nec : 0 = none, 1 = partial, 2 = complete (global, conclusions)
   const ischState = new Map(); SEGMENTS.forEach(s => ischState.set(s, 0));
   const necState  = new Map(); SEGMENTS.forEach(s => necState.set(s, 0));
-  // reversibilite : 0 = complete (vert), 1 = partial, 2 = non (red)
-  const revState = new Map(); SEGMENTS.forEach(s => revState.set(s, 0));
+  // Perfusion panels: Map<key, { stress: Map<seg,0|1|2>, rev: Map<seg,0|1|2> }>
+  const perfPanels = new Map();
 
   // utilitaires
   const lc = s => (s||'').toLowerCase();
@@ -167,57 +161,124 @@ document.addEventListener('DOMContentLoaded', () => {
     if(countNecEl)  countNecEl.textContent = `${nw} / 17`;
   }
 
-  // Perfusion interactions
-  function setPerfColor(path, etat){
+  // Perfusion interactions (multi-panel)
+  const REV_CLASSES = ['fill-green','fill-orange','fill-red'];
+  const setPerfColor = (path, etat) => {
     path.classList.remove('fill-green','fill-orange','fill-red');
     path.classList.add(etat === 1 ? 'fill-orange' : etat === 2 ? 'fill-red' : 'fill-green');
-  }
-  SEGMENTS.forEach(id => {
-    const p = q(`#svg-perfusion #${esc(id)}`);
-    if(!p) return;
-    setPerfColor(p, 0);
-    p.addEventListener('click', () => {
-      const s = stressState.get(id);
-      s.etat = (s.etat + 1) % 3;
-      setPerfColor(p, s.etat);
-      updateReversibiliteAvailability();
-      if(typeof genererCR === 'function') genererCR();
-    });
-  });
+  };
+  const idSuf = (key) => (key === 't1' ? '' : '-' + key);
 
-  // reversibilite SVG
-  const REV_CLASSES = ['fill-green','fill-orange','fill-red'];
-  function setupReversibiliteSvg(){
+  function ensurePanelState(key){
+    if(!perfPanels.has(key)){
+      const stress = new Map(); SEGMENTS.forEach(s => stress.set(s, 0));
+      const rev    = new Map(); SEGMENTS.forEach(s => rev.set(s, 0));
+      perfPanels.set(key, { stress, rev });
+    }
+    return perfPanels.get(key);
+  }
+
+  function updateReversibiliteAvailabilityFor(key){
+    const suf = idSuf(key);
+    const st = ensurePanelState(key);
     SEGMENTS.forEach(seg => {
-      const p = q(`#svg-reversibilite #rev-${esc(seg)}`);
+      const p = q(`#svg-reversibilite${suf} #rev-${esc(seg)}${suf}`);
       if(!p) return;
-      p.classList.add('rev-path');
-      p.addEventListener('click', (e) => {
-        const sperf = stressState.get(seg);
-        if(!sperf || sperf.etat === 0) return;
-        const cur = revState.get(seg) || 0;
-        p.classList.remove(REV_CLASSES[cur]);
+      const active = (st.stress.get(seg) || 0) > 0;
+      const cur = st.rev.get(seg) || 0;
+      p.classList.remove(...REV_CLASSES, 'fill-gray', 'rev-active','rev-inactive');
+      if(active){ p.classList.add(REV_CLASSES[cur], 'rev-active'); }
+      else { p.classList.add('fill-gray','rev-inactive'); }
+    });
+  }
+
+  function initPerfusionPanel(panelEl, key){
+    const suf = idSuf(key);
+    const st = ensurePanelState(key);
+    // bouton suppression pour panels > t1
+    if(key !== 't1'){
+      let actions = panelEl.querySelector('.panel-actions');
+      if(!actions){
+        actions = document.createElement('div');
+        actions.className = 'actions-row panel-actions';
+        // insérer sous le bloc des contrôles pour éviter d'impacter les SVG
+        const controls = panelEl.querySelector('.bulls-controls.perf-controls');
+        if(controls && controls.parentNode){
+          // insérer après controls
+          if(controls.nextSibling) controls.parentNode.insertBefore(actions, controls.nextSibling);
+          else controls.parentNode.appendChild(actions);
+        } else {
+          panelEl.appendChild(actions);
+        }
+      }
+      // éviter doublon bouton
+      let delBtn = actions.querySelector('.btn-del-territoire');
+      if(!delBtn){
+        delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn-copier btn-del-territoire';
+        delBtn.textContent = '− Supprimer territoire';
+        actions.appendChild(delBtn);
+        delBtn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          // retirer état et DOM
+          perfPanels.delete(key);
+          const wrap = document.getElementById('perfusion-panels');
+          if(panelEl && wrap && wrap.contains(panelEl)) wrap.removeChild(panelEl);
+          genererCR();
+        });
+      }
+    }
+    // écouteurs contrôles de ce panel
+    const selIds = [
+      `#territoire-perfusion${suf}`,
+      `#profondeur-perfusion${suf}`,
+      `#etendue-perfusion${suf}`,
+      `#artefactuel${suf}`,
+      `#normal-par-ailleurs${suf}`
+    ];
+    selIds.forEach(sel => {
+      const el = q(sel);
+      if(!el) return;
+      ['change','input'].forEach(ev => el.addEventListener(ev, () => genererCR()));
+    });
+    // init perfusion paths
+    SEGMENTS.forEach(seg => {
+      const path = q(`#svg-perfusion${suf} #${esc(seg)}${suf}`);
+      if(!path) return;
+      setPerfColor(path, st.stress.get(seg) || 0);
+      const clone = path.cloneNode(true);
+      path.parentNode.replaceChild(clone, path);
+      clone.addEventListener('click', () => {
+        const cur = st.stress.get(seg) || 0;
         const next = (cur + 1) % 3;
-        revState.set(seg, next);
-        p.classList.add(REV_CLASSES[next]);
-        e.stopPropagation();
-        if(typeof genererCR === 'function') genererCR();
+        st.stress.set(seg, next);
+        setPerfColor(clone, next);
+        updateReversibiliteAvailabilityFor(key);
+        genererCR();
       });
     });
-  }
-  function updateReversibiliteAvailability(){
+    // init reversibilite paths
     SEGMENTS.forEach(seg => {
-      const p = q(`#svg-reversibilite #rev-${esc(seg)}`);
+      const p = q(`#svg-reversibilite${suf} #rev-${esc(seg)}${suf}`);
       if(!p) return;
-      const sperf = stressState.get(seg);
-      const active = !!(sperf && sperf.etat > 0);
-      p.classList.remove(...REV_CLASSES, 'fill-gray', 'rev-active','rev-inactive');
-      if(active){ const st = revState.get(seg) ?? 0; p.classList.add(REV_CLASSES[st], 'rev-active'); }
-      else p.classList.add('fill-gray', 'rev-inactive');
+      const clone = p.cloneNode(true);
+      p.parentNode.replaceChild(clone, p);
+      clone.classList.add('rev-path');
+      clone.addEventListener('click', (e) => {
+        const active = (st.stress.get(seg) || 0) > 0;
+        if(!active) return;
+        const cur = st.rev.get(seg) || 0;
+        clone.classList.remove(REV_CLASSES[cur]);
+        const next = (cur + 1) % 3;
+        st.rev.set(seg, next);
+        clone.classList.add(REV_CLASSES[next]);
+        e.stopPropagation();
+        genererCR();
+      });
     });
+    updateReversibiliteAvailabilityFor(key);
   }
-  setupReversibiliteSvg();
-  updateReversibiliteAvailability();
 
   // init isch/nec handlers
   initAttachCycle('isch', ischState);
@@ -306,6 +367,90 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   updateFEVGDisplays();
 
+  // ====== MULTI-TERRITOIRE: clonage CSP-safe du panel perfusion ======
+  const perfPanelsWrap = q('#perfusion-panels');
+  const addTerrBtn = q('#btn-add-territoire');
+
+  function getNextTerritoireIndex(){
+    if(!perfPanelsWrap) return 2;
+    const ids = qAll('#perfusion-panels .bulls-container[data-territoire]')
+      .map(el => Number((el.getAttribute('data-territoire')||'t1').replace(/^t/,'')))
+      .filter(n => !isNaN(n));
+    const max = ids.length ? Math.max(...ids) : 1;
+    return max + 1;
+  }
+
+  function renameIdAndFor(root, suffix){
+    // Remplacer tous les id par id+"-"+suffix et mettre à jour les attributs for qui pointent dessus
+    const idMap = new Map();
+  root.querySelectorAll('[id], svg [id]').forEach(el => {
+      const oldId = el.id;
+      if(!oldId) return;
+      // Éviter de doubler le suffixe si déjà présent
+      const newId = oldId.endsWith('-' + suffix) ? oldId : `${oldId}-${suffix}`;
+      idMap.set(oldId, newId);
+      el.id = newId;
+    });
+    // for/aria-labelledby/aria-controls xlink:href et href pour svg
+    const attrsToFix = ['for','aria-labelledby','aria-controls','xlink:href','href'];
+    const all = root.querySelectorAll('*');
+    all.forEach(el => {
+      attrsToFix.forEach(attr => {
+        const v = el.getAttribute(attr);
+        if(!v) return;
+        // cas URI #id
+        if(v.startsWith('#') && idMap.has(v.slice(1))){ el.setAttribute(attr, '#' + idMap.get(v.slice(1))); }
+        else if(idMap.has(v)) { el.setAttribute(attr, idMap.get(v)); }
+      });
+    });
+  }
+
+  function createPerfusionPanelClone(){
+    const base = q('#perfusion-panel-t1');
+    if(!base || !perfPanelsWrap) return null;
+    const idx = getNextTerritoireIndex();
+    const suffix = 't' + idx;
+    const clone = base.cloneNode(true);
+    clone.id = `perfusion-panel-${suffix}`;
+    clone.setAttribute('data-territoire', suffix);
+
+  // Renommer tous les ids à l'intérieur du clone pour éviter les collisions
+    renameIdAndFor(clone, suffix);
+
+    return { node: clone, suffix };
+  }
+
+  function populateProfondeursFor(root){
+    const selects = Array.from(root.querySelectorAll('select[id*="profondeur"]'));
+    selects.forEach(sel=>{
+      sel.innerHTML = '';
+      const opt0 = document.createElement('option'); opt0.value = ''; opt0.textContent = '—'; sel.appendChild(opt0);
+      PROFONDEURS.forEach(p=>{ const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o); });
+    });
+  }
+
+  function insertNewPerfusionPanel(){
+    const res = createPerfusionPanelClone();
+    if(!res) return;
+    const { node } = res;
+    // Insérer juste avant la ligne du bouton
+    const btnRow = q('.add-territoire-row');
+    if(btnRow && btnRow.parentElement === perfPanelsWrap){
+      perfPanelsWrap.insertBefore(node, btnRow);
+    } else {
+      perfPanelsWrap.appendChild(node);
+    }
+  // Peupler les selects "Profondeur" du nouveau panel
+  populateProfondeursFor(node);
+  // Initialiser les écouteurs pour ce panel cloné
+  initPerfusionPanel(node, node.getAttribute('data-territoire'));
+  genererCR();
+  }
+
+  if(addTerrBtn){
+    addTerrBtn.addEventListener('click', (e)=>{ e.preventDefault(); insertNewPerfusionPanel(); });
+  }
+
   // génération CR (utilise états tri)
   function segPhrase(arr){
     if(!arr || arr.length === 0) return "";
@@ -317,45 +462,64 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateCounts(){ updateBottomCounters(); } // compat
 
   function genererCR(){
-    // Perfusion summary
-    const perfAbn = [];
-    stressState.forEach((s,id)=>{ if(s.etat > 0) perfAbn.push({id, etat: s.etat}); });
+    // Perfusion summary multi-panels
     let perf = "Tomoscintigraphie de perfusion de stress et de repos:\n";
-    if(perfAbn.length === 0){
+    const panelKeys = Array.from(perfPanels.keys());
+    if(panelKeys.length === 0){
       perf += "- Répartition physiologique du traceur sur l'ensemble des parois du ventricule gauche, sans modification significative entre le stress et le repos.";
     } else {
-      const complete = perfAbn.filter(x=>x.etat===2).map(x=>x.id);
-      const partial  = perfAbn.filter(x=>x.etat===1).map(x=>x.id);
-      const prof = profondeurPerf && profondeurPerf.value ? `${lc(profondeurPerf.value)} ` : "";
-      const terr = territoirePerf && territoirePerf.value ? ` du territoire ${lc(territoirePerf.value)}` : "";
-      const etnd = etenduePerf && etenduePerf.value ? ` ${lc(etenduePerf.value)}` : "";
-      perf += `- Hypofixation ${prof}${terr}${etnd} (segment(s)`;
-      if(complete.length) perf += " " + joinFr(listSegments(complete));
-      if(partial.length) perf += ` et dans une moindre mesure ${joinFr(listSegments(partial))}`;
-      perf += `) au stress,`;
-
-      const abnormal = complete.concat(partial);
-      if(abnormal.length > 0){
-        const revNon = [], revPart = [], revComp = [];
-        abnormal.forEach(s => {
-          const r = revState.get(s) ?? 0;
-          if(r === 2) revNon.push(s);
-          else if(r === 1) revPart.push(s);
-          else revComp.push(s);
-        });
-        if(revNon.length === abnormal.length) perf += " non réversible au repos";
-        else if(revComp.length === abnormal.length) perf += " de réversibilité complète au repos";
-        else {
-          const parts = [];
-          if(revComp.length) parts.push(`complètement réversible sur ${segPhrase(revComp)}`);
-          if(revPart.length) parts.push(`partiellement réversible sur ${segPhrase(revPart)}`);
-          if(revNon.length) parts.push(`non réversible sur ${segPhrase(revNon)}`);
-          perf += " " + parts.join(", ");
+      panelKeys.forEach((key, idx) => {
+        const st = perfPanels.get(key);
+        const complete = []; const partial = [];
+        for(const seg of SEGMENTS){
+          const e = st.stress.get(seg) || 0;
+          if(e === 2) complete.push(seg);
+          else if(e === 1) partial.push(seg);
         }
-      }
-      if(artefactuelSelect && artefactuelSelect.value === "oui") perf += ", d'allure artéfactuelle";
-      perf += ".";
-      if(normalParAilleurs && normalParAilleurs.value === "oui") perf += "\n- Par ailleurs, répartition physiologique du traceur sur le reste des parois du ventricule gauche";
+        const suf = idSuf(key);
+        const territoirePerf = q(`#territoire-perfusion${suf}`);
+        const profondeurPerf = q(`#profondeur-perfusion${suf}`);
+        const etenduePerf    = q(`#etendue-perfusion${suf}`);
+        const artefactuelSel = q(`#artefactuel${suf}`);
+        const normalAilleurs = q(`#normal-par-ailleurs${suf}`);
+
+        if(complete.length === 0 && partial.length === 0){
+          perf += (idx>0?"\n":"") + "- Répartition physiologique du traceur sur l'ensemble des parois du ventricule gauche, sans modification significative entre le stress et le repos.";
+          return;
+        }
+        const prof = profondeurPerf && profondeurPerf.value ? `${lc(profondeurPerf.value)} ` : "";
+        const terr = territoirePerf && territoirePerf.value ? ` du territoire ${lc(territoirePerf.value)}` : "";
+        const etnd = etenduePerf && etenduePerf.value ? ` ${lc(etenduePerf.value)}` : "";
+
+        let line = `- Hypofixation ${prof}${terr}${etnd} (segment(s)`;
+        if(complete.length) line += " " + joinFr(listSegments(complete));
+        if(partial.length) line += ` et dans une moindre mesure ${joinFr(listSegments(partial))}`;
+        line += ") au stress,";
+
+        const abnormal = complete.concat(partial);
+        if(abnormal.length > 0){
+          const revNon = [], revPart = [], revComp = [];
+          abnormal.forEach(s => {
+            const r = st.rev.get(s) ?? 0;
+            if(r === 2) revNon.push(s);
+            else if(r === 1) revPart.push(s);
+            else revComp.push(s);
+          });
+          if(revNon.length === abnormal.length) line += " non réversible au repos";
+          else if(revComp.length === abnormal.length) line += " de réversibilité complète au repos";
+          else {
+            const parts = [];
+            if(revComp.length) parts.push(`complètement réversible sur ${segPhrase(revComp)}`);
+            if(revPart.length) parts.push(`partiellement réversible sur ${segPhrase(revPart)}`);
+            if(revNon.length) parts.push(`non réversible sur ${segPhrase(revNon)}`);
+            line += " " + parts.join(", ");
+          }
+        }
+        if(artefactuelSel && artefactuelSel.value === "oui") line += ", d'allure artéfactuelle";
+        line += ".";
+        if(normalAilleurs && normalAilleurs.value === "oui") line += "\n- Par ailleurs, répartition physiologique du traceur sur le reste des parois du ventricule gauche";
+        perf += (idx>0?"\n":"") + line;
+      });
     }
 
     // Cinétique et conclusion (conservées, simplifiées)
@@ -490,8 +654,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // bind change/input to regenerate CR
   [
-   territoirePerf, profondeurPerf, etenduePerf,
-   artefactuelSelect, normalParAilleurs,
    territoireIsch, territoireNec,
    typeStress, betabloquant, clinique, electrique,
    fmt, fmtInput,
@@ -507,6 +669,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateKineFlags();
   updateCounts();
   updateFEVGDisplays();
+  // Init perfusion panels (t1 exists by défaut)
+  const basePanel = q('#perfusion-panel-t1');
+  if(basePanel) initPerfusionPanel(basePanel, 't1');
   genererCR();
-  updateReversibiliteAvailability();
 });
