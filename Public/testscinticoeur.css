@@ -350,28 +350,53 @@ select{
   box-shadow:0 8px 30px rgba(12,30,60,0.08);
 }
 
-/* Eviter que le contenu sous-jacent soit masqué par la barre fixe */
+/* --- Ajustements : top-row / form width uniforme et cr-mini décollé + arrondi --- */
+
+/* décoller le panneau sticky du bord supérieur et arrondir les coins supérieurs
+   pour avoir le même style d'angle qu'en bas (plus aéré) */
+.cr-mini,
+.cr-sticky-panel {
+  top: 18px !important;                 /* décollé de 18px du haut */
+  border-radius: 10px !important;       /* arrondi tout autour */
+  box-shadow: 0 18px 50px rgba(12,30,60,0.12) !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+/* laisser un petit offset global pour éviter que la barre fixe ne recouvre le contenu */
 body{
-  padding-top: calc(30vh + 28px); /* ajuste selon ton spacing (30vh + marge) */
+  /* calcule la hauteur visible du panneau + marge pour le contenu sous-jacent */
+  padding-top: calc(30vh + 40px) !important;
 }
 
-/* retirer le padding-right utilisé précédemment pour le CR à droite */
-.container { padding-right: 16px; }
-/* ...existing code... */
+/* si .cr-mini est centré (règles existantes), garantir qu'il reste aligné et de la bonne largeur */
+.cr-mini,
+.cr-sticky-panel{
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  max-width: var(--max-width) !important;
+  width: calc(100% - 32px) !important;
+  box-sizing: border-box !important;
+}
 
-/* petite optimisation : sur petits écrans garder la barre fixe en haut, mais pleine largeur */
-@media (max-width:1000px){
-  .cr-mini{
-    left:0;
-    right:0;
-    top:0;
-    width:100%;
-    height:30vh;
-    max-height:30vh;
-    border-radius:0 0 8px 8px;
+/* sur petits écrans, conserver un léger espace et éviter recouvrement */
+@media (max-width:700px){
+  .cr-mini, .cr-sticky-panel {
+    top: 10px !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    width: calc(100% - 24px) !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    border-radius: 10px !important;
   }
-  .container { padding-right:16px; padding-top: calc(30vh + 28px); }
 }
+
+/* optionnel : petite marge entre le formulaire et le sticky quand la fenêtre est large */
+.top-row.container + .cr-mini,
+.top-row.container + .cr-sticky-panel { margin-top: 6px !important; }
 
 /* responsive adjustments */
 @media(max-width:1000px){
@@ -485,4 +510,116 @@ body{
 /* s'assurer que panels / svg ont même hauteur / padding que perfusion */
 .bulls-container.conclusions-container .bull-svg,
 .bulls-container .bull-svg { min-height:320px; max-height:360px; }
+
+
+.mt-12 { margin-top: 12px !important; }
+/* Fix largeur exacte : harmonise panels et containers */
+:root{ --max-width:1200px; }
+
+/* container principal */
+.container,
+.bulls-container,
+.conclusions-container,
+.layout {
+  max-width: var(--max-width) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+/* Tous les panels utilisent box-sizing:border-box pour que padding n'altère pas la largeur */
+.panel {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: var(--max-width) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+/* Fix final : éviter l'effet "gutter" double et forcer mêmes largeurs intérieures */
+
+/* 1) retirer le padding horizontal sur le conteneur central (évite rétrécissement des enfants) */
+.container,
+.bulls-container,
+.conclusions-container,
+.layout {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 2) laisser les panels gérer leur padding intérieur (gutter visuel identique) */
+.container .panel,
+.bulls-container .panel,
+.conclusions-container .panel,
+.layout .panel {
+  box-sizing: border-box !important;
+  max-width: var(--max-width) !important;
+  width: 100% !important;           /* occupe tout l'espace parent disponible */
+  padding-left: 16px !important;    /* gutter interne identique */
+  padding-right: 16px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 3) si tu préfères garder padding sur .container, alternative :
+   décommenter la règle ci‑dessous pour forcer les panels à exactement var(--max-width) visibles :
+*/
+/*
+.container .panel,
+.bulls-container .panel {
+  max-width: calc(var(--max-width) - 32px) !important;
+  width: 100% !important;
+}
+*/
+
+/* Espacements internes pour que les titres / légendes / SVG ne soient plus collés au bord */
+.bulls-container.panel {
+  /* laisse le panneau gérer son padding global */
+  padding: 16px !important;
+  box-sizing: border-box !important;
+}
+
+/* padding interne à la grille pour séparer contenu du bord du panel */
+.bulls-container.panel .bulls-grid {
+  padding: 6px 8px !important;
+  box-sizing: border-box;
+}
+
+/* chaque cellule (left / right) a un petit padding interne pour aligner le texte
+   avec les contrôles du formulaire (visuel plus aéré) */
+.bull-cell {
+  padding: 8px 12px !important;
+  box-sizing: border-box;
+}
+
+/* espaces verticaux et alignement des titres / légendes */
+.bull-cell h2 {
+  margin: 0 0 10px 0;
+  padding-left: 2px;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.legend.under {
+  margin-top: 10px !important;
+  padding-left: 2px;
+}
+
+/* décale légèrement le svg depuis le haut pour respirer */
+.bull-svg { margin-top: 6px; }
+
+/* s'assurer que les table-panel internes (contrôles sous SVG) héritent du même padding */
+.table-panel { padding: 12px !important; }
+
+/* petit ajustement responsive */
+@media (max-width:1000px){
+  .bull-cell { padding: 10px 8px !important; }
+  .bulls-container.panel .bulls-grid { padding: 4px 6px !important; }
+}
+
 

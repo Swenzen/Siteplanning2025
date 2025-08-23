@@ -405,6 +405,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const ischW = computeWeighted(ischState).weighted;
     const necW = computeWeighted(necState).weighted;
 
+    // helper: format number FR (comma) with one decimal if needed
+    const fmtFr = n => {
+      if (n === null || n === undefined) return '';
+      if (Number.isInteger(n)) return String(n);
+      return n.toFixed(1).replace('.',',');
+    };
+    // helper: detect if territoire text contains multiple items (',' or ' et ' etc.)
+    const isPluralTerr = txt => {
+      if(!txt) return false;
+      const parts = txt.split(/[,;\/|]| et /i).map(s=>s.trim()).filter(Boolean);
+      return parts.length > 1;
+    };
+
     let concl = "\n\nConclusion:\n";
     // type stress / betabloquant / effort handling
     if (typeStress && typeStress.value === "pharmacologique") concl += "Après une épreuve de stress pharmacologique, ";
@@ -412,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (typeStress && typeStress.value === "effort") concl += "Après une épreuve d'effort sur bicyclette ergométrique, ";
     else concl += "Après une épreuve, ";
 
-    // --- AJOUT : insérer description selon % de FMT atteint (affecte le CR) ---
+    // FMT handling (inchangé)
     if (typeStress && typeStress.value === "effort") {
       const fmtVal = Number(fmtInput?.value || fmt?.value || 0);
       if (!isNaN(fmtVal) && fmtVal > 0) {
@@ -422,8 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else concl += "maximale ";
       }
     }
-    // --- fin ajout ---
-    
+
     // clinique / electrique
     const parts = [];
     if (clinique && clinique.value) parts.push(`cliniquement ${clinique.value === "positive" ? "positive" : "négative"}`);
@@ -435,17 +447,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if(parts.length) concl += parts.join(" et ") + ", ";
 
+    // perfusion conclusion : gestion pluriels et format FR pour les nombres
     concl += "la scintigraphie de perfusion myocardique ";
-    if(ischW === 0) concl += "ne met pas en évidence de signes d'ischémie.";
-    else {
-      concl += `met en évidence une ischémie (${ischW} segment(s) sur 17)`;
-      if(territoireIsch && territoireIsch.value) concl += ` localisée sur le territoire ${territoireIsch.value}`;
-      concl += `.`;
+    if (ischW === 0) {
+      concl += "ne met pas en évidence de signes d'ischémie.";
+    } else {
+      const ischNum = fmtFr(ischW);
+      const segWord = (Number(ischW) > 1) ? 'segments' : 'segment';
+      concl += `met en évidence une ischémie (${ischNum} ${segWord} sur 17)`;
+      if (territoireIsch && territoireIsch.value) {
+        const terrWord = isPluralTerr(territoireIsch.value) ? 'territoires' : 'territoire';
+        concl += ` localisée sur le ${terrWord} ${territoireIsch.value}`;
+      }
+      concl += ".";
     }
-    if(necW > 0){
-      concl += `\nAspect de séquelle de nécrose ou d'hibernation (${necW} segment(s) sur 17)`;
-      if(territoireNec && territoireNec.value) concl += ` du territoire ${territoireNec.value}`;
-      concl += `.`;
+
+    // nécrose : même logique (virgule décimale + pluriels)
+    if (necW > 0) {
+      const necNum = fmtFr(necW);
+      const necSegWord = (Number(necW) > 1) ? 'segments' : 'segment';
+      concl += `\nAspect de séquelle de nécrose ou d'hibernation (${necNum} ${necSegWord} sur 17)`;
+      if (territoireNec && territoireNec.value) {
+        const terrWordN = isPluralTerr(territoireNec.value) ? 'territoires' : 'territoire';
+        concl += ` du ${terrWordN} ${territoireNec.value}`;
+      }
+      concl += ".";
     }
 
     if(crZone) crZone.innerHTML = (perf + "\n" + cine + "\n" + concl).replace(/\n/g, "<br>");
