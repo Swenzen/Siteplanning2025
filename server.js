@@ -73,7 +73,7 @@ app.get(['/testscinticoeur.html','/testscinticoeur.js','/testscinticoeur.css'], 
         res.setHeader('Content-Security-Policy', relaxedCsp);
         const file = req.path.replace(/^\//, '');
         // Servir explicitement depuis le dossier public (insensible à la casse sous Windows)
-        res.sendFile(path.join(__dirname, 'public', file));
+        res.sendFile(path.join(__dirname, 'Public', file));
     } catch (e) {
         next(e);
     }
