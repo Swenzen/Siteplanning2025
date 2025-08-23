@@ -274,13 +274,21 @@ async function fetchAvailableNames(competenceId, siteId, date) {
 
 // Tooltip : transmet clickedCompetence et clickedDate à la fonction d'affichage du tableau
 function showTooltip(event, noms, { competenceId, horaireId, date, siteId, planningStartDate, planningEndDate, clickedCompetence, clickedDate }) {
+  // Trier les noms A→Z (les chaînes simples et les objets {nom, nom_id})
+  const sorted = Array.isArray(noms)
+    ? [...noms].sort((a, b) => {
+        const an = typeof a === 'string' ? a : (a.nom || '');
+        const bn = typeof b === 'string' ? b : (b.nom || '');
+        return an.localeCompare(bn, 'fr', { sensitivity: 'base' });
+      })
+    : [];
   const tooltip = document.getElementById("tooltip");
   tooltip.innerHTML = `
     <div class="tooltip-content">
         <div class="tooltip-close">&times;</div>
     </div>
     <ul class="tooltip-list">
-        ${noms.map(nomObj => {
+        ${sorted.map(nomObj => {
           if (typeof nomObj === "string") {
             return `<li class="unavailable" data-nom="${nomObj}">${nomObj}</li>`;
           } else {

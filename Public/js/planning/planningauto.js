@@ -116,6 +116,13 @@ async function displayPlanningWithNames(
     }
   });
 
+  // Trier les noms A→Z dans chaque case pour un rendu stable
+  Object.values(cases).forEach((c) => {
+    if (Array.isArray(c.noms)) {
+      c.noms.sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr', { sensitivity: 'base' }));
+    }
+  });
+
   // Regrouper par competence_id et horaire_id pour les lignes
   const lignes = {};
   Object.values(cases).forEach((cell) => {
@@ -138,8 +145,35 @@ async function displayPlanningWithNames(
 
   // Préparer les lignes repos à insérer dans le tfoot
   const lignesRepos = [];
+  // Conserver l'ordre d'apparition des compétences (selon data) et trier les horaires à l'intérieur
+  const competenceOrder = new Map();
+  let orderIdx = 0;
+  data.forEach((row) => {
+    const key = String(row.competence_id);
+    if (!competenceOrder.has(key)) competenceOrder.set(key, orderIdx++);
+  });
+  const timeToSeconds = (t) => {
+    if (!t || typeof t !== 'string') return 0;
+    const parts = t.split(':');
+    const h = parseInt(parts[0] || '0', 10);
+    const m = parseInt(parts[1] || '0', 10);
+    const s = parseInt(parts[2] || '0', 10);
+    return (isNaN(h)?0:h)*3600 + (isNaN(m)?0:m)*60 + (isNaN(s)?0:s);
+  };
+  const lignesOrdonnees = Object.values(lignes).sort((a, b) => {
+    const oa = competenceOrder.get(String(a.competence_id)) ?? 0;
+    const ob = competenceOrder.get(String(b.competence_id)) ?? 0;
+    if (oa !== ob) return oa - ob; // ordre des compétences conservé
+    const ta = timeToSeconds(a.horaire_debut);
+    const tb = timeToSeconds(b.horaire_debut);
+    if (ta !== tb) return ta - tb;
+    const fa = timeToSeconds(a.horaire_fin);
+    const fb = timeToSeconds(b.horaire_fin);
+    if (fa !== fb) return fa - fb;
+    return (Number(a.horaire_id) || 0) - (Number(b.horaire_id) || 0);
+  });
 
-  Object.values(lignes).forEach((item) => {
+  lignesOrdonnees.forEach((item) => {
     const {
       competence,
       horaire_debut,

@@ -112,6 +112,14 @@ async function displayPlanningWithNames(
   });
 
   const lignes = {};
+  // Trier les noms par ordre alphabétique dans chaque case
+  Object.values(cases).forEach((c) => {
+    if (Array.isArray(c.noms)) {
+      c.noms.sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr', { sensitivity: 'base' }));
+    }
+  });
+
+  // Construire les lignes (compétence + horaire)
   Object.values(cases).forEach((cell) => {
     const key = `${cell.competence_id}-${cell.horaire_id}`;
     if (!lignes[key]) {
@@ -132,7 +140,38 @@ async function displayPlanningWithNames(
 
   const lignesRepos = [];
 
-  Object.values(lignes).forEach((item) => {
+  // Conserver l'ordre d'apparition des compétences et trier seulement par horaire à l'intérieur
+  const competenceOrder = new Map();
+  let orderIdx = 0;
+  Object.values(lignes).forEach(l => {
+    const key = String(l.competence_id);
+    if (!competenceOrder.has(key)) {
+      competenceOrder.set(key, orderIdx++);
+    }
+  });
+  const timeToSeconds = (t) => {
+    if (!t || typeof t !== 'string') return 0;
+    const parts = t.split(':');
+    const h = parseInt(parts[0] || '0', 10);
+    const m = parseInt(parts[1] || '0', 10);
+    const s = parseInt(parts[2] || '0', 10);
+    return (isNaN(h)?0:h)*3600 + (isNaN(m)?0:m)*60 + (isNaN(s)?0:s);
+  };
+  const lignesOrdonnees = Object.values(lignes).sort((a, b) => {
+    const oa = competenceOrder.get(String(a.competence_id)) ?? 0;
+    const ob = competenceOrder.get(String(b.competence_id)) ?? 0;
+    if (oa !== ob) return oa - ob; // ordre des compétences conservé
+    // Trier par heure début (numérique), puis heure fin, puis horaire_id pour stabilité
+    const ta = timeToSeconds(a.horaire_debut);
+    const tb = timeToSeconds(b.horaire_debut);
+    if (ta !== tb) return ta - tb;
+    const fa = timeToSeconds(a.horaire_fin);
+    const fb = timeToSeconds(b.horaire_fin);
+    if (fa !== fb) return fa - fb;
+    return (Number(a.horaire_id) || 0) - (Number(b.horaire_id) || 0);
+  });
+
+  lignesOrdonnees.forEach((item) => {
     const {
       competence,
       horaire_debut,

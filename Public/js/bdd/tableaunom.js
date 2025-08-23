@@ -24,14 +24,19 @@ async function fetchData() {
             throw new Error(`Erreur lors de la récupération des données : ${errorText}`);
         }
 
-        const data = await response.json();
-        console.log('Données reçues :', data);
+    const data = await response.json();
+    console.log('Données reçues :', data);
 
         // Insérer les données dans le tableau HTML
         const tableBody = document.querySelector("#databaseTable tbody");
         tableBody.innerHTML = ''; // Vider le tableau avant de le remplir
 
-        data.forEach(({ nom_id, nom, date_debut, date_fin }) => {
+        // Tri alphabétique A→Z des noms (collation française)
+        const sorted = Array.isArray(data)
+            ? [...data].sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr', { sensitivity: 'base' }))
+            : [];
+
+        sorted.forEach(({ nom_id, nom, date_debut, date_fin }) => {
             const row = document.createElement('tr');
 
             const nomCell = document.createElement('td');
