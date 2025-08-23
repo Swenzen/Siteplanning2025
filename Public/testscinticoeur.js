@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const built = buildOverlay(select);
       if(!built) return;
       const { overlay, list } = built;
-      // Aligner la largeur de l'overlay sur le select
+  // Aligner la largeur de l'overlay sur le select
       try {
         const rectSel = select.getBoundingClientRect();
         overlay.style.width = rectSel.width + 'px';
@@ -100,6 +100,23 @@ document.addEventListener('DOMContentLoaded', () => {
       document.addEventListener('mouseup', onUp);
       current.onMove = onMove;
       current.onUp = onUp;
+      // Placement: ouvrir vers le haut si l'espace en bas est insuffisant, et tenter d'afficher tout (territoire)
+      try {
+        const rectSel = select.getBoundingClientRect();
+        // Mesurer la hauteur totale désirée d'après les options
+        let optH = 28; let count = current.options.length;
+        if(current.options[0]) optH = current.options[0].offsetHeight || optH;
+        const desired = Math.ceil(optH * count + 8);
+        const spaceBelow = Math.max(0, window.innerHeight - rectSel.bottom - 8);
+        const spaceAbove = Math.max(0, rectSel.top - 8);
+        const preferUp = spaceBelow < Math.min(desired, spaceAbove);
+        if(preferUp){ overlay.classList.add('open-up'); } else { overlay.classList.remove('open-up'); }
+        // Pour territoire: prioriser l'affichage complet si possible
+        const isTerr = /territoire/i.test(select.id || '') || /territoire/i.test(select.getAttribute('name')||'');
+        const avail = preferUp ? spaceAbove : spaceBelow;
+        const maxH = isTerr ? Math.min(desired, Math.max(180, avail)) : Math.min(Math.max(180, avail), 320);
+        overlay.style.maxHeight = maxH + 'px';
+      } catch {}
       // Click directly on an option also commits
       overlay.addEventListener('mousedown', (e)=>{
         const opt = e.target.closest('.drag-option');
@@ -1256,4 +1273,107 @@ document.addEventListener('DOMContentLoaded', () => {
   const basePanel = q('#perfusion-panel-t1');
   if(basePanel) initPerfusionPanel(basePanel, 't1');
   genererCR();
+
+  // ====== Améliorations spécifiques demandées ======
+  // 1) Forcer l’overlay “Territoires” avec la liste complète (pas de sous menu)
+  function forceOverlayOnTerritoireSelects(){
+    document.querySelectorAll('select[id*="territoire"]').forEach(sel=>{
+      sel.classList.remove('no-drag-select');
+      sel.classList.add('overlay-click');
+      // Évite l'ouverture du dropdown natif
+      if(!sel.dataset.territoireOverlay){
+        sel.addEventListener('mousedown', (e)=>{ e.preventDefault(); openOverlay(sel, 'drag'); });
+        sel.dataset.territoireOverlay = '1';
+      }
+    });
+  }
+  forceOverlayOnTerritoireSelects();
+
+  // 2) FMT: overlay deux panneaux (dizaines puis valeur exacte)
+  (function initFmtOverlay(){
+    if(!fmtInput) return;
+    // Build overlay on demand
+    function openFmtOverlay(){
+      closeFmtOverlay();
+      const wrap = ensureWrap(fmtInput);
+      const overlay = document.createElement('div');
+      overlay.className = 'drag-select-overlay';
+      const body = document.createElement('div');
+      body.className = 'fmt-overlay';
+      const left = document.createElement('div'); left.className = 'fmt-pane left';
+      const right = document.createElement('div'); right.className = 'fmt-pane right';
+      body.appendChild(left); body.appendChild(right); overlay.appendChild(body);
+      wrap.appendChild(overlay);
+      const ranges = [ [0,9], [10,19], [20,29], [30,39], [40,49], [50,59], [60,69] ];
+      let currentRange = null; let activeLeft = -1; let activeRight = -1;
+      ranges.forEach((r,idx)=>{
+        const o = document.createElement('div'); o.className='fmt-option'; o.textContent = `${r[0]}–${r[1]}`; o.dataset.idx = String(idx);
+        left.appendChild(o);
+      });
+      function populateRight(r){
+        right.innerHTML = '';
+        for(let v=r[0]; v<=r[1]; v++){
+          const o = document.createElement('div'); o.className='fmt-option'; o.textContent = String(v); o.dataset.val = String(v);
+          right.appendChild(o);
+        }
+      }
+      function highlightLeft(i){
+        Array.from(left.children).forEach((el,k)=> el.classList.toggle('active', k===i));
+        activeLeft = i;
+      }
+      function highlightRightVal(v){
+        Array.from(right.children).forEach(el=> el.classList.toggle('active', el.dataset.val === String(v)));
+      }
+      function commitFmt(v){
+        fmtInput.value = String(v);
+        if(fmt) fmt.value = String(v);
+        if(fmtValue) fmtValue.textContent = `${v}%`;
+        fmtInput.dispatchEvent(new Event('input', { bubbles:true }));
+        closeFmtOverlay();
+        fmtInput.focus({ preventScroll:true });
+      }
+      left.addEventListener('mousemove', (e)=>{
+        const item = e.target.closest('.fmt-option'); if(!item) return;
+        const i = Number(item.dataset.idx||-1); if(i<0) return;
+        if(i!==activeLeft){
+          highlightLeft(i);
+          currentRange = ranges[i]; populateRight(currentRange);
+          activeRight = -1;
+        }
+      });
+      right.addEventListener('mousemove', (e)=>{
+        const item = e.target.closest('.fmt-option'); if(!item) return;
+        highlightRightVal(item.dataset.val);
+      });
+      document.addEventListener('mouseup', onUpFmt);
+      function onUpFmt(ev){
+        const el = document.elementFromPoint(ev.clientX, ev.clientY);
+        const rv = el && el.closest ? el.closest('.fmt-pane.right .fmt-option') : null;
+        const lv = el && el.closest ? el.closest('.fmt-pane.left .fmt-option') : null;
+        if(rv && rv.dataset.val){ commitFmt(Number(rv.dataset.val)); }
+        else if(lv){ // si on relâche côté gauche seulement, prendre le bas de la fourchette
+          const i = Number(lv.dataset.idx||-1); if(i>=0){ const r = ranges[i]; commitFmt(r[0]); }
+        }
+        document.removeEventListener('mouseup', onUpFmt);
+      }
+      // Init left from current value
+      const cur = Number(fmtInput.value||0);
+      const idx = Math.min(ranges.length-1, Math.max(0, Math.floor(cur/10)));
+      highlightLeft(idx);
+      currentRange = ranges[idx]; populateRight(currentRange); highlightRightVal(cur);
+    }
+    function ensureWrap(input){
+      let w = input.parentElement; if(!w) return input;
+      if(!w.classList.contains('drag-wrap')){
+        const wrap = document.createElement('div'); wrap.className='drag-wrap'; w.insertBefore(wrap, input); wrap.appendChild(input); return wrap;
+      }
+      return w;
+    }
+    function closeFmtOverlay(){
+      const w = ensureWrap(fmtInput); const ov = w && w.querySelector ? w.querySelector('.drag-select-overlay') : null;
+      if(ov) ov.remove();
+    }
+    fmtInput.addEventListener('mousedown', (e)=>{ e.preventDefault(); openFmtOverlay(); });
+    fmtInput.addEventListener('focus', ()=>{ openFmtOverlay(); });
+  })();
 });

@@ -351,11 +351,22 @@ select{
 /* Wrapper to anchor overlay under the select without inline styles */
 .drag-wrap{ position:relative; display:block; width:100%; }
 .drag-wrap .drag-select-overlay{ width:100%; min-width:180px; }
+.drag-select-overlay.open-up{ top:auto; bottom:calc(100% + 4px); }
 .drag-option.disabled{ color:#8aa0b5; cursor:not-allowed; }
 .drag-option.disabled.active{ background:transparent; color:#8aa0b5; }
 
+/* FMT two-pane overlay */
+.fmt-overlay{ display:flex; flex-direction:row; gap:0; overflow:hidden; max-height:320px; }
+.fmt-pane{ overflow:auto; max-height:inherit; }
+.fmt-pane.left{ min-width:160px; border-right:1px solid rgba(30,60,100,0.12); }
+.fmt-pane.right{ min-width:180px; }
+.fmt-option{ padding:8px 12px; cursor:pointer; }
+.fmt-option.active{ background:#eef5fb; color:#0f3758; }
+
 /* Optionnel: harmoniser le style du select (quand menu natif) avec l’overlay */
 select{ border-radius:8px; border:1px solid rgba(30,60,100,0.2); background-color:#fff; }
+select.overlay-click{ appearance:none; -webkit-appearance:none; -moz-appearance:none; background-image:none !important; padding-right:10px; }
+select.overlay-click::-ms-expand{ display:none; }
 select:focus{ outline:2px solid rgba(16,112,202,0.25); outline-offset:1px; }
 
 /* Controls below bull-eyes */
