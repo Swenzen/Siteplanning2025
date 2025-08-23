@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <li><a href="base-de-donnee.html#ordre compétences par nom">Ordre compétences par nom</a></li>
             <li><a href="base-de-donnee.html#jours repos">Jours repos</a></li>
             <li><a href="base-de-donnee.html#gérer les indisponibilités par compétence">Gérer les indisponibilités par compétence</a></li>
+            <li><a href="base-de-donnee.html#exclusion compétence">Exclusion compétence</a></li>
           </ul>
         </li>
         <li class="has-dropdown">
@@ -127,21 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Forcer le rechargement à chaque clic sur le menu BDD
-    document.querySelectorAll('nav#menu .dropdown-menu a').forEach(link => {
-        link.addEventListener('click', function(e) {
-            // Si le lien pointe vers la même page (juste le hash), on reload
-            const currentPage = window.location.pathname.split('/').pop();
-            const targetPage = this.href.split('/').pop().split('#')[0];
-            if (currentPage === targetPage) {
-                e.preventDefault();
-                window.location.assign(this.href.split('#')[0] + '#' + decodeURIComponent(this.href.split('#')[1] || ''));
-                window.location.reload();
-            }
-            // Sinon, navigation normale (ne bloque pas le clic)
-            // Pas de e.preventDefault()
-        });
-    });
+    // Navigation BDD: laisser le hash changer sans recharger la page (géré en CSS :target)
 
     // Pour afficher une section
     // document.getElementById('section-noms').classList.remove('hidden');

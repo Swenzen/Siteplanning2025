@@ -234,8 +234,26 @@ function makeDateEditable(cell, nomId, dateType) {
 
 
 // Appeler la fonction pour récupérer les données lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Attendre que token et selectedSite soient disponibles (header charge les sites async)
+    let retries = 0;
+    const maxRetries = 10;
+    while (retries < maxRetries) {
+        const token = localStorage.getItem('token');
+        const siteId = sessionStorage.getItem('selectedSite');
+        if (token && siteId) break;
+        await new Promise(r => setTimeout(r, 400));
+        retries++;
+    }
     fetchData(); // Charger les données pour le site sélectionné
+
+    // Recharger quand le site change
+    const selector = document.getElementById('siteSelector');
+    if (selector) {
+        selector.addEventListener('change', () => {
+            fetchData();
+        });
+    }
 });
 
 // Fonction pour afficher la fenêtre modale
@@ -299,7 +317,7 @@ document.querySelector("#databaseTable tbody").addEventListener("click", (event)
             alert('Erreur : Impossible de trouver l\'ID du nom.');
             return;
         }
-        deleteName(nomId); // Appeler la fonction pour supprimer le nom
+    deleteNom(nomId); // Appeler la fonction pour supprimer le nom
     }
 });
 
@@ -331,7 +349,7 @@ document.querySelector("#databaseTable tbody").addEventListener("click", (event)
 });
 
 // Appeler la fonction pour récupérer les données lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', fetchData);
+// (doublon évité) : le fetch initial est géré ci-dessus avec attente token/site
 
 // Fermer la fenêtre modale si l'utilisateur clique en dehors de celle-ci
 window.onclick = function(event) {

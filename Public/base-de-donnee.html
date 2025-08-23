@@ -11,7 +11,7 @@
 </head>
 <body>
   <div id="content">
-    <div id="section-noms" class="bdd-section hidden">
+  <div id="noms" class="bdd-section">
       <h2>Noms</h2>
       <div class="sticky-table-container">
         <table id="databaseTable">
@@ -31,7 +31,22 @@
       </div>
     </div>
 
-    <div id="section-compétences" class="bdd-section hidden">
+  <div id="exclusion compétence" class="bdd-section">
+      <h2>Exclusion compétence</h2>
+      <div class="sticky-table-container">
+        <table id="exclusionCompetenceTable">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  <div id="compétences" class="bdd-section">
       <h2>Compétences</h2>
       <div class="sticky-table-container">
         <table id="competencesTable">
@@ -51,7 +66,7 @@
       </div>
     </div>
 
-    <div id="section-horaires" class="bdd-section hidden">
+  <div id="horaires" class="bdd-section">
       <h2>Horaires</h2>
       <div class="sticky-table-container">
         <table id="horairesTable">
@@ -70,7 +85,7 @@
       </div>
     </div>
 
-    <div id="section-horaires par compétence" class="bdd-section hidden">
+  <div id="horaires par compétence" class="bdd-section">
       <h2>Horaires par compétence</h2>
       <div class="grid-wrapper">
         <div class="sticky-table-container">
@@ -86,7 +101,7 @@
       </div>
     </div>
 
-    <div id="section-horaires par compétence et jours" class="bdd-section hidden">
+  <div id="horaires par compétence et jours" class="bdd-section">
       <h2>Horaires par compétence et jours</h2>
       <div class="grid-wrapper">
         <div class="sticky-table-container">
@@ -102,7 +117,7 @@
       </div>
     </div>
 
-    <div id="section-horaires par compétence avec dates" class="bdd-section hidden">
+  <div id="horaires par compétence avec dates" class="bdd-section">
       <h2>Horaires par compétence avec dates</h2>
       <div class="grid-wrapper">
         <div class="sticky-table-container">
@@ -118,7 +133,7 @@
       </div>
     </div>
 
-    <div id="section-compétences par nom" class="bdd-section hidden">
+  <div id="compétences par nom" class="bdd-section">
       <h2>Compétences par nom</h2>
       <div class="grid-wrapper">
         <div class="sticky-table-container">
@@ -134,7 +149,7 @@
       </div>
     </div>
 
-    <div id="section-ordre compétences par nom" class="bdd-section hidden">
+  <div id="ordre compétences par nom" class="bdd-section">
       <h2>Ordre compétences par nom</h2>
       <div class="sticky-table-container">
         <table id="ordrecomptableau">
@@ -148,7 +163,7 @@
       </div>
     </div>
 
-    <div id="section-jours repos" class="bdd-section hidden">
+  <div id="jours repos" class="bdd-section">
       <h2>Jours repos</h2>
       <div class="sticky-table-container">
         <table id="joursrepos">
@@ -158,7 +173,7 @@
       </div>
     </div>
 
-    <div id="section-gérer les indisponibilités par compétence" class="bdd-section hidden">
+  <div id="gérer les indisponibilités par compétence" class="bdd-section">
       <h2>Gérer les indisponibilités par compétence</h2>
       <div class="sticky-table-container">
         <table id="competenceIndisponibilitesTable">
@@ -238,6 +253,6 @@
   <script src="js/bdd/tableaureposrttforma.js"></script>
   <script src="js/bdd/tableaunom.js"></script>
   <script src="js/bdd/ordrecomp.js"></script>
-  <script src="js/bdd/bddhtml.js"></script>
+  <script src="js/bdd/exclusion.js"></script>
 </body>
 </html>

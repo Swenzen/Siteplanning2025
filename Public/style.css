@@ -606,6 +606,13 @@ header {
   -webkit-overflow-scrolling:touch;
 }
 
+/* BDD: affichage des sections en pur CSS via :target */
+#content > .bdd-section { display:none; }
+#content > #noms { display:block; }    /* section par défaut */
+#content > .bdd-section:target { display:block; }
+/* Si une section est ciblée, on cache la section Noms par défaut */
+#content:has(> .bdd-section:target:not(#noms)) > #noms { display:none; }
+
 /* Neutralise les scrolls internes existants */
 .sticky-table-container,
 .max400-overflow {

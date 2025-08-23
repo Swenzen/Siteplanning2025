@@ -226,7 +226,7 @@
                 .then(response => {
                     if (response.ok) {
                         alert(`Liaison avec le site ID ${siteId} supprimée avec succès.`);
-                        loadDeleteSiteOptions(); // Recharger les options après suppression
+                        loadDeleteSiteOptionsok(); // Recharger les options après suppression
                     } else {
                         alert('Erreur lors de la suppression de la liaison.');
                     }
