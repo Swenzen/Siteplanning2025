@@ -82,7 +82,23 @@
     }
   }
 
-  function renderTable(noms, compMap, compByPerson, horairesByComp) {
+  async function fetchExclusions() {
+    const siteId = sessionStorage.getItem('selectedSite');
+    try {
+      const data = await apiGet(`/api/exclusions-competence-nom?site_id=${siteId}`);
+      // Build Set key: `${nom_id}|${competence_id}|${horaire_id}` where excluded=1
+      const set = new Set();
+      for (const row of data || []) {
+        if (row.excluded) set.add(`${row.nom_id}|${row.competence_id}|${row.horaire_id}`);
+      }
+      return set;
+    } catch (e) {
+      console.error('Exclusion compétence: échec fetch exclusions', e);
+      return new Set();
+    }
+  }
+
+  function renderTable(noms, compMap, compByPerson, horairesByComp, excludedSet) {
     const tbody = document.querySelector('#exclusionCompetenceTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -99,29 +115,81 @@
 
       // Colonne compétences et horaires
       const tdComp = document.createElement('td');
+      const tdActions = document.createElement('td');
       const compIds = compByPerson.get(item.nom_id) || [];
       if (compIds.length === 0) {
         tdComp.textContent = '—';
+        tdActions.textContent = '';
       } else {
-        const list = document.createElement('ul');
-        list.style.margin = '0';
-        list.style.paddingLeft = '16px';
+        // Liste des compétences, et à droite la grille des checkboxes horaires
+        const compList = document.createElement('div');
+        compList.style.display = 'flex';
+        compList.style.gap = '12px';
+        compList.style.flexWrap = 'wrap';
+
         for (const cid of compIds) {
-          const li = document.createElement('li');
-          const label = compMap.get(cid) || `Compétence ${cid}`;
+          const bloc = document.createElement('div');
+          bloc.style.border = '1px solid #ddd';
+          bloc.style.borderRadius = '6px';
+          bloc.style.padding = '6px 8px';
+          bloc.style.minWidth = '240px';
+
+          const title = document.createElement('div');
+          title.style.fontWeight = '600';
+          title.textContent = compMap.get(cid) || `Compétence ${cid}`;
+          bloc.appendChild(title);
+
           const horaires = horairesByComp.get(cid) || [];
-          const horairesTxt = horaires.length
-            ? `: ${horaires.map(h => `${h.debut}–${h.fin}`).join(', ')}`
-            : '';
-          li.textContent = `${label}${horairesTxt}`;
-          list.appendChild(li);
+          if (horaires.length === 0) {
+            const none = document.createElement('div');
+            none.textContent = 'Aucun horaire lié';
+            none.style.opacity = '0.7';
+            bloc.appendChild(none);
+          } else {
+            const grid = document.createElement('div');
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = 'auto auto';
+            grid.style.gap = '6px 10px';
+            for (const h of horaires) {
+              const label = document.createElement('label');
+              label.style.display = 'contents';
+              const cb = document.createElement('input');
+              cb.type = 'checkbox';
+              const key = `${item.nom_id}|${cid}|${h.id}`;
+              cb.checked = excludedSet.has(key);
+              cb.addEventListener('change', async (ev) => {
+                const token = localStorage.getItem('token');
+                const siteId = sessionStorage.getItem('selectedSite');
+                try {
+                  const res = await fetch('/api/toggle-exclusion-competence-nom', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nom_id: item.nom_id, competence_id: cid, horaire_id: h.id, site_id: siteId, excluded: cb.checked })
+                  });
+                  if (!res.ok) throw new Error(await res.text());
+                  if (cb.checked) excludedSet.add(key); else excludedSet.delete(key);
+                } catch (e) {
+                  console.error('Échec mise à jour exclusion:', e);
+                  cb.checked = !cb.checked; // revert UI
+                  alert('Erreur lors de la mise à jour.');
+                }
+              });
+              const span = document.createElement('span');
+              span.textContent = `${h.debut}–${h.fin}`;
+              label.appendChild(cb);
+              label.appendChild(span);
+              grid.appendChild(label);
+            }
+            bloc.appendChild(grid);
+          }
+          compList.appendChild(bloc);
         }
-        tdComp.appendChild(list);
+        tdComp.appendChild(compList);
       }
       tr.appendChild(tdComp);
-
-      const tdActions = document.createElement('td');
-      // Intentionnellement vide pour l'instant
       tr.appendChild(tdActions);
 
       tbody.appendChild(tr);
@@ -131,13 +199,14 @@
   async function initExclusionSection() {
   const section = document.getElementById('exclusion compétence');
     if (!section) return;
-    const [noms, comps, compByPerson, horairesByComp] = await Promise.all([
+    const [noms, comps, compByPerson, horairesByComp, excludedSet] = await Promise.all([
       fetchNoms(),
       fetchCompetences(),
       fetchCompetencesPersonnes(),
-      fetchHorairesCompetences()
+      fetchHorairesCompetences(),
+      fetchExclusions()
     ]);
-    renderTable(noms, comps.map, compByPerson, horairesByComp);
+    renderTable(noms, comps.map, compByPerson, horairesByComp, excludedSet);
   }
 
   // Charger quand la section devient la cible (:target) ou au chargement si déjà ciblée

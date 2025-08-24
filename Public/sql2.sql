@@ -1,3 +1,4 @@
+
 -- Utiliser la base de données railway
 USE railway;
 
@@ -372,6 +373,35 @@ CREATE TABLE IF NOT EXISTS Tmission (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+
+-- Table des exclusions par (nom, competence, horaire) et site
+CREATE TABLE IF NOT EXISTS Texclusioncompetencenom_Tsite (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nom_id INT NOT NULL,
+  competence_id INT NOT NULL,
+  horaire_id INT NOT NULL,
+  site_id INT NOT NULL,
+  excluded TINYINT(1) NOT NULL DEFAULT 1,
+  UNIQUE KEY uniq_nom_comp_hor_site (nom_id, competence_id, horaire_id, site_id)
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 INSERT INTO Tnom (nom_id, nom, date_debut, date_fin) VALUES
 (1, 'Pierre', '2025-01-01', '2025-12-31'),

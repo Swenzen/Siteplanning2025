@@ -1,6 +1,6 @@
 // Fonction pour récupérer les noms disponibles pour une compétence donnée dans le tooltip
-// Appel à showTooltip : ajoute clickedCompetence et clickedDate
-function fetchNomIds(competenceId, event, clickedDate, clickedCompetence) {
+// + filtre les noms exclus pour le couple (compétence, horaire)
+async function fetchNomIds(competenceId, event, clickedDate, clickedCompetence, horaireDebut, horaireFin, overrideHoraireId) {
   const token = localStorage.getItem("token");
   const siteId = sessionStorage.getItem("selectedSite");
   if (!token || !siteId) return;
@@ -8,20 +8,73 @@ function fetchNomIds(competenceId, event, clickedDate, clickedCompetence) {
   const planningStartDate = localStorage.getItem("savedStartDate");
   const planningEndDate = localStorage.getItem("savedEndDate");
 
-  fetch(`/api/nom-ids?competence_id=${competenceId}&site_id=${siteId}`)
-    .then(res => res.json())
-    .then(data => {
-      showTooltip(event, data, {
-        competenceId,
-        horaireId: null,
-        date: clickedDate,
-        siteId,
-        planningStartDate,
-        planningEndDate,
-        clickedCompetence,
-        clickedDate
+  // Normaliser les heures au format HH:MM:SS
+  const toHMS = (t) => {
+    if (!t) return null;
+    if (/^\d{2}:\d{2}:\d{2}$/.test(t)) return t;
+    if (/^\d{2}:\d{2}$/.test(t)) return `${t}:00`;
+    return t; // fallback
+  };
+  const hDeb = toHMS(horaireDebut);
+  const hFin = toHMS(horaireFin);
+
+  let horaireId = overrideHoraireId ? Number(overrideHoraireId) : null;
+  try {
+    if (!horaireId && hDeb && hFin) {
+      const resHor = await fetch(`/api/horaires-competences?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-    });
+      if (resHor.ok) {
+        const horaires = await resHor.json();
+        // Chercher l'horaire par début/fin et qui contient la compétence
+        const match = (horaires || []).find(h => (h.horaire_debut || h.debut) === hDeb && (h.horaire_fin || h.fin) === hFin && Array.isArray(h.competences) && h.competences.includes(Number(competenceId)));
+        if (match) horaireId = match.horaire_id || match.id || null;
+      }
+    }
+  } catch (e) {
+    console.warn('Impossible de résoudre horaire_id pour filtrer les exclusions', e);
+  }
+
+  // Récupérer la liste initiale
+  let data = [];
+  try {
+    const res = await fetch(`/api/nom-ids?competence_id=${competenceId}&site_id=${siteId}`);
+    data = res.ok ? await res.json() : [];
+  } catch (e) {
+    data = [];
+  }
+
+  // Filtrer si on a un horaireId
+  if (horaireId) {
+    try {
+      const resEx = await fetch(`/api/exclusions-competence-nom?site_id=${siteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (resEx.ok) {
+        const excl = await resEx.json();
+        const excludedSet = new Set((excl || []).filter(r => r.excluded).map(r => `${r.nom_id}|${r.competence_id}|${r.horaire_id}`));
+        // data peut contenir des strings (indisponibles) et des objets {nom, nom_id}
+        data = Array.isArray(data) ? data.filter(n => {
+          if (typeof n === 'string') return true; // on laisse les autres infos du tooltip
+          const nid = n.nom_id || n.id;
+          if (!nid) return true;
+          const key = `${nid}|${competenceId}|${horaireId}`;
+          return !excludedSet.has(key);
+        }) : data;
+      }
+    } catch {}
+  }
+
+  showTooltip(event, data, {
+    competenceId,
+    horaireId: horaireId || null,
+    date: clickedDate,
+    siteId,
+    planningStartDate,
+    planningEndDate,
+    clickedCompetence,
+    clickedDate
+  });
 }
 async function fetchNomDetails(competenceId, siteId, semaine, annee, noms) {
   try {
@@ -151,7 +204,9 @@ function showEmptyTooltip(
   );
 
   // Appeler fetchNomIds pour récupérer les noms disponibles
-  fetchNomIds(competenceId, event);
+  const td = event.target && event.target.closest ? event.target.closest('td[data-horaire-id][data-competence-id]') : null;
+  const overrideHoraireId = td ? td.getAttribute('data-horaire-id') : null;
+  fetchNomIds(competenceId, event, null, null, horaireDebut, horaireFin, overrideHoraireId);
 }
 
 // Fonction pour mettre à jour le planning dans la base de données
