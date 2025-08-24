@@ -15,12 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         <li><a href="/bdd/horaires.html">Horaires</a></li>
                         <li><a href="/bdd/horaires-par-competence.html">Horaires par compétence</a></li>
                         <li><a href="/bdd/horaires-par-competence-jours.html">Horaires par compétence et jours</a></li>
-                        <li><a href="/bdd/horaires-par-competence-dates.html">Horaires par compétence avec dates</a></li>
                         <li><a href="/bdd/competences-par-nom.html">Compétences par nom</a></li>
                         <li><a href="/bdd/ordre-competences-par-nom.html">Ordre compétences par nom</a></li>
                         <li><a href="/bdd/jours-repos.html">Jours repos</a></li>
-                        <li><a href="/bdd/indisponibilites-par-competence.html">Gérer les indisponibilités par compétence</a></li>
                         <li><a href="/bdd/exclusion-competence.html">Exclusion compétence</a></li>
+                        <!-- Items conservés mais à ne pas utiliser pour le moment -->
+                        <li><a href="/bdd/horaires-par-competence-dates.html">Horaires par compétence avec dates (ne pas utiliser)</a></li>
+                        <li><a href="/bdd/indisponibilites-par-competence.html">Indisponibilités par compétence (ne pas utiliser)</a></li>
                     </ul>
                 </li>
                 <li class="has-dropdown">

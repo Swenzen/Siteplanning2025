@@ -12,15 +12,30 @@ async function fetchCompetencesRepos() {
 
 async function updateReposCompetence(competence_id, repos) {
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/update-repos', {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ competence_id, repos })
-    });
-    return res.ok;
+    const site_id = sessionStorage.getItem('selectedSite');
+    if (!token) { alert('Non connecté'); return false; }
+    if (!site_id) { alert('Sélectionnez un site'); return false; }
+
+    try {
+        const res = await fetch('/api/update-repos', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ competence_id, repos, site_id })
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            alert(`Échec mise à jour (${res.status}) : ${text || 'Erreur'}`);
+            return false;
+        }
+        return true;
+    } catch (e) {
+        console.error('Erreur réseau update-repos', e);
+        alert('Erreur réseau lors de la mise à jour');
+        return false;
+    }
 }
 
 async function displayReposTable() {
