@@ -1,5 +1,20 @@
 // Affiche le tableau "Exclusion compétence" en listant les noms depuis l'API
 (function () {
+  // Helpers d’API
+  async function apiGet(url) {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Token manquant');
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!res.ok) throw new Error(await res.text() || 'Erreur API');
+    return res.json();
+  }
+
   async function fetchNoms() {
     const token = localStorage.getItem('token');
     const siteId = sessionStorage.getItem('selectedSite');
@@ -8,18 +23,7 @@
       return [];
     }
     try {
-      const res = await fetch(`/api/noms?site_id=${siteId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || 'Erreur API noms');
-      }
-      const data = await res.json();
+      const data = await apiGet(`/api/noms?site_id=${siteId}`);
       return Array.isArray(data) ? data : [];
     } catch (e) {
       console.error('Exclusion compétence: échec fetch noms', e);
@@ -27,7 +31,58 @@
     }
   }
 
-  function renderTable(noms) {
+  async function fetchCompetences() {
+    const siteId = sessionStorage.getItem('selectedSite');
+    try {
+      const data = await apiGet(`/api/competences?site_id=${siteId}`);
+      // Map id -> libellé
+      const map = new Map(data.map(c => [c.competence_id, c.competence]));
+      return { list: data, map };
+    } catch (e) {
+      console.error('Exclusion compétence: échec fetch competences', e);
+      return { list: [], map: new Map() };
+    }
+  }
+
+  async function fetchCompetencesPersonnes() {
+    const siteId = sessionStorage.getItem('selectedSite');
+    try {
+      const data = await apiGet(`/api/competences-personnes?site_id=${siteId}`);
+      // data: [{ nom_id, competences: [competence_id, ...] }, ...]
+      const byNom = new Map();
+      for (const p of data) byNom.set(p.nom_id, p.competences || []);
+      return byNom;
+    } catch (e) {
+      console.error('Exclusion compétence: échec fetch competences-personnes', e);
+      return new Map();
+    }
+  }
+
+  async function fetchHorairesCompetences() {
+    const siteId = sessionStorage.getItem('selectedSite');
+    try {
+      const data = await apiGet(`/api/horaires-competences?site_id=${siteId}`);
+      // Retour attendu: [{ horaire_id, horaire_debut, horaire_fin, competences: [competence_id] }, ...]
+      const byCompetence = new Map();
+      for (const h of data) {
+        const compIds = h.competences || [];
+        for (const cid of compIds) {
+          if (!byCompetence.has(cid)) byCompetence.set(cid, []);
+          byCompetence.get(cid).push({ id: h.horaire_id, debut: h.horaire_debut, fin: h.horaire_fin });
+        }
+      }
+      // Tri des horaires par heure début
+      for (const [, arr] of byCompetence) {
+        arr.sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
+      }
+      return byCompetence;
+    } catch (e) {
+      console.error('Exclusion compétence: échec fetch horaires-competences', e);
+      return new Map();
+    }
+  }
+
+  function renderTable(noms, compMap, compByPerson, horairesByComp) {
     const tbody = document.querySelector('#exclusionCompetenceTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -42,6 +97,29 @@
       tdNom.textContent = item.nom || '';
       tr.appendChild(tdNom);
 
+      // Colonne compétences et horaires
+      const tdComp = document.createElement('td');
+      const compIds = compByPerson.get(item.nom_id) || [];
+      if (compIds.length === 0) {
+        tdComp.textContent = '—';
+      } else {
+        const list = document.createElement('ul');
+        list.style.margin = '0';
+        list.style.paddingLeft = '16px';
+        for (const cid of compIds) {
+          const li = document.createElement('li');
+          const label = compMap.get(cid) || `Compétence ${cid}`;
+          const horaires = horairesByComp.get(cid) || [];
+          const horairesTxt = horaires.length
+            ? `: ${horaires.map(h => `${h.debut}–${h.fin}`).join(', ')}`
+            : '';
+          li.textContent = `${label}${horairesTxt}`;
+          list.appendChild(li);
+        }
+        tdComp.appendChild(list);
+      }
+      tr.appendChild(tdComp);
+
       const tdActions = document.createElement('td');
       // Intentionnellement vide pour l'instant
       tr.appendChild(tdActions);
@@ -53,8 +131,13 @@
   async function initExclusionSection() {
   const section = document.getElementById('exclusion compétence');
     if (!section) return;
-    const noms = await fetchNoms();
-    renderTable(noms);
+    const [noms, comps, compByPerson, horairesByComp] = await Promise.all([
+      fetchNoms(),
+      fetchCompetences(),
+      fetchCompetencesPersonnes(),
+      fetchHorairesCompetences()
+    ]);
+    renderTable(noms, comps.map, compByPerson, horairesByComp);
   }
 
   // Charger quand la section devient la cible (:target) ou au chargement si déjà ciblée
