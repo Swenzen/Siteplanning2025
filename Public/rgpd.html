@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Protection des données (RGPD)</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/header.js" defer></script>
+  <script src="/js/rgpd.js" defer></script>
+  <style>
+    .rgpd-hero { background: linear-gradient(135deg,#2c3e50,#1f2d3a); color:#fff; padding:32px 20px; text-align:center; }
+    .rgpd-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px; }
+    .rgpd-card { background:#fff; border-radius:10px; box-shadow:var(--shadow); padding:18px; }
+    .rgpd-badge { display:inline-block; background:#e3f2fd; color:#1976d2; padding:4px 10px; border-radius:20px; font-weight:600; font-size:12px; }
+    .muted { color:#666; }
+    .list-compact li { margin:6px 0; }
+  </style>
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Politique de confidentialité et engagements RGPD." />
+  <link rel="icon" href="/BullsEye_SVG.svg" />
+  <link rel="canonical" href="/rgpd.html" />
+</head>
+<body>
+  <section class="rgpd-hero">
+    <h1>Protection des données et confidentialité</h1>
+    <p class="muted">Transparence sur les données, vos droits et nos engagements RGPD.</p>
+  </section>
+
+  <section class="section-container">
+    <div class="rgpd-grid">
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Responsable de traitement</span>
+        <h3>Qui est responsable ?</h3>
+        <p>
+          Nom / Entité: <strong id="ctlr-name">À compléter</strong><br/>
+          Adresse: <span id="ctlr-address">À compléter</span><br/>
+          Email de contact / DPO: <a href="mailto:" id="ctlr-email">À compléter</a>
+        </p>
+      </div>
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Finalités & bases légales</span>
+        <h3>Pourquoi nous traitons vos données</h3>
+        <ul class="list-compact">
+          <li>Gestion du planning et des affectations — exécution d’un contrat/intérêt légitime</li>
+          <li>Statistiques de fonctionnement internes — intérêt légitime</li>
+          <li>Authentification et sécurité — obligation légale/intérêt légitime</li>
+        </ul>
+      </div>
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Catégories de données</span>
+        <h3>Données que nous traitons</h3>
+        <ul class="list-compact">
+          <li><strong>Données d’identification</strong> : nom, initiale du prénom ; adresse e‑mail professionnelle <em>(le cas échéant)</em>.</li>
+          <li><strong>Données organisationnelles</strong> : compétences/habilitations, horaires, affectations, disponibilités et indisponibilités.</li>
+          <li><strong>Métadonnées techniques & journaux</strong> : journaux applicatifs, adresses IP et identifiants techniques <em>(le cas échéant, à des fins de sécurité et d’audit)</em>.</li>
+          <li><strong>Exclusions</strong> : aucune donnée « sensible » au sens du RGPD (santé, opinions, etc.).</li>
+        </ul>
+      </div>
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Conservation</span>
+        <h3>Durées de conservation</h3>
+        <ul class="list-compact">
+          <li>Données de planning: <strong id="retention-planning">À définir</strong></li>
+          <li>Comptes/utilisateurs: <strong id="retention-users">À définir</strong></li>
+          <li>Logs techniques: <strong id="retention-logs">À définir</strong></li>
+        </ul>
+      </div>
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Sécurité</span>
+        <h3>Mesures de sécurité</h3>
+        <ul class="list-compact">
+          <li>Chiffrement en transit (HTTPS/TLS) et contrôle d’accès basé sur rôles (RBAC).</li>
+          <li>Journalisation des accès et supervision <em>(le cas échéant)</em>.</li>
+          <li>Sauvegardes régulières et chiffrées ; restauration testée périodiquement.</li>
+          <li>Principe de minimisation et cloisonnement par site/service.</li>
+        </ul>
+      </div>
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Destinataires</span>
+        <h3>Accès et partage</h3>
+        <p>
+          Accès réservé aux personnes habilitées (encadrement/administration) sur le périmètre autorisé. Les prestataires d’hébergement peuvent accéder aux journaux techniques, strictement pour maintenance.
+        </p>
+      </div>
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Transferts</span>
+        <h3>Transferts hors UE</h3>
+        <p>Aucun transfert hors Union européenne n’est prévu. Si nécessaire, un encadrement adéquat (CCT, etc.) sera mis en place et documenté.</p>
+      </div>
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Hébergement & sous-traitants</span>
+        <h3>Où sont hébergées vos données ?</h3>
+        <p>
+          Hébergeur: <strong>Railway</strong> — Région: <strong id="hosting-region">Europe (à confirmer)</strong><br/>
+          Base de données: <strong>MySQL</strong> — Région: <strong id="db-region">Europe (à confirmer)</strong>
+        </p>
+        <p class="muted">Liste complète des sous-traitants et localisations à compléter.</p>
+      </div>
+      <div class="rgpd-card">
+        <span class="rgpd-badge">Droits des personnes</span>
+        <h3>Vos droits</h3>
+        <ul class="list-compact">
+          <li>Droit d’accès, de rectification, d’effacement</li>
+          <li>Droit d’opposition et de limitation</li>
+          <li>Droit à la portabilité</li>
+        </ul>
+        <p>Contact: <a href="mailto:" id="rights-email">À compléter</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-container">
+    <h2>Documents contractuels</h2>
+    <p>
+      Les modalités d’utilisation et la confidentialité sont précisées dans les documents suivants :
+    </p>
+    <div class="rgpd-grid">
+      <div class="rgpd-card">
+        <h3>Conditions générales d’utilisation</h3>
+        <p class="muted">Règles d’accès, responsabilités et obligations des utilisateurs.</p>
+        <a href="/cgu.html" class="action-btn">Lire les CGU</a>
+      </div>
+      <div class="rgpd-card">
+        <h3>Politique de confidentialité</h3>
+        <p class="muted">Détail des traitements, droits et contacts.</p>
+        <a href="/confidentialite.html" class="action-btn">Lire la Politique</a>
+      </div>
+    </div>
+  </section>
+
+
+</body>
+</html>

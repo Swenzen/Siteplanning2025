@@ -32,6 +32,14 @@ document.addEventListener("DOMContentLoaded", () => {
         </li>
                 <li><a href="/parametrage.html">Paramétrage</a></li>
                 <li><a href="/stats.html">Stats</a></li>
+                <li class="has-dropdown">
+                    <a href="/confidentialite.html">Infos légales</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/confidentialite.html">Politique de confidentialité</a></li>
+                        <li><a href="/rgpd.html">RGPD</a></li>
+                        <li><a href="/cgu.html">CGU</a></li>
+                    </ul>
+                </li>
       </ul>
     </nav>
         <div id="user-section">
