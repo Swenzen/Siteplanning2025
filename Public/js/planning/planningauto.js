@@ -705,6 +705,61 @@ applyDateFilterButton.addEventListener("click", () => {
   sessionStorage.setItem("planningEndDate", endDate);
 });
 
+// Suppression des affectations marquées Auto (A) dans la période affichée
+document.getElementById('btnDeleteAutoAssignments')?.addEventListener('click', async () => {
+  const token = localStorage.getItem('token');
+  const siteId = sessionStorage.getItem('selectedSite');
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  if (!token || !siteId || !startDate || !endDate) {
+    alert('Token, site ou période manquants');
+    return;
+  }
+
+  if (!confirm('Supprimer toutes les affectations AUTO (A) sur la période affichée ?')) return;
+
+  try {
+    // Récupérer toutes les cases avec noms pour la période, incluant les flags
+    const rows = await fetchCompetencesWithNames(siteId, startDate, endDate);
+    // Construire la liste des entrées à supprimer: celles avec planning_auto=1
+    const deletions = [];
+    rows.forEach(r => {
+      // Chaque ligne r représente une cellule et peut contenir un seul nom: r.nom/r.nom_id
+      // planning_auto est projeté au niveau r.planning_auto
+      if (r && r.nom_id && Number(r.planning_auto) === 1) {
+        deletions.push({
+          date: r.date,
+          nom_id: r.nom_id,
+          competence_id: r.competence_id,
+          horaire_id: r.horaire_id,
+          site_id: Number(siteId)
+        });
+      }
+    });
+
+    if (deletions.length === 0) {
+      alert('Aucune affectation Auto (A) à supprimer dans la période.');
+      return;
+    }
+
+    // Supprimer en série (séquentiel pour rester simple)
+    for (const d of deletions) {
+      await fetch('/api/delete-planningv2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(d)
+      });
+    }
+
+    // Rafraîchir l’affichage
+    await refreshSecondTable();
+    alert(`Supprimé ${deletions.length} affectation(s) Auto.`);
+  } catch (e) {
+    console.error('Erreur suppression Auto:', e);
+    alert('Erreur lors de la suppression des affectations Auto.');
+  }
+});
+
 async function fetchAvailableCount(siteId, dates) {
   const token = localStorage.getItem("token");
   // On suppose que tu as une route qui retourne un objet { "2025-05-05": 3, ... }
