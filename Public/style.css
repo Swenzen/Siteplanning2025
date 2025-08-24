@@ -595,6 +595,12 @@ table.grid-freeze .sub-table input[type=checkbox] { cursor:pointer; }
     box-shadow:none !important;          /* on retire l’ombre si tu veux */
     border-radius:10px !important;
   }
+  /* Supprime marges de page et du body pour impression pleine page */
+  @page { size: auto; margin: 0; }
+  html, body { margin:0 !important; padding:0 !important; }
+  #content { margin:0 !important; padding:0 !important; }
+  /* Ne pas imprimer la ligne Compteur */
+  #compteur-row { display:none !important; }
 }
 
 /* === Mise en forme du bloc d’actions planning === */
