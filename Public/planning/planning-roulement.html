@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Planning roulement</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="header.js" defer></script>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/header.js" defer></script>
 </head>
 <body>
     <h2>Planning roulement</h2>
     <div>
         <p>Bienvenue sur la page de gestion du planning de roulement.</p>
-        <!-- Ajoute ici des boutons ou infos spécifiques au roulement si besoin -->
     </div>
 
     <div id="user-info" class="hidden">
@@ -18,7 +17,6 @@
         <button data-role="page-logout">Se déconnecter</button>
     </div>
 
-    <!-- Sélecteurs de dates -->
     <div id="dateSelector">
         <label for="startDate">Date de début :</label>
         <input type="date" id="startDate">
@@ -28,15 +26,10 @@
     </div>
 
     <table id="roulementTable">
-        <thead>
-            <!-- Les en-têtes seront ajoutés dynamiquement -->
-        </thead>
-        <tbody>
-            <!-- Les lignes seront ajoutées dynamiquement -->
-        </tbody>
+        <thead></thead>
+        <tbody></tbody>
     </table>
 
-    <!-- Tableau des noms pour le roulement -->
     <h3>Liste des noms</h3>
     <table id="roulementNomTable" border="1" class="roulement-nom-table">
         <thead>
@@ -47,15 +40,11 @@
                 <th>Supprimer roulement</th>
             </tr>
         </thead>
-        <tbody>
-            <!-- Les noms seront ajoutés dynamiquement -->
-        </tbody>
+        <tbody></tbody>
     </table>
 
     <div id="tooltip" class="tooltip-hidden"></div>
 
-    <!-- Ajoute ici d'autres éléments spécifiques au roulement si besoin -->
-
-    <script src="js/planning/roulement/planningroulement.js"></script>
+    <script src="/js/planning/roulement/planningroulement.js"></script>
 </body>
 </html>

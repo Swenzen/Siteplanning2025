@@ -23,13 +23,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         <li><a href="/bdd/exclusion-competence.html">Exclusion compétence</a></li>
                     </ul>
                 </li>
-        <li class="has-dropdown">
-                    <a href="/planning.html">Planning</a>
-          <ul class="dropdown-menu">
-                        <li><a href="/planning-planning automatique.html">Planning automatique</a></li>
-                        <li><a href="/planning-roulement.html">Planning roulement</a></li>
-          </ul>
-        </li>
+                <li class="has-dropdown">
+                                        <a href="/planning/planning.html">Planning</a>
+                    <ul class="dropdown-menu">
+                                                <li><a href="/planning/planning-automatique.html">Planning automatique</a></li>
+                                                <li><a href="/planning/planning-roulement.html">Planning roulement</a></li>
+                    </ul>
+                </li>
                 <li><a href="/parametrage.html">Paramétrage</a></li>
                 <li><a href="/stats.html">Stats</a></li>
                 <li class="has-dropdown">
