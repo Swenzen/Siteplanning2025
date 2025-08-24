@@ -72,7 +72,8 @@ function openRoulementMenu(nom_id, nom) {
 
     modal.querySelector('#roulementAnnuler').onclick = () => modal.remove();
 
-    modal.querySelector('#roulementValider').onclick = async () => {
+    modal.querySelector('#roulementValider').onclick = async (e) => {
+        const btn = e.currentTarget;
         const jours = Array.from(modal.querySelectorAll('.jour-checkbox'))
             .filter(cb => cb.checked)
             .map(cb => cb.value)
@@ -82,21 +83,52 @@ function openRoulementMenu(nom_id, nom) {
         const horaire_id = modal.querySelector('#horaireSelect').value;
         const site_id = sessionStorage.getItem('selectedSite');
 
-        // Envoi à l'API
+        // Validations côté client
+        if (!localStorage.getItem('token')) {
+            alert('Vous devez être connecté pour ajouter un roulement.');
+            return;
+        }
+        if (!site_id) {
+            alert('Sélectionnez un site avant d\'ajouter un roulement.');
+            return;
+        }
+        if (!jours) {
+            alert('Sélectionnez au moins un jour.');
+            return;
+        }
+        if (!competence_id || !horaire_id) {
+            alert('Sélectionnez une compétence et un horaire.');
+            return;
+        }
+
+        // Envoi à l'API avec gestion d'erreurs
         const token = localStorage.getItem('token');
-        await fetch('/api/troulement', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                nom_id, competence_id, horaire_id, jours_semaine: jours, semaine_type: semaineType, site_id
-            })
-        });
-        modal.remove();
-        alert('Roulement ajouté !');
-        fetchRoulementNoms();
+        btn.disabled = true;
+        try {
+            const resp = await fetch('/api/troulement', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nom_id, competence_id, horaire_id, jours_semaine: jours, semaine_type: semaineType, site_id
+                })
+            });
+            if (!resp.ok) {
+                const text = await resp.text();
+                alert(`Échec de l\'ajout du roulement (${resp.status}) : ${text || 'Erreur inconnue'}`);
+                btn.disabled = false;
+                return;
+            }
+            modal.remove();
+            alert('Roulement ajouté !');
+            fetchRoulementNoms();
+        } catch (err) {
+            console.error('Erreur réseau lors de l\'ajout du roulement:', err);
+            alert('Erreur réseau lors de l\'ajout du roulement. Vérifiez le serveur.');
+            btn.disabled = false;
+        }
     };
 }
 

@@ -435,6 +435,7 @@ table.grid-freeze .sub-table input[type=checkbox] { cursor:pointer; }
 .modal-content, .date-modal-content,
 .modalh-content, .indisponibilites-modal-content,
 .roulement-modal {
+  display:block; /* force l'affichage de la modale roulement (le sélecteur global la cachait) */
   background:#fff;
   margin:10% auto;
   padding:20px;
