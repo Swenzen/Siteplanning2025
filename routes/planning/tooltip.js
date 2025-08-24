@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../../db'); // Assurez-vous que le chemin est correct
 const authenticateToken = require('../../middleware/auth'); // Middleware d'authentification
+const validateSiteAccess = require('../../middleware/validateSiteAccess');
 
 // Route pour récupérer les noms disponibles pour une compétence donnée
-router.get('/nom-ids', authenticateToken, (req, res) => {
+router.get('/nom-ids', authenticateToken, validateSiteAccess(), (req, res) => {
   const { competence_id, semaine, annee, jour_id, horaire_id } = req.query;
   const site_id = req.query.site_id;
     const userSiteIds = req.user.siteIds;
@@ -122,7 +123,7 @@ router.get('/available-names', authenticateToken, (req, res) => {
 });
 
 
-router.post('/update-planningv2', authenticateToken, (req, res) => {
+router.post('/update-planningv2', authenticateToken, validateSiteAccess(), (req, res) => {
     const { date, nom_id, competence_id, horaire_id, site_id } = req.body;
 
     if (!date || !nom_id || !competence_id || !horaire_id || !site_id) {
@@ -148,7 +149,7 @@ router.post('/update-planningv2', authenticateToken, (req, res) => {
     );
 });
 
-router.post('/delete-planningv2', authenticateToken, (req, res) => {
+router.post('/delete-planningv2', authenticateToken, validateSiteAccess(), (req, res) => {
     const { date, nom_id, competence_id, horaire_id, site_id } = req.body;
     const userSiteIds = req.user.siteIds; // Sites autorisés pour l'utilisateur
 
@@ -184,7 +185,7 @@ router.post('/delete-planningv2', authenticateToken, (req, res) => {
     );
 });
 
-router.post('/delete-vacancev2', authenticateToken, (req, res) => {
+router.post('/delete-vacancev2', authenticateToken, validateSiteAccess(), (req, res) => {
   const { date, nom_id, site_id } = req.body;
   if (!date || !nom_id || !site_id) {
     return res.status(400).send('Paramètres manquants');
@@ -199,7 +200,7 @@ router.post('/delete-vacancev2', authenticateToken, (req, res) => {
   });
 });
 
-router.get('/available-vacance-names', authenticateToken, (req, res) => {
+router.get('/available-vacance-names', authenticateToken, validateSiteAccess(), (req, res) => {
   const { site_id, date } = req.query;
   if (!site_id || !date) {
     return res.status(400).send('Paramètres site_id et date requis.');
@@ -233,7 +234,7 @@ router.get('/available-vacance-names', authenticateToken, (req, res) => {
   });
 });
 
-router.post('/ajouter-vacance', authenticateToken, (req, res) => {
+router.post('/ajouter-vacance', authenticateToken, validateSiteAccess(), (req, res) => {
   const { site_id, nom_id, date } = req.body;
   if (!site_id || !nom_id || !date) {
     return res.status(400).send('Paramètres manquants');
@@ -259,7 +260,7 @@ router.post('/ajouter-vacance', authenticateToken, (req, res) => {
 
 
 //rotue tolltip vacs
-router.get('/available-vacance-names-multi', authenticateToken, (req, res) => {
+router.get('/available-vacance-names-multi', authenticateToken, validateSiteAccess(), (req, res) => {
   const { site_id, start_date, end_date } = req.query;
   if (!site_id || !start_date || !end_date) {
     return res.status(400).send('Paramètres manquants');
@@ -292,7 +293,7 @@ router.get('/available-vacance-names-multi', authenticateToken, (req, res) => {
   });
 });
 
-router.post('/ajouter-vacance-multi', authenticateToken, (req, res) => {
+router.post('/ajouter-vacance-multi', authenticateToken, validateSiteAccess(), (req, res) => {
   const { site_id, nom_id, dates } = req.body;
   if (!site_id || !nom_id || !dates || !Array.isArray(dates)) {
     return res.status(400).send('Paramètres manquants');
@@ -313,7 +314,7 @@ router.post('/ajouter-vacance-multi', authenticateToken, (req, res) => {
 
 
 
-router.post('/delete-vacance-multi', authenticateToken, (req, res) => {
+router.post('/delete-vacance-multi', authenticateToken, validateSiteAccess(), (req, res) => {
   const { site_id, nom_id, dates } = req.body;
   if (!site_id || !nom_id || !dates || !Array.isArray(dates)) {
     return res.status(400).send('Paramètres manquants');
@@ -333,7 +334,7 @@ router.post('/delete-vacance-multi', authenticateToken, (req, res) => {
 
 
 //tolltip plusieurs noms
-router.get('/affectations-nom-periode', authenticateToken, (req, res) => {
+router.get('/affectations-nom-periode', authenticateToken, validateSiteAccess(), (req, res) => {
   const { nom_id, site_id, start_date, end_date } = req.query;
   if (!nom_id || !site_id || !start_date || !end_date) {
     return res.status(400).send('Paramètres manquants');

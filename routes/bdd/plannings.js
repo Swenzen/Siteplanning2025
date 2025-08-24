@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../../db');
 const authenticateToken = require('../../middleware/auth');
+const validateSiteAccess = require('../../middleware/validateSiteAccess');
 
-router.post('/nom-details', authenticateToken, (req, res) => {
+router.post('/nom-details', authenticateToken, validateSiteAccess(), (req, res) => {
     const { competence_id, site_id, semaine, annee, noms } = req.body;
 
     if (!competence_id || !site_id || !semaine || !annee || !noms) {

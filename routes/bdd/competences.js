@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../../db'); // Assurez-vous que le chemin est correct
 const authenticateToken = require('../../middleware/auth'); // Importer le middleware d'authentification
+const validateSiteAccess = require('../../middleware/validateSiteAccess');
 
 
 router.get('/competences', authenticateToken, (req, res) => {
@@ -184,7 +185,7 @@ router.post('/delete-competence', authenticateToken, (req, res) => {
 });
 
 // Route pour récupérer le plus grand display_order
-router.get('/max-display-order', (req, res) => {
+router.get('/max-display-order', authenticateToken, (req, res) => {
     const query = 'SELECT MAX(display_order) AS maxDisplayOrder FROM Tcompetence_order';
     connection.query(query, (err, results) => {
         if (err) {
@@ -196,7 +197,7 @@ router.get('/max-display-order', (req, res) => {
     });
 });
 
-router.get('/competence-days', authenticateToken, (req, res) => {
+router.get('/competence-days', authenticateToken, validateSiteAccess(), (req, res) => {
     const siteId = req.query.site_id;
 
     if (!siteId) {
@@ -229,7 +230,7 @@ router.get('/competence-days', authenticateToken, (req, res) => {
 });
 
 
-router.post('/toggle-competence-day', authenticateToken, (req, res) => {
+router.post('/toggle-competence-day', authenticateToken, validateSiteAccess(), (req, res) => {
     const { competence_id, jour_id, is_checked, site_id } = req.body;
 
     if (!competence_id || !jour_id || site_id === undefined) {
@@ -251,7 +252,7 @@ router.post('/toggle-competence-day', authenticateToken, (req, res) => {
 });
 
 
-router.get('/competence-disponibilites', authenticateToken, (req, res) => {
+router.get('/competence-disponibilites', authenticateToken, validateSiteAccess(), (req, res) => {
     const { competence_id, site_id } = req.query;
 
     const query = `
@@ -272,7 +273,7 @@ router.get('/competence-disponibilites', authenticateToken, (req, res) => {
     });
 });
 
-router.post('/add-indisponibilite', authenticateToken, (req, res) => {
+router.post('/add-indisponibilite', authenticateToken, validateSiteAccess(), (req, res) => {
     const { competence_id, date_debut, date_fin, site_id } = req.body;
 
     const query = `
@@ -293,7 +294,7 @@ router.post('/add-indisponibilite', authenticateToken, (req, res) => {
     });
 });
 
-router.post('/remove-indisponibilite', authenticateToken, (req, res) => {
+router.post('/remove-indisponibilite', authenticateToken, validateSiteAccess(), (req, res) => {
     const { competence_id, date_debut, date_fin, site_id } = req.body;
 
     console.log("Requête reçue pour /remove-indisponibilite :", {

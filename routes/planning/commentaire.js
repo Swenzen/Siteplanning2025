@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../../db'); // Assurez-vous que le chemin est correct
 const authenticateToken = require('../../middleware/auth'); // Middleware d'authentification
+const validateSiteAccess = require('../../middleware/validateSiteAccess');
 
 // POST /api/delete-commentairev2
-router.post('/delete-commentairev2', authenticateToken, (req, res) => {
+router.post('/delete-commentairev2', authenticateToken, validateSiteAccess(), (req, res) => {
     const { site_id, competence_id, horaire_id, date, nom_id } = req.body;
     if (!site_id || !competence_id || !horaire_id || !date) {
         return res.status(400).json({ error: 'Paramètres manquants' });
@@ -27,7 +28,7 @@ router.post('/delete-commentairev2', authenticateToken, (req, res) => {
 });
 
 
-router.post('/add-commentairev2', authenticateToken, (req, res) => {
+router.post('/add-commentairev2', authenticateToken, validateSiteAccess(), (req, res) => {
     const { site_id, competence_id, horaire_id, date, nom_id, commentaire } = req.body;
     if (!site_id || !competence_id || !horaire_id || !date || !commentaire) {
         return res.status(400).json({ error: 'Paramètres manquants' });

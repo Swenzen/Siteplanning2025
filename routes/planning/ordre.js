@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const connection = require('../../db'); // Assurez-vous que le chemin est correct
+const authenticateToken = require('../../middleware/auth');
 
 // Route pour mettre à jour l'ordre des compétences
-router.post('/update-competence-order', (req, res) => {
+router.post('/update-competence-order', authenticateToken, (req, res) => {
     const order = req.body;
 
     if (!Array.isArray(order) || order.length === 0) {

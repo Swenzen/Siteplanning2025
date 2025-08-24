@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../../db');
 const authenticateToken = require('../../middleware/auth');
+const validateSiteAccess = require('../../middleware/validateSiteAccess');
 
 // Stats planning
-router.get('/planning-stats', authenticateToken, (req, res) => {
+router.get('/planning-stats', authenticateToken, validateSiteAccess(), (req, res) => {
     const { site_id, start, end } = req.query;
     if (!site_id || !start || !end) {
         return res.status(400).json({ error: "Paramètres manquants" });
@@ -32,7 +33,7 @@ router.get('/planning-stats', authenticateToken, (req, res) => {
 
 // En dessous = groupe pour stats
 
-router.get('/all-competences', authenticateToken, (req, res) => {
+router.get('/all-competences', authenticateToken, validateSiteAccess(), (req, res) => {
     const site_id = req.query.site_id; // <-- récupère dans la query, comme planning-stats !
     if (!site_id) return res.status(400).json({ error: "site_id manquant" });
 
@@ -77,7 +78,7 @@ router.post('/competence-groupe', authenticateToken, (req, res) => {
     );
 });
 
-router.get('/competence-groupes', authenticateToken, (req, res) => {
+router.get('/competence-groupes', authenticateToken, validateSiteAccess(), (req, res) => {
     const site_id = req.query.site_id;
     if (!site_id) return res.status(400).json({ error: "site_id manquant" });
 

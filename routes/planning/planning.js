@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../../db'); // Assurez-vous que le chemin est correct
 const authenticateToken = require('../../middleware/auth'); // Middleware d'authentification
+const validateSiteAccess = require('../../middleware/validateSiteAccess');
 
-router.get('/datecompetencewithnames', authenticateToken, (req, res) => {
+router.get('/datecompetencewithnames', authenticateToken, validateSiteAccess(), (req, res) => {
     const { site_id, start_date, end_date } = req.query;
 
     if (!site_id || !start_date || !end_date) {
@@ -83,7 +84,7 @@ ORDER BY co.display_order ASC, hct.horaire_id, d.date;
 });
 
 // Récupérer les vacances par jour pour un site et une période
-router.get('/vacancesv2', authenticateToken, (req, res) => {
+router.get('/vacancesv2', authenticateToken, validateSiteAccess(), (req, res) => {
     const { site_id, start_date, end_date } = req.query;
     if (!site_id || !start_date || !end_date) {
         return res.status(400).send('Paramètres manquants');
@@ -108,7 +109,7 @@ router.get('/vacancesv2', authenticateToken, (req, res) => {
 });
 
 
-router.get('/available-count', authenticateToken, (req, res) => {
+router.get('/available-count', authenticateToken, validateSiteAccess(), (req, res) => {
     const { site_id, dates } = req.query;
     if (!site_id || !dates) {
         return res.status(400).send('Paramètres manquants');
@@ -148,7 +149,7 @@ router.get('/available-count', authenticateToken, (req, res) => {
     });
 });
 
-router.get('/competence-horaire-dates', authenticateToken, (req, res) => {
+router.get('/competence-horaire-dates', authenticateToken, validateSiteAccess(), (req, res) => {
     const { site_id } = req.query;
     if (!site_id) {
         return res.status(400).send('Paramètre site_id manquant');
@@ -179,7 +180,7 @@ router.get('/competence-horaire-dates', authenticateToken, (req, res) => {
 
 //pour roulement
 
-router.post('/troulement', authenticateToken, (req, res) => {
+router.post('/troulement', authenticateToken, validateSiteAccess(), (req, res) => {
     const { nom_id, competence_id, horaire_id, jours_semaine, semaine_type, site_id } = req.body;
     if (!nom_id || !competence_id || !horaire_id || !jours_semaine || !semaine_type || !site_id) {
         return res.status(400).send('Paramètres manquants');
@@ -197,7 +198,7 @@ router.post('/troulement', authenticateToken, (req, res) => {
     });
 });
 
-router.get('/troulement', authenticateToken, (req, res) => {
+router.get('/troulement', authenticateToken, validateSiteAccess(), (req, res) => {
     const { nom_id, site_id } = req.query;
     if (!site_id) return res.status(400).send('Paramètres manquants');
     let query, params;
@@ -216,14 +217,17 @@ router.get('/troulement', authenticateToken, (req, res) => {
 
 router.delete('/troulement/:roulement_id', authenticateToken, (req, res) => {
     const { roulement_id } = req.params;
-    connection.query(
-        'DELETE FROM Troulement WHERE roulement_id = ?',
-        [roulement_id],
-        (err) => {
-            if (err) return res.status(500).send('Erreur SQL');
+    const userSiteIds = (req.user && req.user.siteIds) ? req.user.siteIds.map(String) : [];
+    connection.query('SELECT site_id FROM Troulement WHERE roulement_id = ?', [roulement_id], (err, rows) => {
+        if (err) return res.status(500).send('Erreur SQL');
+        if (!rows || rows.length === 0) return res.status(404).send('Introuvable');
+        const site_id = String(rows[0].site_id);
+        if (!userSiteIds.includes(site_id)) return res.status(403).send('Accès refusé');
+        connection.query('DELETE FROM Troulement WHERE roulement_id = ?', [roulement_id], (err2) => {
+            if (err2) return res.status(500).send('Erreur SQL');
             res.json({ success: true });
-        }
-    );
+        });
+    });
 });
 
 module.exports = router;

@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../../db');
 const authenticateToken = require('../../middleware/auth');
+const validateSiteAccess = require('../../middleware/validateSiteAccess');
 
 // Récupérer toutes les compétences du site avec leur statut repos
-router.get('/competences-repos', authenticateToken, (req, res) => {
+router.get('/competences-repos', authenticateToken, validateSiteAccess(), (req, res) => {
     const { site_id } = req.query;
     if (!site_id) return res.status(400).send('site_id manquant');
     const query = `
@@ -24,7 +25,7 @@ router.get('/competences-repos', authenticateToken, (req, res) => {
 });
 
 // Mettre à jour le statut repos d'une compétence
-router.post('/update-repos', authenticateToken, (req, res) => {
+router.post('/update-repos', authenticateToken, validateSiteAccess(), (req, res) => {
     const { competence_id, repos } = req.body;
     if (typeof competence_id === 'undefined' || typeof repos === 'undefined') {
         return res.status(400).send('Paramètres manquants');
