@@ -7,8 +7,25 @@ let planningData = [];
 let nomsDisponiblesParCellule = {};
 const siteId = sessionStorage.getItem("selectedSite");
 let groupesCache = {};
+let _exclusionsSet = new Set();
+
+async function loadExclusionsSet() {
+  try {
+    const site_id = sessionStorage.getItem('selectedSite');
+    const token = localStorage.getItem('token');
+    if (!site_id || !token) return;
+    const res = await fetch(`/api/exclusions-competence-nom?site_id=${site_id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const rows = await res.json();
+    _exclusionsSet = new Set((rows || []).filter(r => r.excluded).map(r => `${r.nom_id}|${r.competence_id}|${r.horaire_id}`));
+  } catch {}
+}
 
 window.addEventListener("DOMContentLoaded", () => {
+  // Précharger les exclusions pour les algos (auto-fill, croisement, mutation)
+  loadExclusionsSet();
   // Crée un conteneur pour les boutons si pas déjà présent
   let actionsDiv = document.getElementById("planning-actions");
   if (!actionsDiv) {
@@ -145,6 +162,9 @@ async function autoFillPlanningSimulatedTable(planningData) {
     }
   });
 
+  // Charger les exclusions une fois
+  await loadExclusionsSet();
+
   // Pour chaque date, tente de remplir toutes les cases ouvertes de la journée
   for (const date of Object.keys(casesParDate)) {
     let essais = 0;
@@ -164,7 +184,10 @@ async function autoFillPlanningSimulatedTable(planningData) {
       );
 
       const personnesPossiblesParCase = await Promise.all(cases.map(async cell => {
-        const nomsDispo = await fetchAvailableNames(cell.competence_id, siteId, cell.date);
+        const nomsDispoRaw = await fetchAvailableNames(cell.competence_id, siteId, cell.date, cell.horaire_id);
+        const nomsDispo = Array.isArray(nomsDispoRaw)
+          ? nomsDispoRaw.filter(n => !_exclusionsSet.has(`${n.nom_id}|${cell.competence_id}|${cell.horaire_id}`))
+          : [];
         return { cell, nomsDispo };
       }));
 
@@ -594,7 +617,7 @@ function crossoverByExchange(parentA, parentB) {
     const nomsDispo = Array.from(new Set([...nomsA, ...nomsB]));
     let used = new Set();
 
-    cases.forEach(c => {
+  cases.forEach(c => {
       // Si la case est locked dans l'un des parents, on garde la valeur et locked=true
       if (c.cellA.locked) {
         enfant[c.idx] = { ...c.cellA, locked: true };
@@ -609,17 +632,23 @@ function crossoverByExchange(parentA, parentB) {
       // Sinon, comportement normal
       let nom_id = null, nom = null;
       for (let id of nomsDispo) {
-        if (!used.has(id)) {
-          if (c.cellA.nom_id === id) {
-            nom_id = c.cellA.nom_id;
-            nom = c.cellA.nom;
-          } else if (c.cellB.nom_id === id) {
-            nom_id = c.cellB.nom_id;
-            nom = c.cellB.nom;
-          }
-          used.add(id);
-          break;
+        if (used.has(id)) continue;
+        let candidateNom, candidateId;
+        if (c.cellA.nom_id === id) {
+          candidateId = c.cellA.nom_id;
+          candidateNom = c.cellA.nom;
+        } else if (c.cellB.nom_id === id) {
+          candidateId = c.cellB.nom_id;
+          candidateNom = c.cellB.nom;
         }
+        if (candidateId == null) continue;
+        // Vérifie exclusion pour la case cible (compétence/horaire de cellA)
+        const excl = _exclusionsSet.has(`${candidateId}|${c.cellA.competence_id}|${c.cellA.horaire_id}`);
+        if (excl) continue;
+        nom_id = candidateId;
+        nom = candidateNom;
+        used.add(id);
+        break;
       }
       enfant[c.idx] = {
         ...c.cellA,
@@ -666,6 +695,10 @@ function nextGeneration(prevPlanning, competencesParNom) {
       competencesParNom[c1.nom_id] && competencesParNom[c1.nom_id].includes(c2.competence_id) &&
       competencesParNom[c2.nom_id] && competencesParNom[c2.nom_id].includes(c1.competence_id)
     ) {
+      // Vérifier exclusions (nom_id, competence_id, horaire_id)
+      const excl1 = _exclusionsSet.has(`${c2.nom_id}|${c1.competence_id}|${c1.horaire_id}`);
+      const excl2 = _exclusionsSet.has(`${c1.nom_id}|${c2.competence_id}|${c2.horaire_id}`);
+      if (excl1 || excl2) continue;
       // Vérifie que c2.nom_id n'est pas déjà affecté à une autre case ce jour-là (hors c1 et c2)
       const doublonC2 = planning.some(l =>
         l.date === date &&
@@ -1202,8 +1235,10 @@ async function appliquerRoulementsDansPlanningAuto() {
             if (cell.querySelector(".nom-block")) continue;
 
             // Vérifie disponibilité via fetchAvailableNames
-            const availableNames = await fetchAvailableNames(r.competence_id, siteId, dateStr);
+            const availableNames = await fetchAvailableNames(r.competence_id, siteId, dateStr, r.horaire_id);
             if (!availableNames.some(n => n.nom_id == r.nom_id)) continue;
+            // Exclusion (nom, compétence, horaire)
+            if (_exclusionsSet && _exclusionsSet.has(`${r.nom_id}|${r.competence_id}|${r.horaire_id}`)) continue;
 
             // Affecte la personne
             affectations.push({
@@ -1217,7 +1252,7 @@ async function appliquerRoulementsDansPlanningAuto() {
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    // 4. Envoie les affectations à l'API
+  // 4. Envoie les affectations à l'API
     for (const aff of affectations) {
         await fetch('/api/update-planningv2', {
             method: 'POST',
