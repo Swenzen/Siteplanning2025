@@ -24,6 +24,18 @@ async function loadExclusionsSet() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  // Prépare le panneau repliable des outils avancés
+  let adv = document.getElementById('advanced-tools');
+  let advToggle = document.getElementById('toggle-advanced-tools');
+  let advContent = document.getElementById('advanced-tools-content');
+  if (adv && advToggle && advContent) {
+    // Comportement du toggle
+    advToggle.addEventListener('click', () => {
+      const isOpen = advContent.style.display !== 'none';
+      advContent.style.display = isOpen ? 'none' : 'block';
+      advToggle.textContent = isOpen ? 'Outils avancés ▸' : 'Outils avancés ▾';
+    });
+  }
   // Précharger les exclusions pour les algos (auto-fill, croisement, mutation)
   loadExclusionsSet();
   // Crée un conteneur pour les boutons si pas déjà présent
@@ -75,17 +87,18 @@ window.addEventListener("DOMContentLoaded", () => {
     actionsDiv.appendChild(btn);
   }
 
-  // 4 - 100 générations (remplace le bouton croiser/muter)
+  // 4 - 100 générations (placer dans panneau avancé si présent)
+  const ensureAdvancedHost = () => document.getElementById('advanced-tools-content') || actionsDiv;
   if (!document.getElementById("btnNextGen100")) {
     const btn = document.createElement("button");
     btn.id = "btnNextGen100";
     btn.textContent = "4 - 100 générations";
     btn.classList.add("action-btn");
     btn.onclick = next100GenerationsWithVisualization;
-    actionsDiv.appendChild(btn);
+    ensureAdvancedHost().appendChild(btn);
   }
 
-  // 5 - Appliquer ce planning
+  // 5 - Appliquer ce planning (placer dans panneau avancé)
   if (!document.getElementById("btnApplySimuPlanning")) {
     const btn = document.createElement("button");
     btn.id = "btnApplySimuPlanning";
@@ -112,13 +125,31 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!confirm("Voulez-vous vraiment appliquer ce planning ? Cela va écraser les affectations existantes pour cette période.")) return;
       await applySimuPlanningToDB(toApply);
     };
-    actionsDiv.appendChild(btn);
+    ensureAdvancedHost().appendChild(btn);
   }
 
-  // Place la navigation juste sous les boutons
+  // Déplacer la navigation dans le panneau avancé
   const nav = document.getElementById("evolution-nav");
   if (nav) {
-    actionsDiv.parentNode.insertBefore(nav, actionsDiv.nextSibling);
+    ensureAdvancedHost().appendChild(nav);
+  }
+
+  // Déplacer la visualisation d'évolution dans le panneau avancé
+  const evo = document.getElementById('evolution-visualization');
+  if (evo) {
+    ensureAdvancedHost().appendChild(evo);
+  }
+
+  // Déplacer les résultats de stats dans le panneau avancé
+  const stats = document.getElementById('stats-results');
+  if (stats) {
+    ensureAdvancedHost().appendChild(stats);
+  }
+
+  // Déplacer le bouton imprimer dans le panneau avancé
+  const printBtn = document.getElementById('btnPrintPlanning');
+  if (printBtn) {
+    ensureAdvancedHost().appendChild(printBtn);
   }
 
   // Barre de progression
@@ -135,7 +166,9 @@ window.addEventListener("DOMContentLoaded", () => {
     prog.classList.add("native-progress");
     container.appendChild(bar);
     container.appendChild(prog);
-    document.body.insertBefore(container, document.getElementById("evolution-nav"));
+  const host = ensureAdvancedHost();
+  if (host && host.parentNode) host.parentNode.insertBefore(container, host);
+  else document.body.appendChild(container);
   }
 });
 

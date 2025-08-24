@@ -991,3 +991,27 @@ thead tr th {
 /* === PLANNING VALIDE: masquer les badges (D/A/V) et n'afficher que les noms === */
 .page-valide .badge-assign { display: none !important; }
 
+/* === Panneau Outils avancés === */
+.advanced-tools {
+  width: 90%;
+  margin: 16px auto 24px;
+  background: #fff;
+  border: 1px solid var(--gray-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.advanced-tools > #toggle-advanced-tools {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: linear-gradient(180deg,#f7fafc,#eef3f8);
+  color: #1f2937;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  padding: 10px 14px;
+  font-weight: 700;
+}
+.advanced-tools-content, #advanced-tools-content {
+  padding: 12px 14px 16px;
+}
+

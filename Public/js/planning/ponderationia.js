@@ -47,10 +47,16 @@ async function renderPonderationTable() {
     <button id="btnApplyPonderation" class="btn-ponderation">Appliquer</button>
   </div>`;
 
-  // Ajoute le tableau tout en bas du body
+  // Ajoute le tableau : si le conteneur d'outils avancés existe, insérer dedans, sinon en bas du body
+  const advContent = document.getElementById('advanced-tools-content');
   let panel = document.getElementById("ponderationia-panel");
-  if (panel) panel.outerHTML = html;
-  else document.body.insertAdjacentHTML("beforeend", html);
+  if (panel) {
+    panel.outerHTML = html;
+  } else if (advContent) {
+    advContent.insertAdjacentHTML('beforeend', html);
+  } else {
+    document.body.insertAdjacentHTML("beforeend", html);
+  }
 
   // Gestion du bouton "Appliquer"
   document.getElementById("btnApplyPonderation").onclick = () => {
