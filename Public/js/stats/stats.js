@@ -1,9 +1,29 @@
-// Pré-remplir avec la période du planning si dispo
+// Pré-remplir avec la période du planning si dispo (fallback sur startDate/endDate)
 document.addEventListener("DOMContentLoaded", () => {
-    const start = sessionStorage.getItem("planningStartDate");
-    const end = sessionStorage.getItem("planningEndDate");
-    if (start) document.getElementById("statsStartDate").value = start;
-    if (end) document.getElementById("statsEndDate").value = end;
+    const start = sessionStorage.getItem("planningStartDate") || sessionStorage.getItem("startDate") || localStorage.getItem("savedStartDate");
+    const end = sessionStorage.getItem("planningEndDate") || sessionStorage.getItem("endDate") || localStorage.getItem("savedEndDate");
+    const startInput = document.getElementById("statsStartDate");
+    const endInput = document.getElementById("statsEndDate");
+    if (start && startInput) startInput.value = start;
+    if (end && endInput) endInput.value = end;
+
+    // Sync immédiat sur changement des inputs
+    const syncDates = () => {
+        const s = startInput?.value || "";
+        const e = endInput?.value || "";
+        if (s) {
+            sessionStorage.setItem("planningStartDate", s);
+            sessionStorage.setItem("startDate", s);
+            localStorage.setItem("savedStartDate", s);
+        }
+        if (e) {
+            sessionStorage.setItem("planningEndDate", e);
+            sessionStorage.setItem("endDate", e);
+            localStorage.setItem("savedEndDate", e);
+        }
+    };
+    startInput?.addEventListener("change", syncDates);
+    endInput?.addEventListener("change", syncDates);
 });
 
 document.getElementById("periode-stats-form").addEventListener("submit", async function(e) {
@@ -16,6 +36,18 @@ document.getElementById("periode-stats-form").addEventListener("submit", async f
     if (!token || !siteId) {
         document.getElementById("stats-results").innerHTML = "Erreur : authentification ou site manquant.";
         return;
+    }
+
+    // Sauvegarde/Synchronise la période sélectionnée pour les autres pages
+    if (start) {
+        sessionStorage.setItem("planningStartDate", start);
+        sessionStorage.setItem("startDate", start);
+        localStorage.setItem("savedStartDate", start);
+    }
+    if (end) {
+        sessionStorage.setItem("planningEndDate", end);
+        sessionStorage.setItem("endDate", end);
+        localStorage.setItem("savedEndDate", end);
     }
 
     // Récupère les stats brutes
@@ -31,20 +63,9 @@ document.getElementById("periode-stats-form").addEventListener("submit", async f
     }
     const data = await res.json(); // [{nom, competence, horaire_id, ...}, ...]
 
-    // Récupère les groupes de compétences
-    const groupes = await getCompetenceGroups();
-
-    // Modalités horaires
-    const modalites = {
-        "Matin": [1],
-        "Après-midi": [2],
-        "Soir": [3],
-        "Journée": [4]
-    };
-    const allModalites = Object.keys(modalites);
-
-    // Toutes les compétences individuelles
-    const allCompetences = [...new Set(data.map(d => d.competence))];
+    // Récupère les groupes de compétences et d'horaires
+    const groupesCompetence = await getCompetenceGroups();
+    const groupesHoraire = await getHoraireGroups();
 
     // Toutes les personnes
     const allNoms = [...new Set(data.map(d => d.nom))];
@@ -52,42 +73,43 @@ document.getElementById("periode-stats-form").addEventListener("submit", async f
     // Stats par personne
     const stats = {};
     data.forEach(d => {
-        if (!stats[d.nom]) stats[d.nom] = {competences: {}, modalites: {}, total: 0};
+        if (!stats[d.nom]) stats[d.nom] = {competences: {}, horairesById: {}, total: 0};
+        // Compétences unitaires (servira pour sommer dans les groupes)
         stats[d.nom].competences[d.competence] = (stats[d.nom].competences[d.competence] || 0) + 1;
-        for (const [mod, ids] of Object.entries(modalites)) {
-            if (ids.includes(d.horaire_id)) {
-                stats[d.nom].modalites[mod] = (stats[d.nom].modalites[mod] || 0) + 1;
-            }
+        // Comptage par horaire_id (pour sommer dans les groupes d'horaires)
+        const hid = d.horaire_id;
+        if (hid != null) {
+            stats[d.nom].horairesById[hid] = (stats[d.nom].horairesById[hid] || 0) + 1;
         }
         stats[d.nom].total++;
     });
 
-    // Stats par groupe de compétences
-    // Pour chaque groupe, additionne les stats de toutes les compétences du groupe
-    function getGroupeStat(nom, groupe) {
+    // Fonctions d'agrégation par groupe
+    // Compétences: somme des occurrences de toutes les compétences incluses
+    function getGroupeCompetenceStat(nom, groupe) {
         if (!stats[nom]) return 0;
-        return groupe.competences.reduce((sum, c) => sum + (stats[nom].competences[c.competence] || 0), 0);
+        return (groupe.competences || []).reduce((sum, c) => sum + (stats[nom].competences[c.competence] || 0), 0);
+    }
+    // Horaires: somme des occurrences de tous les horaires inclus
+    function getGroupeHoraireStat(nom, groupe) {
+        if (!stats[nom]) return 0;
+        return (groupe.horaires || []).reduce((sum, h) => sum + (stats[nom].horairesById[h.horaire_id] || 0), 0);
     }
 
-    // Génère le tableau HTML
+    // Génère le tableau HTML: seulement les groupes (compétences et horaires) + total
     let html = `<table><thead><tr><th>Nom</th>`;
-
-    // Colonnes compétences individuelles
-    allCompetences.forEach(c => html += `<th>${c}</th>`);
-    // Colonnes groupes
-    groupes.forEach(g => html += `<th class="stats-groupe-col">${g.nom_groupe}</th>`);
-    // Colonnes horaires
-    allModalites.forEach(m => html += `<th>${m}</th>`);
+    // Groupes de compétences
+    groupesCompetence.forEach(g => html += `<th class="stats-groupe-col">${g.nom_groupe}</th>`);
+    // Groupes d'horaires
+    groupesHoraire.forEach(g => html += `<th class="stats-groupe-col">${g.nom_groupe}</th>`);
     html += `<th>Total</th></tr></thead><tbody>`;
 
     for (const nom of allNoms) {
         html += `<tr><td>${nom}</td>`;
-        // Compétences individuelles
-        allCompetences.forEach(c => html += `<td>${stats[nom]?.competences[c] || 0}</td>`);
-        // Groupes
-        groupes.forEach(g => html += `<td class="stats-groupe-col">${getGroupeStat(nom, g)}</td>`);
-        // Horaires
-        allModalites.forEach(m => html += `<td>${stats[nom]?.modalites[m] || 0}</td>`);
+        // Groupes de compétences
+        groupesCompetence.forEach(g => html += `<td class="stats-groupe-col">${getGroupeCompetenceStat(nom, g)}</td>`);
+        // Groupes d'horaires
+        groupesHoraire.forEach(g => html += `<td class="stats-groupe-col">${getGroupeHoraireStat(nom, g)}</td>`);
         html += `<td>${stats[nom]?.total || 0}</td></tr>`;
     }
     html += `</tbody></table>`;
