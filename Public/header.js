@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <li><a href="/bdd/ordre-competences-par-nom.html">Ordre compétences par nom</a></li>
                         <li><a href="/bdd/jours-repos.html">Jours repos</a></li>
                         <li><a href="/bdd/exclusion-competence.html">Exclusion compétence</a></li>
+                        <li><a href="/bdd/preferences.html">Préférences utilisateur</a></li>
                         <!-- Items conservés mais à ne pas utiliser pour le moment -->
                         <li><a href="/bdd/horaires-par-competence-dates.html">Horaires par compétence avec dates (ne pas utiliser)</a></li>
                         <li><a href="/bdd/indisponibilites-par-competence.html">Indisponibilités par compétence (ne pas utiliser)</a></li>
@@ -42,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <li><a href="/confidentialite.html">Politique de confidentialité</a></li>
                         <li><a href="/rgpd.html">RGPD</a></li>
                         <li><a href="/cgu.html">CGU</a></li>
+                        <li><a href="/bdd/preferences.html">Préférences utilisateur</a></li>
                     </ul>
                 </li>
       </ul>

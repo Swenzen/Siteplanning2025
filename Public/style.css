@@ -1103,3 +1103,10 @@ thead tr th {
   padding: 12px 14px 16px;
 }
 
+/* Indicateur de préférence (Outils avancés) */
+#pref-planningcompsem-indicator { margin-bottom: 8px; font-size: 14px; }
+.pref-label { color: #555; margin-right: 6px; }
+.pref-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+.pref-badge.on { background: #e6ffe6; color: #1a7f1a; border: 1px solid #9fd89f; }
+.pref-badge.off { background: #fff5e6; color: #b36b00; border: 1px solid #f3c781; }
+

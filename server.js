@@ -189,6 +189,7 @@ const statsRoutes = require('./routes/stats/stats');
 const styleRoutes = require('./routes/planning/style');
 const missionRoutes = require('./routes/planning/mission');
 const exclusionRoutes = require('./routes/bdd/exclusion');
+const preferencesRoutes = require('./routes/bdd/preferences');
 
 // Utiliser les routes
 app.use('/api', competencesRoutes);
@@ -211,6 +212,7 @@ app.use('/api', statsRoutes);
 app.use('/api', styleRoutes);
 app.use('/api', missionRoutes);
 app.use('/api', exclusionRoutes);
+app.use('/api', preferencesRoutes);
 
 
 

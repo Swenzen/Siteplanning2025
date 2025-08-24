@@ -406,7 +406,20 @@ CREATE TABLE IF NOT EXISTS Texclusioncompetencenom_Tsite (
   UNIQUE KEY uniq_nom_comp_hor_site (nom_id, competence_id, horaire_id, site_id)
 );
 
+ALTER TABLE Tcompetence
+ADD COLUMN repos BOOLEAN NOT NULL DEFAULT 0;
 
+-- Table des préférences utilisateur par site
+CREATE TABLE IF NOT EXISTS Tpreferenceuser (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    site_id INT NOT NULL,
+    planningcompsem TINYINT(1) NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_user_site (user_id, site_id),
+    FOREIGN KEY (user_id) REFERENCES Tuser(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);
 
 
 
@@ -562,5 +575,3 @@ INSERT INTO Tcompetence_jour (competence_id, jour_id) VALUES
 (2, 6), -- IRM indisponible le samedi
 (2, 7); -- IRM indisponible le dimanche
 
-ALTER TABLE Tcompetence
-ADD COLUMN repos BOOLEAN NOT NULL DEFAULT 0;
