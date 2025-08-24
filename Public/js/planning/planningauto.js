@@ -75,6 +75,59 @@ async function displayPlanningWithNames(
     dateHeaders.push(formattedDate);
     currentDate.setDate(currentDate.getDate() + 1);
   }
+  // Avant d'ajouter la ligne d'en-tête, insérer une bande segmentée au-dessus des dates qui marque les jours validés (page auto seulement)
+  try {
+    const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
+    const isAutoPage = (ctx === 'automatique') || (typeof location !== 'undefined' && /planning-automatique\.html?$/.test(location.pathname || ''));
+    if (isAutoPage) {
+      // Agrège les infos par date
+      const infoByDate = {};
+      if (Array.isArray(data)) {
+        data.forEach(r => {
+          const d = r && r.date;
+          if (!d) return;
+          if (!infoByDate[d]) infoByDate[d] = { anyValidated:false, anyAssigned:false, anyAssignedNotValidated:false };
+          if (r.nom_id) infoByDate[d].anyAssigned = true;
+          if (Number(r.planning_valide || 0) === 1) infoByDate[d].anyValidated = true;
+          if (r.nom_id && Number(r.planning_valide || 0) !== 1) infoByDate[d].anyAssignedNotValidated = true;
+        });
+      }
+      const validatedDatesArr = Object.keys(infoByDate).filter(d => infoByDate[d].anyValidated).sort();
+      if (validatedDatesArr.length > 0) {
+        const minV = validatedDatesArr[0];
+        const maxV = validatedDatesArr[validatedDatesArr.length - 1];
+        const bandRow = document.createElement('tr');
+        bandRow.className = 'valide-band-row';
+        // Cellule de gauche (2 colonnes) avec le texte
+        const left = document.createElement('th');
+        left.colSpan = 2;
+        const minStr = new Date(minV).toLocaleDateString('fr-FR');
+        const maxStr = new Date(maxV).toLocaleDateString('fr-FR');
+        left.innerHTML = `<span class=\"valide-icon\">✓</span> <strong>Planning validé</strong><br><small>du ${minStr} au ${maxStr}</small>`;
+        bandRow.appendChild(left);
+        // Une cellule par date: coche verte si validée totalement, coche orange clignotante si mixte, vide sinon
+        dateHeaders.forEach(d => {
+          const thd = document.createElement('th');
+          thd.className = 'valide-col';
+          const info = infoByDate[d] || { anyValidated:false, anyAssigned:false, anyAssignedNotValidated:false };
+          if (info.anyValidated) {
+            if (info.anyAssignedNotValidated) {
+              thd.classList.add('val-on');
+              thd.innerHTML = '<span class="val-tick val-orange blink-soft">✓</span>';
+            } else {
+              thd.classList.add('val-on');
+              thd.innerHTML = '<span class="val-tick val-green">✓</span>';
+            }
+          } else {
+            thd.classList.add('val-off');
+          }
+          bandRow.appendChild(thd);
+        });
+        thead.appendChild(bandRow);
+      }
+    }
+  } catch(e) { /* noop */ }
+
   thead.appendChild(headerRow);
 
   // Regrouper les données par competence_id, horaire_id, date

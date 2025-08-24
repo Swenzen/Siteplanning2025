@@ -1023,6 +1023,62 @@ thead tr th {
   padding:6px 10px; border-radius: 20px; font-weight:700;
 }
 
+/* Ligne d'entête période validée pour la page automatique */
+.valide-range-row th {
+  background: #e8f5e9 !important;
+  color: #1b5e20 !important;
+  border-bottom: 2px solid #c8e6c9 !important;
+  font-weight: 800 !important;
+  text-align: left !important;
+  padding: 10px 12px !important;
+}
+.valide-range-row .valide-icon {
+  display:inline-flex; align-items:center; justify-content:center;
+  width: 22px; height: 22px; margin-right: 8px;
+  background:#43a047; color:#fff; border-radius:50%; font-weight:900;
+}
+
+/* Bande segmentée des jours validés au-dessus des dates (planning auto) */
+.valide-band-row th {
+  background:#f1f8f4 !important;
+  color:#1b5e20 !important;
+  border-bottom:1px solid #cfe9d6 !important;
+}
+.valide-band-row th:first-child {
+  text-align:left !important;
+  font-weight:700 !important;
+  padding:8px 10px !important;
+}
+.valide-band-row .valide-col {
+  height: 14px;
+  padding:0 !important;
+}
+.valide-band-row .valide-col.val-on {
+  background:#a5d6a7 !important; /* vert moyen visible */
+  border-bottom:2px solid #66bb6a !important;
+}
+.valide-band-row .valide-col.val-off {
+  background:#f5f5f5 !important;
+  opacity:0.6;
+}
+
+/* Coche dans la bande segmentée */
+.valide-band-row .val-tick {
+  display:inline-flex; align-items:center; justify-content:center;
+  width: 16px; height: 16px; border-radius:50%; font-size:12px; font-weight:900;
+  margin: 0 auto; margin-top: -2px;
+}
+.valide-band-row .val-green { background:#2e7d32; color:#fff; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+.valide-band-row .val-orange { background:#ff9800; color:#1a1a1a; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+
+/* Clignotement doux */
+@keyframes softBlink {
+  0% { opacity: 0.25; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.25; transform: scale(0.96); }
+}
+.blink-soft { animation: softBlink 1.4s ease-in-out infinite; }
+
 /* === Panneau Outils avancés === */
 .advanced-tools {
   width: 90%;
