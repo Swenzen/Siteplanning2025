@@ -25,12 +25,18 @@
                 <button id="applyDateFilter">Appliquer</button>
     </div>
 
+        <div id="progressBarContainer" class="progress-bar-container">
+            <div class="progress-label">Progression</div>
+            <div id="progressBar" class="progress-bar"></div>
+            <progress id="progressProcess" max="100" value="0" class="native-progress"></progress>
+        </div>
+
     <table id="planningTableWithNames">
         <thead></thead>
         <tbody></tbody>
         <tfoot></tfoot>
     </table>
-        <div style="margin: 10px 5%;">
+    <div class="actions-below-table">
             <button id="btnDeleteNonDesideratas" class="danger" title="Supprimer toutes les affectations sauf celles marquées Désidératas dans la période affichée">Supprimer les noms (sauf les désidératas)</button>
         </div>
     <button id="btnPrintPlanning">Imprimer ce planning</button>

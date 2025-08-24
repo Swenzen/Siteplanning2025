@@ -777,6 +777,10 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
   }
 });
 
+// Aperçu live: met à jour une cellule du tableau principal sans toucher la BDD
+// contract: input = { competence_id, horaire_id, date, nom, nom_id, desideratas(0/1) }
+// (liveUpdatePlanningCell retiré)
+
 async function fetchAvailableCount(siteId, dates) {
   const token = localStorage.getItem("token");
   // On suppose que tu as une route qui retourne un objet { "2025-05-05": 3, ... }

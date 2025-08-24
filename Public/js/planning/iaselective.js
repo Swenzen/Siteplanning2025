@@ -126,11 +126,15 @@ window.addEventListener("DOMContentLoaded", () => {
     const container = document.createElement("div");
     container.id = "progressBarContainer";
     container.classList.add("progress-bar-container");
-    container.style.display = "none";
     const bar = document.createElement("div");
     bar.id = "progressBar";
     bar.classList.add("progress-bar");
+    const prog = document.createElement("progress");
+    prog.id = "progressProcess";
+    prog.max = 100; prog.value = 0;
+    prog.classList.add("native-progress");
     container.appendChild(bar);
+    container.appendChild(prog);
     document.body.insertBefore(container, document.getElementById("evolution-nav"));
   }
 });
@@ -138,6 +142,14 @@ window.addEventListener("DOMContentLoaded", () => {
 // Remplissage automatique du planning simulé (pas de BDD)
 async function autoFillPlanningSimulatedTable(planningData) {
   const site_id = sessionStorage.getItem("selectedSite");
+  ensureProgressUI();
+  // Prépare la barre de progression pour l'opération de remplissage auto
+  const progressBarContainer = document.getElementById("progressBarContainer");
+  const progressBar = document.getElementById("progressBar");
+  const progressProcess = document.getElementById("progressProcess");
+  if (progressBarContainer) progressBarContainer.classList.add('show');
+  if (progressBar) progressBar.style.width = "0%";
+  if (progressProcess) progressProcess.value = 0;
   let planning = planningData.map(cell => ({
     ...cell,
     site_id,
@@ -166,7 +178,10 @@ async function autoFillPlanningSimulatedTable(planningData) {
   await loadExclusionsSet();
 
   // Pour chaque date, tente de remplir toutes les cases ouvertes de la journée
-  for (const date of Object.keys(casesParDate)) {
+  const datesList = Object.keys(casesParDate);
+  const totalDates = datesList.length || 1;
+  let idxDate = 0;
+  for (const date of datesList) {
     let essais = 0;
     let rempli = false;
     let backup = JSON.parse(JSON.stringify(planning)); // Pour restaurer si échec
@@ -230,9 +245,19 @@ async function autoFillPlanningSimulatedTable(planningData) {
       }
     }
     // Si après 20 essais la journée n'est pas remplie, on laisse les cases vides
+
+    // Mise à jour de la barre de progression par date traitée
+    idxDate++;
+  const pct = Math.min(100, Math.round((idxDate / totalDates) * 100));
+  if (progressBar) progressBar.style.width = pct + "%";
+  if (progressProcess) progressProcess.value = pct;
+    // Laisse un petit temps au navigateur pour peindre (optionnel)
+    await new Promise(r => setTimeout(r, 0));
   }
 
   renderPlanningRemplissageTable(planning);
+  // Cache la barre à la fin
+  if (progressBarContainer) setTimeout(() => { progressBarContainer.classList.remove('show'); }, 400);
   return planning;
 }
 
@@ -554,10 +579,13 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, pla
   const competencesParNom = await fetchCompetencesParNom();
 
   // Affiche la barre de progression
+  ensureProgressUI();
   const progressBarContainer = document.getElementById("progressBarContainer");
   const progressBar = document.getElementById("progressBar");
-  if (progressBarContainer) progressBarContainer.style.display = "block";
+  const progressProcess = document.getElementById("progressProcess");
+  if (progressBarContainer) progressBarContainer.classList.add('show');
   if (progressBar) progressBar.style.width = "0%";
+  if (progressProcess) progressProcess.value = 0;
 
   let plannings = [];
   for (let i = 0; i < nbPlannings; i++) {
@@ -569,17 +597,40 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, pla
     plannings.push(planning);
 
     // Mise à jour de la barre de progression
-    if (progressBar) {
-      progressBar.style.width = `${((i + 1) / nbPlannings) * 100}%`;
-    }
+  const pct = ((i + 1) / nbPlannings) * 100;
+  if (progressBar) progressBar.style.width = `${pct}%`;
+  if (progressProcess) progressProcess.value = Math.round(pct);
     // Pour laisser le temps d'afficher la progression (optionnel)
     await new Promise(r => setTimeout(r, 1));
   }
 
   // Cache la barre à la fin
-  if (progressBarContainer) setTimeout(() => { progressBarContainer.style.display = "none"; }, 500);
+  if (progressBarContainer) setTimeout(() => { progressBarContainer.classList.remove('show'); }, 500);
 
   return plannings;
+}
+
+// Assure la présence de l'UI de progression (sans dépendre de DOMContentLoaded)
+function ensureProgressUI() {
+  if (document.getElementById('progressBarContainer')) return;
+  const container = document.createElement('div');
+  container.id = 'progressBarContainer';
+  container.classList.add('progress-bar-container');
+  const bar = document.createElement('div');
+  bar.id = 'progressBar';
+  bar.classList.add('progress-bar');
+  const prog = document.createElement('progress');
+  prog.id = 'progressProcess';
+  prog.max = 100; prog.value = 0;
+  prog.classList.add('native-progress');
+  container.appendChild(bar);
+  container.appendChild(prog);
+  const nav = document.getElementById('evolution-nav');
+  if (nav && nav.parentNode) {
+    nav.parentNode.insertBefore(container, nav);
+  } else {
+    document.body.appendChild(container);
+  }
 }
 
 // =======================
@@ -822,6 +873,14 @@ function setupCrossMutateNav() {
 // Lance la génération des meilleurs plannings
 async function launchBestPlannings() {
   document.getElementById("stats-results").innerHTML = "Calcul en cours...";
+  // Assure que la barre d'avancement est visible immédiatement
+  ensureProgressUI();
+  const pbc = document.getElementById('progressBarContainer');
+  const pb = document.getElementById('progressBar');
+  const pp = document.getElementById('progressProcess');
+  if (pbc) pbc.classList.add('show');
+  if (pb) pb.style.width = '0%';
+  if (pp) pp.value = 0;
   const plannings = await generateRandomPlannings(100, 1000, planningData);
   let statsPlannings = plannings.map((planning) => ({
     planning,
@@ -1106,20 +1165,16 @@ window.addEventListener("DOMContentLoaded", () => {
   if (!document.getElementById("progressBarContainer")) {
     const container = document.createElement("div");
     container.id = "progressBarContainer";
-    container.style.width = "100%";
-    container.style.background = "#eee";
-    container.style.margin = "12px 0";
-    container.style.height = "18px";
-    container.style.borderRadius = "8px";
-    container.style.overflow = "hidden";
-    container.style.display = "none";
+    container.classList.add("progress-bar-container");
     const bar = document.createElement("div");
     bar.id = "progressBar";
-    bar.style.height = "100%";
-    bar.style.width = "0%";
-    bar.style.background = "#007bff";
-    bar.style.transition = "width 0.2s";
+    bar.classList.add("progress-bar");
+    const prog = document.createElement("progress");
+    prog.id = "progressProcess";
+    prog.max = 100; prog.value = 0;
+    prog.classList.add("native-progress");
     container.appendChild(bar);
+    container.appendChild(prog);
     document.body.insertBefore(container, document.getElementById("evolution-nav"));
   }
   if (!document.getElementById("btnApplySimuPlanning")) {
