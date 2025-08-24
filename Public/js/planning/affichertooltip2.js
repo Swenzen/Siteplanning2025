@@ -517,7 +517,7 @@ async function updatePlanningV2({
   }
 
   try {
-    const response = await fetch("/api/update-planningv2", {
+  const response = await fetch("/api/update-planningv2", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -535,14 +535,14 @@ async function updatePlanningV2({
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Erreur lors de la mise à jour de Tplanningv2 : ${response.status} - ${errorText}`
+  `Erreur lors de la mise à jour de Tplanningv2 : ${response.status} - ${errorText}`
       );
     }
 
     console.log("Planning mis à jour avec succès.");
     await refreshSecondTable();
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de Tplanningv2 :", error);
+  console.error("Erreur lors de la mise à jour de Tplanningv2 :", error);
     alert("Une erreur est survenue lors de la mise à jour du planning.");
   }
 }

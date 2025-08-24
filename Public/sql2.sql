@@ -274,6 +274,20 @@ CREATE TABLE Tplanningv2 (
 );
 
 
+-- Table de planning définitif (même structure que Tplanningv2)
+CREATE TABLE Tplanningdefinitif (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATE NOT NULL,
+    nom_id INT NOT NULL,
+    horaire_id INT NOT NULL,
+    competence_id INT NOT NULL,
+    site_id INT NOT NULL,
+    FOREIGN KEY (nom_id) REFERENCES Tnom(nom_id) ON DELETE CASCADE,
+    FOREIGN KEY (horaire_id, competence_id, site_id) REFERENCES Thoraire_competence_Tsite(horaire_id, competence_id, site_id) ON DELETE CASCADE,
+    FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE
+);
+
+
 CREATE TABLE Tcommentairev2 (
     commentaire_id INT AUTO_INCREMENT PRIMARY KEY,
     site_id INT NOT NULL,

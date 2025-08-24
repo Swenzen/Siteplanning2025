@@ -80,16 +80,16 @@ router.get('/available-names', authenticateToken, (req, res) => {
         return res.status(400).send('Les paramètres competence_id, site_id et date sont requis.');
     }
 
-    let query = `
+  let query = `
         SELECT DISTINCT n.nom, n.nom_id
         FROM Tcompetence_nom_Tsite cns
         JOIN Tnom n ON cns.nom_id = n.nom_id
         WHERE cns.competence_id = ?
           AND cns.site_id = ?
           AND n.nom_id NOT IN (
-              SELECT p.nom_id
-              FROM Tplanningv2 p
-              WHERE p.date = ? AND p.site_id = ?
+        SELECT p.nom_id
+        FROM Tplanningv2 p
+        WHERE p.date = ? AND p.site_id = ?
           )
           AND n.nom_id NOT IN (
               SELECT v.nom_id
@@ -99,7 +99,7 @@ router.get('/available-names', authenticateToken, (req, res) => {
           AND ? BETWEEN n.date_debut AND n.date_fin
     `;
 
-    const params = [competence_id, site_id, date, site_id, date, site_id, date];
+  const params = [competence_id, site_id, date, site_id, date, site_id, date];
 
     if (horaire_id) {
       query += ` AND n.nom_id NOT IN (
@@ -130,10 +130,10 @@ router.post('/update-planningv2', authenticateToken, validateSiteAccess(), (req,
         return res.status(400).send('Tous les champs sont requis.');
     }
 
-    const query = `
-        INSERT INTO Tplanningv2 (date, nom_id, competence_id, horaire_id, site_id)
-        VALUES (?, ?, ?, ?, ?)
-    `;
+  const query = `
+    INSERT INTO Tplanningv2 (date, nom_id, competence_id, horaire_id, site_id)
+    VALUES (?, ?, ?, ?, ?)
+  `;
 
     connection.query(
         query,
@@ -163,8 +163,8 @@ router.post('/delete-planningv2', authenticateToken, validateSiteAccess(), (req,
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
-    const query = `
-        DELETE FROM Tplanningv2
+  const query = `
+    DELETE FROM Tplanningv2
         WHERE date = ? AND nom_id = ? AND competence_id = ? AND horaire_id = ? AND site_id = ?
         LIMIT 1
     `;
@@ -340,8 +340,8 @@ router.get('/affectations-nom-periode', authenticateToken, validateSiteAccess(),
     return res.status(400).send('Paramètres manquants');
   }
   const sql = `
-    SELECT p.date, c.competence AS nom_competence, h.horaire_debut, h.horaire_fin
-    FROM Tplanningv2 p
+  SELECT p.date, c.competence AS nom_competence, h.horaire_debut, h.horaire_fin
+  FROM Tplanningv2 p
     JOIN Tcompetence c ON p.competence_id = c.competence_id
     JOIN Thoraire h ON p.horaire_id = h.horaire_id
     WHERE p.nom_id = ? AND p.site_id = ? AND p.date BETWEEN ? AND ?
