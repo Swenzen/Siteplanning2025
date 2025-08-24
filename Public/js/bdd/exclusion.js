@@ -197,8 +197,9 @@
   }
 
   async function initExclusionSection() {
-  const section = document.getElementById('exclusion compétence');
-    if (!section) return;
+    // Fonctionne si la table de la page dédiée est présente
+    const table = document.querySelector('#exclusionCompetenceTable tbody');
+    if (!table) return;
     const [noms, comps, compByPerson, horairesByComp, excludedSet] = await Promise.all([
       fetchNoms(),
       fetchCompetences(),
@@ -215,32 +216,50 @@
     const maxRetries = 10;
     const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
-    const maybeLoad = async () => {
-  const section = document.getElementById('exclusion compétence');
-      if (section && section.matches(':target')) {
-        const token = localStorage.getItem('token');
-        const siteId = sessionStorage.getItem('selectedSite');
-        if (!token || !siteId) {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            await delay(400);
-            return maybeLoad();
-          }
+    // 1) Page dédiée /bdd/exclusion-competence.html : init direct si la table est là
+    const loadOnPageIfReady = async () => {
+      if (!document.querySelector('#exclusionCompetenceTable')) return; // pas sur cette page
+      const token = localStorage.getItem('token');
+      const siteId = sessionStorage.getItem('selectedSite');
+      if (!token || !siteId) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          await delay(400);
+          return loadOnPageIfReady();
         }
-        initExclusionSection();
       }
+      initExclusionSection();
     };
-    maybeLoad();
-    window.addEventListener('hashchange', maybeLoad);
+    loadOnPageIfReady();
 
-    // Recharger quand le site change si la section est active
-  const selector = document.getElementById('siteSelector');
+    // 2) Compatibilité ancienne page: charger quand la section devient :target
+    const maybeLoadOldPage = async () => {
+      const oldSection = document.getElementById('exclusion compétence');
+      if (!oldSection || !oldSection.matches(':target')) return;
+      const token = localStorage.getItem('token');
+      const siteId = sessionStorage.getItem('selectedSite');
+      if (!token || !siteId) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          await delay(400);
+          return maybeLoadOldPage();
+        }
+      }
+      initExclusionSection();
+    };
+    maybeLoadOldPage();
+    window.addEventListener('hashchange', maybeLoadOldPage);
+
+    // Recharger quand le site change (page dédiée ou ancienne section active)
+    const selector = document.getElementById('siteSelector');
     if (selector) {
       selector.addEventListener('change', () => {
-    const section = document.getElementById('exclusion compétence');
-        if (section && section.matches(':target')) {
+        if (document.querySelector('#exclusionCompetenceTable')) {
           initExclusionSection();
+          return;
         }
+        const oldSection = document.getElementById('exclusion compétence');
+        if (oldSection && oldSection.matches(':target')) initExclusionSection();
       });
     }
   });

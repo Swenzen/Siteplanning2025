@@ -1,6 +1,15 @@
 let currentCell = null;
 let currentId = null;
 
+// Reformate une date YYYY-MM-DD en DD/MM/YYYY; retourne '' si vide/invalid
+function formatDate(iso) {
+    if (!iso || typeof iso !== 'string') return '';
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return iso;
+    const [, y, mo, d] = m;
+    return `${d}/${mo}/${y}`;
+}
+
 async function fetchData() {
     const token = localStorage.getItem('token');
     const siteId = sessionStorage.getItem('selectedSite');
@@ -276,7 +285,7 @@ async function saveName() {
         try {
             console.time('saveName');
             const token = localStorage.getItem('token');
-            const siteId = localStorage.getItem('site_id');
+            const siteId = sessionStorage.getItem('selectedSite');
 
             const response = await fetch('/api/update-name', {
                 method: 'POST',

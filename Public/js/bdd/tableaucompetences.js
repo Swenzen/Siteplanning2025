@@ -90,7 +90,8 @@ function openCompetenceDateModal(competenceId, dateDebut, dateFin) {
     modal.style.display = "block";
 }
 
-document.getElementById("saveDatesButton").addEventListener("click", async () => {
+const _saveDatesBtn = document.getElementById("saveDatesButton");
+if (_saveDatesBtn) _saveDatesBtn.addEventListener("click", async () => {
     const dateDebut = document.getElementById("dateDebutInput").value;
     const dateFin = document.getElementById("dateFinInput").value;
 
@@ -127,7 +128,8 @@ document.getElementById("saveDatesButton").addEventListener("click", async () =>
         console.error('Erreur lors de la mise à jour des dates :', error);
     }
 
-    document.getElementById("dateModal").style.display = "none";
+    const m = document.getElementById("dateModal");
+    if (m) m.style.display = "none";
 });
 
 function formatDate(dateString) {
@@ -730,17 +732,23 @@ async function deleteIndisponibilite(competenceId, dateDebut, dateFin) {
 }
 
 // Gestionnaire d'événements pour ajouter une compétence
-document.getElementById("addCompetenceButton").addEventListener("click", addCompetence);
+const _addCompetenceBtn = document.getElementById("addCompetenceButton");
+if (_addCompetenceBtn) _addCompetenceBtn.addEventListener("click", addCompetence);
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Chargement des compétences pour 'Gérer les indisponibilités'.");
-    fetchCompetences(); // Charger les compétences
-    fetchCompetenceDays(); // Charger les jours par compétence
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("Chargement des compétences pour 'Gérer les indisponibilités'.");
-    fetchCompetenceIndisponibilitesTable(); // Charger les compétences pour le tableau
+    // Ne lancer que ce qui est pertinent pour la page courante
+    if (document.querySelector('#competencesTable')) {
+        console.log("[competences] Remplissage #competencesTable");
+        fetchCompetences();
+    }
+    if (document.querySelector('#competenceDaysTable')) {
+        console.log("[competence-days] Remplissage #competenceDaysTable");
+        fetchCompetenceDays();
+    }
+    if (document.querySelector('#competenceIndisponibilitesTable')) {
+        console.log("[indispos] Remplissage #competenceIndisponibilitesTable");
+        fetchCompetenceIndisponibilitesTable();
+    }
 });
 
 const tableBody = document.querySelector("#competenceIndisponibilitesTable tbody");

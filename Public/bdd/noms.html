@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>BDD - Noms</title>
+  <link rel="stylesheet" href="../style.css" />
+  <script defer src="../header.js"></script>
+  <script defer src="../js/bdd/tableaunom.js"></script>
+</head>
+<body>
+  <h1>Base de données - Noms</h1>
+  <div id="section-noms" class="section active">
+    <div class="sticky-table-container">
+      <table id="databaseTable">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Date de début</th>
+            <th>Date de fin</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="form-container">
+      <button id="addNameButton">Ajouter un nom</button>
+    </div>
+  </div>
+
+  <!-- Modale édition nom -->
+  <div id="myModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editNameTitle">
+    <div class="modal-content">
+      <span class="close" data-close-modal="myModal">&times;</span>
+      <h2 id="editNameTitle">Modifier le nom</h2>
+      <input type="text" id="newName" placeholder="Entrez le nouveau nom" />
+      <button id="saveName">Sauvegarder</button>
+    </div>
+  </div>
+
+  <!-- Modale dates -->
+  <div id="dateModal" class="date-modal hidden" role="dialog" aria-modal="true" aria-labelledby="editDatesTitle">
+    <div class="date-modal-content">
+      <span class="date-close" data-close-modal="dateModal">&times;</span>
+      <h2 id="editDatesTitle">Modifier les dates</h2>
+      <label for="dateDebutInput">Date de début :</label>
+      <input type="date" id="dateDebutInput" />
+      <label for="dateFinInput">Date de fin :</label>
+      <input type="date" id="dateFinInput" />
+      <button id="saveDatesButton">Sauvegarder</button>
+    </div>
+  </div>
+</body>
+</html>

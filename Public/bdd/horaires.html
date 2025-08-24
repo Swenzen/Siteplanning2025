@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>BDD - Horaires</title>
+  <link rel="stylesheet" href="../style.css" />
+  <script defer src="../header.js"></script>
+  <script defer src="../js/bdd/horaires.js"></script>
+</head>
+<body>
+  <h1>Base de données - Horaires</h1>
+  <div id="section-horaires" class="section active">
+    <div class="sticky-table-container">
+      <table id="horairesTable">
+        <thead>
+          <tr>
+            <th>Horaire début</th>
+            <th>Horaire fin</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="form-container">
+      <button id="addHoraireButton">Ajouter un horaire</button>
+    </div>
+  </div>
+
+  <div id="horaireModal" class="modalh hidden" role="dialog" aria-modal="true" aria-labelledby="horaireModalTitle">
+    <div class="modalh-content">
+      <span id="closeHoraireModal" class="float-right cursor-pointer" data-close-modal="horaireModal">&times;</span>
+      <h3 id="horaireModalTitle">Ajouter un horaire</h3>
+      <label for="horaireDebutInput">Début :</label>
+      <input type="time" id="horaireDebutInput" required>
+      <br>
+      <label for="horaireFinInput">Fin :</label>
+      <input type="time" id="horaireFinInput" required>
+      <br><br>
+      <button id="confirmAddHoraire">Ajouter</button>
+    </div>
+  </div>
+</body>
+</html>

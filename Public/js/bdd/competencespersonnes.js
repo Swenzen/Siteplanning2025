@@ -36,8 +36,13 @@ async function fetchCompetencesPersonnes() {
         const competences = await competencesResponse.json();
         const personnes = await personnesResponse.json();
 
+        const table = document.querySelector('#competencesPersonnesTable');
         const tableHead = document.querySelector("#competencesPersonnesTable thead tr");
         const tableBody = document.querySelector("#competencesPersonnesTable tbody");
+        if (!table || !tableHead || !tableBody) {
+            console.error('Tableau #competencesPersonnesTable manquant dans la page.');
+            return;
+        }
         tableHead.innerHTML = '<th>Nom</th>';
         tableBody.innerHTML = '';
 

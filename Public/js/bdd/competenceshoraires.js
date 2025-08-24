@@ -42,6 +42,10 @@ async function fetchHorairesCompetences() {
 
         const tableHead = document.querySelector("#horairescompetenceTable thead tr");
         const tableBody = document.querySelector("#horairescompetenceTable tbody");
+        if (!tableHead || !tableBody) {
+            console.warn('[horaires-competences] Table #horairescompetenceTable absente, on ignore ce rendu.');
+            return;
+        }
         tableHead.innerHTML = '<th>Horaires</th>';
         tableBody.innerHTML = '';
 
@@ -156,6 +160,10 @@ async function fetchHoraireCompetenceDays() {
 
         const tableHead = document.querySelector("#horaireCompetenceDaysTable thead tr");
         const tableBody = document.querySelector("#horaireCompetenceDaysTable tbody");
+        if (!tableHead || !tableBody) {
+            console.warn('[horaire-competence-jours] Table #horaireCompetenceDaysTable absente, on ignore.');
+            return;
+        }
 
         // Réinitialiser l'en-tête et le corps du tableau
         tableHead.innerHTML = '<th>Horaires</th>';
@@ -299,6 +307,10 @@ async function fetchHoraireCompetenceDates() {
 
         const tableHead = document.querySelector("#horaireCompetenceDatesTable thead tr");
         const tableBody = document.querySelector("#horaireCompetenceDatesTable tbody");
+        if (!tableHead || !tableBody) {
+            console.warn('[horaire-competence-dates] Table #horaireCompetenceDatesTable absente, on ignore.');
+            return;
+        }
 
         // Réinitialiser l'en-tête et le corps du tableau
         tableHead.innerHTML = '<th>Horaires</th>';
@@ -387,6 +399,10 @@ function openDateModal(horaireId, competenceId, dateDebut, dateFin, dateType) {
     const dateDebutInput = document.getElementById("dateDebutInput");
     const dateFinInput = document.getElementById("dateFinInput");
     const saveButton = document.getElementById("saveDatesButton");
+    if (!modal || !dateDebutInput || !dateFinInput || !saveButton) {
+        console.warn('[horaire-competence-dates] Modale dates incomplète/absente, openDateModal ignoré.');
+        return;
+    }
 
     // Pré-remplir les champs avec les dates actuelles
     dateDebutInput.value = dateDebut ? dateDebut.split('T')[0] : ''; // Format YYYY-MM-DD
@@ -444,12 +460,24 @@ function formatDate(dateString) {
 }
 
 // Fermer le modal
-document.querySelector(".date-close").addEventListener("click", () => {
-    document.getElementById("dateModal").style.display = "none";
-});
+const _dateCloseBtn = document.querySelector(".date-close");
+if (_dateCloseBtn) {
+    _dateCloseBtn.addEventListener("click", () => {
+        const m = document.getElementById("dateModal");
+        if (m) m.style.display = "none";
+    });
+}
 
 
 // Appeler la fonction pour récupérer les horaires par compétence lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', fetchHorairesCompetences);
-document.addEventListener('DOMContentLoaded', fetchHoraireCompetenceDays);
-document.addEventListener('DOMContentLoaded', fetchHoraireCompetenceDates);
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.querySelector('#horairescompetenceTable')) {
+        fetchHorairesCompetences();
+    }
+    if (document.querySelector('#horaireCompetenceDaysTable')) {
+        fetchHoraireCompetenceDays();
+    }
+    if (document.querySelector('#horaireCompetenceDatesTable')) {
+        fetchHoraireCompetenceDates();
+    }
+});

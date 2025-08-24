@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>BDD - Horaires par compétence avec dates</title>
+  <link rel="stylesheet" href="../style.css" />
+  <script defer src="../header.js"></script>
+  <script defer src="../js/bdd/horaires.js"></script>
+  <script defer src="../js/bdd/competenceshoraires.js"></script>
+</head>
+<body>
+  <h1>Base de données - Horaires par compétence avec dates</h1>
+  <div id="section-horaires-competence-dates" class="section active">
+    <div class="grid-wrapper">
+      <div class="sticky-table-container">
+        <table id="horaireCompetenceDatesTable" class="grid-freeze">
+          <thead>
+            <tr>
+              <th>Horaires</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale dates -->
+  <div id="dateModal" class="date-modal hidden" role="dialog" aria-modal="true" aria-labelledby="editDatesTitle">
+    <div class="date-modal-content">
+      <span class="date-close" data-close-modal="dateModal">&times;</span>
+      <h2 id="editDatesTitle">Modifier les dates</h2>
+      <label for="dateDebutInput">Date de début :</label>
+      <input type="date" id="dateDebutInput" />
+      <label for="dateFinInput">Date de fin :</label>
+      <input type="date" id="dateFinInput" />
+      <button id="saveDatesButton">Sauvegarder</button>
+    </div>
+  </div>
+</body>
+</html>

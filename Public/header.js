@@ -6,32 +6,32 @@ document.addEventListener("DOMContentLoaded", () => {
         <div id="header-container">
     <nav id="menu">
       <ul>
-        <li><a href="index.html" class="">Index</a></li>
+                <li><a href="/index.html" class="">Index</a></li>
+                <li class="has-dropdown">
+                    <a href="/bdd/noms.html">Base de donnée</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/bdd/noms.html">Noms</a></li>
+                        <li><a href="/bdd/competences.html">Compétences</a></li>
+                        <li><a href="/bdd/horaires.html">Horaires</a></li>
+                        <li><a href="/bdd/horaires-par-competence.html">Horaires par compétence</a></li>
+                        <li><a href="/bdd/horaires-par-competence-jours.html">Horaires par compétence et jours</a></li>
+                        <li><a href="/bdd/horaires-par-competence-dates.html">Horaires par compétence avec dates</a></li>
+                        <li><a href="/bdd/competences-par-nom.html">Compétences par nom</a></li>
+                        <li><a href="/bdd/ordre-competences-par-nom.html">Ordre compétences par nom</a></li>
+                        <li><a href="/bdd/jours-repos.html">Jours repos</a></li>
+                        <li><a href="/bdd/indisponibilites-par-competence.html">Gérer les indisponibilités par compétence</a></li>
+                        <li><a href="/bdd/exclusion-competence.html">Exclusion compétence</a></li>
+                    </ul>
+                </li>
         <li class="has-dropdown">
-          <a href="base-de-donnee.html">Base de donnée</a>
+                    <a href="/planning.html">Planning</a>
           <ul class="dropdown-menu">
-            <li><a href="base-de-donnee.html#noms">Noms</a></li>
-            <li><a href="base-de-donnee.html#compétences">Compétences</a></li>
-            <li><a href="base-de-donnee.html#horaires">Horaires</a></li>
-            <li><a href="base-de-donnee.html#horaires par compétence">Horaires par compétence</a></li>
-            <li><a href="base-de-donnee.html#horaires par compétence et jours">Horaires par compétence et jours</a></li>
-            <li><a href="base-de-donnee.html#horaires par compétence avec dates">Horaires par compétence avec dates</a></li>
-            <li><a href="base-de-donnee.html#compétences par nom">Compétences par nom</a></li>
-            <li><a href="base-de-donnee.html#ordre compétences par nom">Ordre compétences par nom</a></li>
-            <li><a href="base-de-donnee.html#jours repos">Jours repos</a></li>
-            <li><a href="base-de-donnee.html#gérer les indisponibilités par compétence">Gérer les indisponibilités par compétence</a></li>
-            <li><a href="base-de-donnee.html#exclusion compétence">Exclusion compétence</a></li>
+                        <li><a href="/planning-planning automatique.html">Planning automatique</a></li>
+                        <li><a href="/planning-roulement.html">Planning roulement</a></li>
           </ul>
         </li>
-        <li class="has-dropdown">
-          <a href="planning.html">Planning</a>
-          <ul class="dropdown-menu">
-            <li><a href="planning-planning automatique.html">Planning automatique</a></li>
-            <li><a href="planning-roulement.html">Planning roulement</a></li>
-          </ul>
-        </li>
-        <li><a href="parametrage.html">Paramétrage</a></li>
-        <li><a href="stats.html">Stats</a></li>
+                <li><a href="/parametrage.html">Paramétrage</a></li>
+                <li><a href="/stats.html">Stats</a></li>
       </ul>
     </nav>
         <div id="user-section">
@@ -81,6 +81,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const parentLink = parentLi.querySelector('a[href]');
                 if (parentLink) parentLink.classList.add('active');
             }
+        }
+
+        // Cas BDD: si on est sur une sous-page dans /bdd/, activer le lien principal "Base de donnée"
+        if (window.location.pathname.includes('/bdd/') && href.includes('bdd/noms.html')) {
+            link.classList.add('active');
         }
     });
 
