@@ -84,7 +84,7 @@ function openNomDateModal(nomId, dateDebut, dateFin) {
 
     dateDebutInput.value = dateDebut || '';
     dateFinInput.value = dateFin || '';
-
+    modal.classList.remove('hidden');
     modal.style.display = "block";
 }
 
@@ -268,20 +268,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Fonction pour afficher la fenêtre modale
 function showModal() {
     const modal = document.getElementById("myModal");
+    modal.classList.remove('hidden');
     modal.style.display = "block";
-    document.getElementById("newName").value = currentCell.textContent;
+    const input = document.getElementById("newName");
+    input.value = currentCell.textContent;
+    input.focus();
+    input.select();
+    const onKey = (e) => { if (e.key === 'Enter') { e.preventDefault(); saveName(); } if (e.key === 'Escape') { closeModal(); } };
+    input.addEventListener('keydown', onKey, { once: true });
 }
 
 // Fonction pour fermer la fenêtre modale
 function closeModal() {
     const modal = document.getElementById("myModal");
     modal.style.display = "none";
+    modal.classList.add('hidden');
 }
 
 // Fonction pour sauvegarder le nouveau nom
 async function saveName() {
     const newName = document.getElementById("newName").value;
     if (currentCell && currentId) {
+        if (!newName || !newName.trim()) {
+            alert('Le nom ne peut pas être vide.');
+            return;
+        }
         try {
             console.time('saveName');
             const token = localStorage.getItem('token');
@@ -299,9 +310,9 @@ async function saveName() {
             if (response.ok) {
                 const result = await response.text();
                 console.log(result);
-                // Mettre à jour l'affichage du nom dans la cellule
-                currentCell.textContent = newName;
                 closeModal();
+                // Recharger pour conserver le tri alphabétique
+                await fetchData();
             } else {
                 console.error('Erreur lors de la mise à jour du nom');
             }
@@ -348,7 +359,16 @@ document.querySelector("#databaseTable tbody").addEventListener("click", (event)
 document.querySelector("#databaseTable tbody").addEventListener("click", (event) => {
     const cell = event.target;
     const row = cell.parentElement;
-    const nomId = row.querySelector("button").dataset.nomId;
+    const deleteBtn = row.querySelector("button");
+    const nomId = deleteBtn ? deleteBtn.dataset.nomId : null;
+
+    // Clic sur la colonne Nom -> ouvrir la modale d'édition
+    if (cell.cellIndex === 0 && nomId) {
+        currentCell = cell;
+        currentId = nomId;
+        showModal();
+        return;
+    }
 
     if (cell.cellIndex === 1) { // Colonne "Date de début"
         makeDateEditable(cell, nomId, "date_debut");
@@ -365,5 +385,18 @@ window.onclick = function(event) {
     const modal = document.getElementById("myModal");
     if (event.target === modal) {
         modal.style.display = "none";
+        modal.classList.add('hidden');
     }
 }
+
+// Gestionnaires génériques pour les fermetures de modales via attribut data-close-modal
+document.querySelectorAll('[data-close-modal]').forEach((el) => {
+    el.addEventListener('click', () => {
+        const targetId = el.getAttribute('data-close-modal');
+        const target = document.getElementById(targetId);
+        if (target) {
+            target.style.display = 'none';
+            target.classList.add('hidden');
+        }
+    });
+});

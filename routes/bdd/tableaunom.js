@@ -66,6 +66,36 @@ router.post('/add-nom', authenticateToken, (req, res) => {
         });
     });
 });
+
+// Mettre à jour le libellé d'un nom
+router.post('/update-name', authenticateToken, (req, res) => {
+    const { nom_id, nom, site_id } = req.body;
+    const userSiteIds = req.user.siteIds;
+
+    if (!userSiteIds.includes(String(site_id))) {
+        return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+    }
+    if (!nom || !String(nom).trim()) {
+        return res.status(400).send('Le nom ne peut pas être vide.');
+    }
+
+    const sql = `
+        UPDATE Tnom SET nom = ?
+        WHERE nom_id = ? AND EXISTS (
+            SELECT 1 FROM Tnom_Tsite WHERE nom_id = ? AND site_id = ?
+        )
+    `;
+    connection.query(sql, [nom, nom_id, nom_id, site_id], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la mise à jour du nom :', err.message);
+            return res.status(500).send('Erreur lors de la mise à jour du nom.');
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Nom introuvable pour ce site.');
+        }
+        res.send('Nom mis à jour avec succès.');
+    });
+});
 router.post('/delete-nom', authenticateToken, (req, res) => {
     const { nom_id, site_id } = req.body;
     const userSiteIds = req.user.siteIds;
