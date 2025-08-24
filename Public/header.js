@@ -83,9 +83,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Cas BDD: si on est sur une sous-page dans /bdd/, activer le lien principal "Base de donnée"
-        if (window.location.pathname.includes('/bdd/') && href.includes('bdd/noms.html')) {
-            link.classList.add('active');
+        // Cas BDD: si on est sur une page dans /bdd/, n'activer que le lien racine du menu BDD (pas les autres menus comme Planning)
+        if (window.location.pathname.includes('/bdd/')) {
+            const liHasDropdown = link.closest('.has-dropdown');
+            const isDropdownRoot = liHasDropdown && liHasDropdown.querySelector(':scope > a') === link;
+            if (isDropdownRoot) {
+                const hrefLower = (link.getAttribute('href') || '').toLowerCase();
+                if (hrefLower.startsWith('/bdd/')) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            }
         }
     });
 
@@ -129,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.removeItem('username');
             localStorage.removeItem('site_id');
             sessionStorage.removeItem('selectedSite');
-            window.location.href = 'index.html';
+            window.location.href = '/index.html';
         });
     }
 
