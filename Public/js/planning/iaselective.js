@@ -987,6 +987,9 @@ async function launchCrossMutateCycle() {
   currentCrossIdx = 0;
   await showCrossMutatePlanning(0);;
   setupCrossMutateNav();
+
+  // Démarre automatiquement les cycles de 100 générations avec visualisation
+  try { runAutoGenerationsUntilStagnation(5); } catch {}
 }
 
 async function next100Generations() {
@@ -1005,6 +1008,79 @@ async function next100Generations() {
   delete window._competencesParNomCache;
 
   if (btn) btn.disabled = false;
+}
+
+// Variante: 100 générations avec visualisation live et barre de progression
+async function next100GenerationsWithVisualization() {
+  ensureProgressUI();
+  const pbc = document.getElementById('progressBarContainer');
+  const pb = document.getElementById('progressBar');
+  const pp = document.getElementById('progressProcess');
+  if (pbc) pbc.classList.add('show');
+  if (pb) pb.style.width = '0%';
+  if (pp) pp.value = 0;
+
+  // Cache les compétences une seule fois
+  const competencesParNom = await fetchCompetencesParNom();
+  window._competencesParNomCache = competencesParNom;
+
+  const fullEvery = Number(window.PREVIEW_FULL_EVERY || 5);
+  for (let i = 0; i < 100; i++) {
+    await nextEvolutionGeneration(window._competencesParNomCache);
+    // Visualisation: meilleur planning courant
+    try {
+      const best = (Array.isArray(window.crossMutatePlannings) && window.crossMutatePlannings[0]) ? window.crossMutatePlannings[0] : null;
+      if (best && typeof window.previewPlanning === 'function') {
+        window.previewPlanning(best);
+      }
+      if (best && fullEvery > 0 && ((i + 1) % fullEvery) === 0 && typeof window.previewFullPlanning === 'function') {
+        window.previewFullPlanning(best);
+        await new Promise(r => setTimeout(r, Number(window.PREVIEW_FULL_MS || 120)));
+      }
+    } catch {}
+    // Progression visuelle
+    const pct = ((i + 1) / 100) * 100;
+    if (pb) pb.style.width = pct + '%';
+    if (pp) pp.value = Math.round(pct);
+    await new Promise(r => setTimeout(r, 0));
+  }
+  delete window._competencesParNomCache;
+}
+
+// Auto-run: enchaîne des lots de 100 générations jusqu'à 5 lots sans amélioration de score, puis applique.
+async function runAutoGenerationsUntilStagnation(maxStagnantLots = 5) {
+  if (window.AUTO_EVOL_RUNNING) return;
+  window.AUTO_EVOL_RUNNING = true;
+  try {
+    // Score initial (meilleur courant)
+    let bestPlanning = (Array.isArray(crossMutatePlannings) && crossMutatePlannings[0]) ? crossMutatePlannings[0] : null;
+    if (!bestPlanning) return;
+    let bestStats = await computeStats(bestPlanning);
+    let bestScore = computeEquilibreScore(bestStats, window.groupePriorites);
+    let stagnant = 0;
+
+    while (stagnant < maxStagnantLots) {
+      await next100GenerationsWithVisualization();
+      // Évalue le meilleur score après ce lot
+      bestPlanning = (Array.isArray(crossMutatePlannings) && crossMutatePlannings[0]) ? crossMutatePlannings[0] : bestPlanning;
+      const stats = await computeStats(bestPlanning);
+      const score = computeEquilibreScore(stats, window.groupePriorites);
+      if (score < bestScore - 1e-9) {
+        bestScore = score;
+        stagnant = 0;
+      } else {
+        stagnant++;
+      }
+    }
+    // Applique le meilleur planning si on est stagnant 5 lots
+    if (bestPlanning) {
+      await applySimuPlanningToDB(bestPlanning);
+    }
+  } catch (e) {
+    console.warn('Auto-run generations error:', e);
+  } finally {
+    window.AUTO_EVOL_RUNNING = false;
+  }
 }
 
 // Modifie nextEvolutionGeneration pour accepter le cache en paramètre
