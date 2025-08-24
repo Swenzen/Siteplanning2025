@@ -777,6 +777,101 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
   }
 });
 
+// ====================
+// Aperçu live (non persistant)
+// ====================
+(function(){
+  let _cellIndex = null; // Map key "c|h|date" -> td
+  let _snapshot = null;  // Map td -> originalHTML (seulement celles modifiées)
+  let _previewCursor = 0; // balayage rotatif
+  let _lastPreviewTs = 0; // throttle temporel
+  function buildCellIndex() {
+    _cellIndex = new Map();
+    const tds = document.querySelectorAll('#planningTableWithNames tbody td[data-competence-id][data-horaire-id][data-date]');
+    tds.forEach(td => {
+      const key = `${td.dataset.competenceId}|${td.dataset.horaireId}|${td.dataset.date}`;
+      _cellIndex.set(key, td);
+    });
+  }
+  function ensureSnapshotFor(td) {
+    if (!_snapshot) _snapshot = new Map();
+    if (!_snapshot.has(td)) {
+      _snapshot.set(td, td.innerHTML);
+    }
+  }
+  function applyCell(td, nom, nom_id, desideratas) {
+    ensureSnapshotFor(td);
+    // Efface le contenu nom-block uniquement (garde éventuels commentaires déjà rendus)
+    td.querySelectorAll('.nom-block').forEach(n => n.remove());
+    if (nom && nom_id) {
+      const div = document.createElement('div');
+      div.className = 'nom-block' + (desideratas ? ' nom-desideratas' : '');
+      div.dataset.nom = nom;
+      div.dataset.nomId = nom_id;
+      div.dataset.desideratas = String(desideratas ? 1 : 0);
+      const span = document.createElement('span');
+      span.className = 'nom-valeur';
+      span.textContent = nom;
+      div.appendChild(span);
+      const badge = document.createElement('span');
+      badge.className = 'badge-assign ' + (desideratas ? 'badge-desideratas' : 'badge-auto');
+      badge.title = desideratas ? 'Désidératas' : 'Auto';
+      badge.textContent = desideratas ? 'D' : 'A';
+      div.appendChild(badge);
+      td.appendChild(div);
+    }
+  }
+  window.previewPlanning = function(planningArray) {
+    try {
+      const table = document.getElementById('planningTableWithNames');
+      if (!table || !Array.isArray(planningArray)) return;
+      if (!_cellIndex) buildCellIndex();
+      if (!_snapshot) _snapshot = new Map();
+      // Balayage rotatif: applique un lot visible en partant d'un curseur qui avance
+      let updated = 0;
+      const L = planningArray.length;
+      if (!L) return;
+      const maxCells = Number(window.PREVIEW_MAX_CELLS || 24);
+      let idx = _previewCursor % L;
+      for (let count = 0; count < L && updated < maxCells; count++) {
+        const cell = planningArray[idx];
+        if (!cell || !cell.date || !cell.competence_id || !cell.horaire_id) continue;
+        const key = `${cell.competence_id}|${cell.horaire_id}|${cell.date}`;
+        const td = _cellIndex.get(key);
+        if (!td || td.dataset.ouverture === 'non') continue;
+        applyCell(td, cell.nom || null, cell.nom_id || null, cell.desideratas || 0);
+        updated++;
+        idx = (idx + 1) % L;
+      }
+      _previewCursor = idx; // mémorise le prochain point de départ
+    } catch {}
+  };
+  // Aperçu complet: applique toutes les cellules visibles du planning fourni
+  window.previewFullPlanning = function(planningArray) {
+    try {
+      const table = document.getElementById('planningTableWithNames');
+      if (!table || !Array.isArray(planningArray)) return;
+      if (!_cellIndex) buildCellIndex();
+      if (!_snapshot) _snapshot = new Map();
+      for (let i = 0; i < planningArray.length; i++) {
+        const cell = planningArray[i];
+        if (!cell || !cell.date || !cell.competence_id || !cell.horaire_id) continue;
+        const key = `${cell.competence_id}|${cell.horaire_id}|${cell.date}`;
+        const td = _cellIndex.get(key);
+        if (!td || td.dataset.ouverture === 'non') continue;
+        applyCell(td, cell.nom || null, cell.nom_id || null, cell.desideratas || 0);
+      }
+    } catch {}
+  };
+  window.endPreview = function() {
+    try {
+      if (_snapshot) { _snapshot.forEach((html, td) => { td.innerHTML = html; }); }
+    } catch {}
+    _snapshot = null;
+    _cellIndex = null;
+  };
+})();
+
 // Aperçu live: met à jour une cellule du tableau principal sans toucher la BDD
 // contract: input = { competence_id, horaire_id, date, nom, nom_id, desideratas(0/1) }
 // (liveUpdatePlanningCell retiré)

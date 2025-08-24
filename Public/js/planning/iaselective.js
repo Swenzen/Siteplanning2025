@@ -576,6 +576,10 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, pla
     }
     planningInitial = await fetchCompetencesWithNames(siteId, startDate, endDate);
   }
+  // Assurer une base entièrement (autant que possible) remplie avant mutations
+  try {
+    planningInitial = await autoFillPlanningSimulatedTable(planningInitial);
+  } catch {}
   const competencesParNom = await fetchCompetencesParNom();
 
   // Affiche la barre de progression
@@ -588,13 +592,37 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, pla
   if (progressProcess) progressProcess.value = 0;
 
   let plannings = [];
+  // Aperçu initial complet de la base remplie (sans écrire en BDD)
+  try { if (typeof window.previewFullPlanning === 'function') window.previewFullPlanning(planningInitial); } catch {}
+
   for (let i = 0; i < nbPlannings; i++) {
     let planning = JSON.parse(JSON.stringify(planningInitial));
     for (let j = 0; j < nbMutations; j++) {
       const res = nextGeneration(planning, competencesParNom);
       planning = res.planning;
+  // Aperçu live: afficher l'état courant rarement (réglable via PREVIEW_INTERVAL)
+      const interval = Number(window.PREVIEW_INTERVAL || 1500);
+      const nowTs = (window.performance && performance.now) ? performance.now() : Date.now();
+      window.__lastPreviewCallTs = window.__lastPreviewCallTs || 0;
+      if ((j % interval) === 0 && (nowTs - window.__lastPreviewCallTs > (window.PREVIEW_MIN_MS || 500))) {
+        if (typeof window.previewPlanning === 'function') {
+          window.previewPlanning(planning);
+          window.__lastPreviewCallTs = nowTs;
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
     }
     plannings.push(planning);
+
+  // Aperçu complet périodique: montrer tout le tableau de temps en temps (sans restaurer entre deux aperçus)
+    try {
+      const fullEvery = Number(window.PREVIEW_FULL_EVERY || 5);
+      if (fullEvery > 0 && ((i + 1) % fullEvery) === 0 && typeof window.previewFullPlanning === 'function') {
+        window.previewFullPlanning(planning);
+        // Laisse le navigateur peindre brièvement puis restaure
+    await new Promise(r => setTimeout(r, Number(window.PREVIEW_FULL_MS || 120)));
+      }
+    } catch {}
 
     // Mise à jour de la barre de progression
   const pct = ((i + 1) / nbPlannings) * 100;
@@ -605,6 +633,7 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, pla
   }
 
   // Cache la barre à la fin
+  if (!(window.PREVIEW_KEEP_AT_END === true) && typeof window.endPreview === 'function') { window.endPreview(); }
   if (progressBarContainer) setTimeout(() => { progressBarContainer.classList.remove('show'); }, 500);
 
   return plannings;
