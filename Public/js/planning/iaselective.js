@@ -81,7 +81,7 @@ window.addEventListener("DOMContentLoaded", () => {
     btn.id = "btnNextGen100";
     btn.textContent = "4 - 100 générations";
     btn.classList.add("action-btn");
-    btn.onclick = next100Generations;
+    btn.onclick = next100GenerationsWithVisualization;
     actionsDiv.appendChild(btn);
   }
 
@@ -593,37 +593,18 @@ async function generateRandomPlannings(nbPlannings = 20, nbMutations = 1000, pla
 
   let plannings = [];
   // Aperçu initial complet de la base remplie (sans écrire en BDD)
-  try { if (typeof window.previewFullPlanning === 'function') window.previewFullPlanning(planningInitial); } catch {}
+  try {
+          // Plus de prévisualisation en direct ici
+  } catch {}
 
   for (let i = 0; i < nbPlannings; i++) {
     let planning = JSON.parse(JSON.stringify(planningInitial));
     for (let j = 0; j < nbMutations; j++) {
       const res = nextGeneration(planning, competencesParNom);
       planning = res.planning;
-  // Aperçu live: afficher l'état courant rarement (réglable via PREVIEW_INTERVAL)
-      const interval = Number(window.PREVIEW_INTERVAL || 1500);
-      const nowTs = (window.performance && performance.now) ? performance.now() : Date.now();
-      window.__lastPreviewCallTs = window.__lastPreviewCallTs || 0;
-      if ((j % interval) === 0 && (nowTs - window.__lastPreviewCallTs > (window.PREVIEW_MIN_MS || 500))) {
-        if (typeof window.previewPlanning === 'function') {
-          window.previewPlanning(planning);
-          window.__lastPreviewCallTs = nowTs;
-          await new Promise(r => setTimeout(r, 0));
-        }
-      }
+      // Pas de live preview pendant les mutations
     }
     plannings.push(planning);
-
-  // Aperçu complet périodique: montrer tout le tableau de temps en temps (sans restaurer entre deux aperçus)
-    try {
-      const fullEvery = Number(window.PREVIEW_FULL_EVERY || 5);
-      if (fullEvery > 0 && ((i + 1) % fullEvery) === 0 && typeof window.previewFullPlanning === 'function') {
-        window.previewFullPlanning(planning);
-        // Laisse le navigateur peindre brièvement puis restaure
-    await new Promise(r => setTimeout(r, Number(window.PREVIEW_FULL_MS || 120)));
-      }
-    } catch {}
-
     // Mise à jour de la barre de progression
   const pct = ((i + 1) / nbPlannings) * 100;
   if (progressBar) progressBar.style.width = `${pct}%`;
@@ -826,16 +807,6 @@ async function showBestPlanning(idx) {
   document.getElementById("genLabel").textContent = `Planning ${idx + 1}/10`;
 }
 
-async function showCrossMutatePlanning(idx) {
-  const { lignes, dates } = buildLignesEtDates(crossMutatePlannings[idx]);
-  renderPlanningSwitchTable(crossMutatePlannings[idx], dates);
-  const stats = await computeStats(crossMutatePlannings[idx]);
-  renderStatsPanel(stats);
-  document.getElementById("genLabel").textContent = `Enfant ${
-    idx + 1
-  }/10 (Génération ${generationCounter})`;
-}
-
 // Navigation dans les meilleurs plannings
 function setupBestPlanningNav() {
   // Supprime tous les anciens listeners en remplaçant les boutons par des clones
@@ -985,11 +956,10 @@ async function launchCrossMutateCycle() {
   crossMutatePlannings = statsEnfants.slice(0, 10).map((x) => x.planning);
   crossMutateStats = statsEnfants.slice(0, 10).map((x) => x.stats);
   currentCrossIdx = 0;
-  await showCrossMutatePlanning(0);;
+  await showCrossMutatePlanning(0);
   setupCrossMutateNav();
-
-  // Démarre automatiquement les cycles de 100 générations avec visualisation
-  try { runAutoGenerationsUntilStagnation(5); } catch {}
+  // Démarre automatiquement 6 lots de 100 générations avec une barre unique
+  try { await runFixedLotsGenerations(6, 100); } catch {}
 }
 
 async function next100Generations() {
@@ -1010,77 +980,89 @@ async function next100Generations() {
   if (btn) btn.disabled = false;
 }
 
-// Variante: 100 générations avec visualisation live et barre de progression
+// Variante sans visualisation, conservée au besoin
 async function next100GenerationsWithVisualization() {
-  ensureProgressUI();
-  const pbc = document.getElementById('progressBarContainer');
-  const pb = document.getElementById('progressBar');
-  const pp = document.getElementById('progressProcess');
-  if (pbc) pbc.classList.add('show');
-  if (pb) pb.style.width = '0%';
-  if (pp) pp.value = 0;
-
-  // Cache les compétences une seule fois
-  const competencesParNom = await fetchCompetencesParNom();
-  window._competencesParNomCache = competencesParNom;
-
-  const fullEvery = Number(window.PREVIEW_FULL_EVERY || 5);
+  const compParNom = await fetchCompetencesParNom();
+  window._competencesParNomCache = compParNom;
   for (let i = 0; i < 100; i++) {
     await nextEvolutionGeneration(window._competencesParNomCache);
-    // Visualisation: meilleur planning courant
-    try {
-      const best = (Array.isArray(window.crossMutatePlannings) && window.crossMutatePlannings[0]) ? window.crossMutatePlannings[0] : null;
-      if (best && typeof window.previewPlanning === 'function') {
-        window.previewPlanning(best);
-      }
-      if (best && fullEvery > 0 && ((i + 1) % fullEvery) === 0 && typeof window.previewFullPlanning === 'function') {
-        window.previewFullPlanning(best);
-        await new Promise(r => setTimeout(r, Number(window.PREVIEW_FULL_MS || 120)));
-      }
-    } catch {}
-    // Progression visuelle
-    const pct = ((i + 1) / 100) * 100;
-    if (pb) pb.style.width = pct + '%';
-    if (pp) pp.value = Math.round(pct);
-    await new Promise(r => setTimeout(r, 0));
   }
   delete window._competencesParNomCache;
 }
 
-// Auto-run: enchaîne des lots de 100 générations jusqu'à 5 lots sans amélioration de score, puis applique.
-async function runAutoGenerationsUntilStagnation(maxStagnantLots = 5) {
-  if (window.AUTO_EVOL_RUNNING) return;
-  window.AUTO_EVOL_RUNNING = true;
-  try {
-    // Score initial (meilleur courant)
-    let bestPlanning = (Array.isArray(crossMutatePlannings) && crossMutatePlannings[0]) ? crossMutatePlannings[0] : null;
-    if (!bestPlanning) return;
-    let bestStats = await computeStats(bestPlanning);
-    let bestScore = computeEquilibreScore(bestStats, window.groupePriorites);
-    let stagnant = 0;
+// Exécute totalLots×perLot générations avec une seule barre 0→100%
+async function runFixedLotsGenerations(totalLots = 6, perLot = 100) {
+  ensureProgressUI();
+  const pbc = document.getElementById('progressBarContainer');
+  const pb = document.getElementById('progressBar');
+  const pp = document.getElementById('progressProcess');
+  let pt = document.getElementById('progressText');
+  if (!pt) {
+    pt = document.createElement('div');
+    pt.id = 'progressText';
+    pt.className = 'progress-label';
+    pbc?.insertBefore(pt, pbc.firstChild);
+  }
+  if (pbc) pbc.classList.add('show');
+  if (pb) pb.style.width = '0%';
+  if (pp) pp.value = 0;
+  if (pt) pt.textContent = 'Progression : 0%';
 
-    while (stagnant < maxStagnantLots) {
-      await next100GenerationsWithVisualization();
-      // Évalue le meilleur score après ce lot
-      bestPlanning = (Array.isArray(crossMutatePlannings) && crossMutatePlannings[0]) ? crossMutatePlannings[0] : bestPlanning;
-      const stats = await computeStats(bestPlanning);
-      const score = computeEquilibreScore(stats, window.groupePriorites);
-      if (score < bestScore - 1e-9) {
-        bestScore = score;
-        stagnant = 0;
-      } else {
-        stagnant++;
+  const total = totalLots * perLot;
+  const compParNom = await fetchCompetencesParNom();
+  window._competencesParNomCache = compParNom;
+  for (let i = 0; i < total; i++) {
+    await nextEvolutionGeneration(window._competencesParNomCache);
+    const pct = ((i + 1) / total) * 100;
+    if (pb) pb.style.width = pct + '%';
+    if (pp) pp.value = Math.round(pct);
+    if (pt) pt.textContent = `Progression : ${Math.round(pct)}%`;
+    await new Promise(r => setTimeout(r, 0));
+  }
+  delete window._competencesParNomCache;
+  // Appliquer automatiquement le meilleur planning à la fin
+  try {
+    const best = (Array.isArray(crossMutatePlannings) && crossMutatePlannings[0]) ? crossMutatePlannings[0] : null;
+    if (best) await applySimuPlanningToDB(best);
+  } catch {}
+  if (pbc) setTimeout(() => pbc.classList.remove('show'), 500);
+
+  // Ancien code de visualisation supprimé
+}
+
+// S'assure que le tableau 1 affiche la période du planning et qu'il est présent dans le DOM
+async function ensureMainTableSyncedToPlanning(planningArray) {
+  try {
+    if (!Array.isArray(planningArray) || planningArray.length === 0) return;
+    const dates = Array.from(new Set(planningArray.map(c => c && c.date).filter(Boolean))).sort();
+    const start = dates[0];
+    const end = dates[dates.length - 1];
+    const s = document.getElementById('startDate');
+    const e = document.getElementById('endDate');
+    let needRefresh = false;
+    if (s && e && start && end && (s.value !== start || e.value !== end)) {
+      s.value = start; e.value = end;
+      sessionStorage.setItem('startDate', start);
+      sessionStorage.setItem('endDate', end);
+      needRefresh = true;
+    }
+    const hasCells = () => document.querySelectorAll('#planningTableWithNames tbody td[data-competence-id][data-horaire-id][data-date]').length > 0;
+    if (needRefresh || !hasCells()) {
+      if (typeof window.refreshPlanningTableWithNames === 'function') {
+        await window.refreshPlanningTableWithNames();
+      }
+      // Attendre que le DOM soit prêt (jusqu'à ~1s)
+      for (let t = 0; t < 10 && !hasCells(); t++) {
+        await new Promise(r => setTimeout(r, 100));
       }
     }
-    // Applique le meilleur planning si on est stagnant 5 lots
-    if (bestPlanning) {
-      await applySimuPlanningToDB(bestPlanning);
-    }
-  } catch (e) {
-    console.warn('Auto-run generations error:', e);
-  } finally {
-    window.AUTO_EVOL_RUNNING = false;
-  }
+  } catch {}
+}
+
+// Auto-run: enchaîne des lots de 100 générations jusqu'à 5 lots sans amélioration de score, puis applique.
+async function runAutoGenerationsUntilStagnation(maxStagnantLots = 5) {
+// Ancienne boucle auto avec stagnation supprimée (remplacée par runFixedLotsGenerations)
+  return; // fonction conservée pour compatibilité, mais vide
 }
 
 // Modifie nextEvolutionGeneration pour accepter le cache en paramètre
@@ -1112,6 +1094,8 @@ async function nextEvolutionGeneration(competencesParNomCache = null) {
       enfants.push(enfant);
     }
   }
+
+  // (visualisation supprimée)
 
   // 3. Calcule les scores des enfants
   let statsEnfants = await Promise.all(enfants.map(async (planning) => {
@@ -1160,6 +1144,8 @@ async function nextEvolutionGeneration(competencesParNomCache = null) {
   currentCrossIdx = 0;
   await showCrossMutatePlanning(0);
   setupCrossMutateNav();
+
+  // (visualisation supprimée)
 
   if (btn) btn.disabled = false;
 }

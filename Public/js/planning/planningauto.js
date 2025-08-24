@@ -785,6 +785,7 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
   let _snapshot = null;  // Map td -> originalHTML (seulement celles modifiées)
   let _previewCursor = 0; // balayage rotatif
   let _lastPreviewTs = 0; // throttle temporel
+  let _cellCount = 0;     // nombre de cellules indexées pour détecter les re-rendus
   function buildCellIndex() {
     _cellIndex = new Map();
     const tds = document.querySelectorAll('#planningTableWithNames tbody td[data-competence-id][data-horaire-id][data-date]');
@@ -792,6 +793,14 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
       const key = `${td.dataset.competenceId}|${td.dataset.horaireId}|${td.dataset.date}`;
       _cellIndex.set(key, td);
     });
+    _cellCount = tds.length;
+  }
+  function ensureFreshIndex() {
+    const tdsNow = document.querySelectorAll('#planningTableWithNames tbody td[data-competence-id][data-horaire-id][data-date]');
+    if (!_cellIndex || _cellCount !== tdsNow.length) {
+      buildCellIndex();
+      _snapshot = new Map(); // reset snapshot car le DOM a changé
+    }
   }
   function ensureSnapshotFor(td) {
     if (!_snapshot) _snapshot = new Map();
@@ -821,12 +830,21 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
       td.appendChild(div);
     }
   }
+  function normDate(dateStr) {
+    if (!dateStr) return dateStr;
+    const m = String(dateStr).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (!m) return dateStr;
+    const y = m[1];
+    const mm = m[2].padStart(2,'0');
+    const dd = m[3].padStart(2,'0');
+    return `${y}-${mm}-${dd}`;
+  }
   window.previewPlanning = function(planningArray) {
     try {
       const table = document.getElementById('planningTableWithNames');
       if (!table || !Array.isArray(planningArray)) return;
-      if (!_cellIndex) buildCellIndex();
-      if (!_snapshot) _snapshot = new Map();
+  ensureFreshIndex();
+  if (!_snapshot) _snapshot = new Map();
       // Balayage rotatif: applique un lot visible en partant d'un curseur qui avance
       let updated = 0;
       const L = planningArray.length;
@@ -836,7 +854,7 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
       for (let count = 0; count < L && updated < maxCells; count++) {
         const cell = planningArray[idx];
         if (!cell || !cell.date || !cell.competence_id || !cell.horaire_id) continue;
-        const key = `${cell.competence_id}|${cell.horaire_id}|${cell.date}`;
+  const key = `${cell.competence_id}|${cell.horaire_id}|${normDate(cell.date)}`;
         const td = _cellIndex.get(key);
         if (!td || td.dataset.ouverture === 'non') continue;
         applyCell(td, cell.nom || null, cell.nom_id || null, cell.desideratas || 0);
@@ -851,13 +869,29 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
     try {
       const table = document.getElementById('planningTableWithNames');
       if (!table || !Array.isArray(planningArray)) return;
-      if (!_cellIndex) buildCellIndex();
+  ensureFreshIndex();
+  if (!_snapshot) _snapshot = new Map();
+      for (let i = 0; i < planningArray.length; i++) {
+        const cell = planningArray[i];
+        if (!cell || !cell.date || !cell.competence_id || !cell.horaire_id) continue;
+  const key = `${cell.competence_id}|${cell.horaire_id}|${normDate(cell.date)}`;
+        const td = _cellIndex.get(key);
+        if (!td || td.dataset.ouverture === 'non') continue;
+        applyCell(td, cell.nom || null, cell.nom_id || null, cell.desideratas || 0);
+      }
+    } catch {}
+  };
+  // Fallback: applique via querySelector direct si l'index ne correspond pas
+  window.applyPlanningToMainTable = function(planningArray) {
+    try {
+      const table = document.getElementById('planningTableWithNames');
+      if (!table || !Array.isArray(planningArray)) return;
       if (!_snapshot) _snapshot = new Map();
       for (let i = 0; i < planningArray.length; i++) {
         const cell = planningArray[i];
         if (!cell || !cell.date || !cell.competence_id || !cell.horaire_id) continue;
-        const key = `${cell.competence_id}|${cell.horaire_id}|${cell.date}`;
-        const td = _cellIndex.get(key);
+  const sel = `#planningTableWithNames tbody td[data-competence-id="${cell.competence_id}"][data-horaire-id="${cell.horaire_id}"][data-date="${normDate(cell.date)}"]`;
+        const td = document.querySelector(sel);
         if (!td || td.dataset.ouverture === 'non') continue;
         applyCell(td, cell.nom || null, cell.nom_id || null, cell.desideratas || 0);
       }
