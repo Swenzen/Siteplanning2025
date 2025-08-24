@@ -6,71 +6,95 @@ function createRoulementButton(nom_id, nom) {
 }
 
 function openRoulementMenu(nom_id, nom) {
-    // Création du menu/modal
+    // Création de l'overlay et du contenu modal
+    const overlay = document.createElement('div');
+    overlay.className = 'roulement-overlay';
     const modal = document.createElement('div');
     modal.className = 'roulement-modal';
 
-    modal.innerHTML = `
-        <h3>Roulement pour ${nom}</h3>
-        <label>Jours de la semaine :</label><br>
-        ${[1,2,3,4,5,6,7].map(j => `<label><input type="checkbox" value="${j}" class="jour-checkbox"> ${['L','M','M','J','V','S','D'][j-1]}</label>`).join(' ')}
-        <br><br>
-        <label>Semaine :</label>
-        <select id="semaineType">
-            <option value="toutes">Toutes</option>
-            <option value="paire">Paire</option>
-            <option value="impaire">Impaire</option>
-        </select>
-        <br><br>
-        <label>Compétence :</label>
-        <select id="competenceSelect"></select>
-        <br><br>
-        <label>Horaire :</label>
-        <select id="horaireSelect"></select>
-        <br><br>
-        <button id="roulementValider">Valider</button>
-        <button id="roulementAnnuler">Annuler</button>
-    `;
+        modal.innerHTML = `
+                <h3>Roulement pour ${nom}</h3>
+                <label>Jours de la semaine</label>
+                <div class="roulement-days">
+                    ${[1,2,3,4,5,6,7].map(j => `
+                        <div class="roulement-day">
+                            <strong>${['L','M','M','J','V','S','D'][j-1]}</strong>
+                            <input type="checkbox" value="${j}" class="jour-checkbox" aria-label="${['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'][j-1]}">
+                        </div>
+                    `).join('')}
+                </div>
 
-    document.body.appendChild(modal);
+                <label>Semaine</label>
+                <select id="semaineType" class="roulement-select">
+                        <option value="toutes">Toutes</option>
+                        <option value="paire">Paire</option>
+                        <option value="impaire">Impaire</option>
+                </select>
 
-    // Remplir les compétences/horaire dynamiquement
+                <label>Couple compétence / horaire</label>
+                <select id="coupleSelect" class="roulement-select"></select>
+
+                <div class="roulement-actions">
+                    <button id="roulementAnnuler">Annuler</button>
+                    <button id="roulementValider" class="success">Valider</button>
+                </div>
+        `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Fermeture au clic en dehors de la boîte
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+    // Fermeture clavier (Échap)
+    const onKeyDown = (e) => { if (e.key === 'Escape') { overlay.remove(); window.removeEventListener('keydown', onKeyDown); } };
+    window.addEventListener('keydown', onKeyDown);
+
+        // Remplir la liste des couples (compétence + horaire) dynamiquement
     const token = localStorage.getItem('token');
+        const siteId = sessionStorage.getItem('selectedSite');
+            Promise.all([
+                fetch('/api/competences?site_id=' + siteId, { headers: { 'Authorization': `Bearer ${token}` } }).then(r=>r.json()),
+                fetch('/api/horaires?site_id=' + siteId, { headers: { 'Authorization': `Bearer ${token}` } }).then(r=>r.json()),
+                fetch('/api/horaires-competences?site_id=' + siteId, { headers: { 'Authorization': `Bearer ${token}` } }).then(r=>r.json())
+            ]).then(([competences, horaires, hcList]) => {
+                const select = modal.querySelector('#coupleSelect');
+                const options = [];
+                // Index pour libellés
+                const compById = new Map(competences.map(c => [String(c.competence_id), c.competence]));
+                const horaireById = new Map(horaires.map(h => [String(h.horaire_id), h]));
+                // hcList: [{horaire_id, horaire_debut, horaire_fin, competences:[ids]}]
+                hcList.forEach(h => {
+                    const hInfo = horaireById.get(String(h.horaire_id)) || { horaire_debut: h.horaire_debut, horaire_fin: h.horaire_fin };
+                    (h.competences || []).forEach(cid => {
+                        const compName = compById.get(String(cid));
+                        if (!compName) return; // sécurité
+                        options.push({
+                            value: `${cid}|${h.horaire_id}`,
+                            label: `${compName} — ${hInfo.horaire_debut} - ${hInfo.horaire_fin}`
+                        });
+                    });
+                });
+                // Tri alpha par libellé
+                options.sort((a,b)=>a.label.localeCompare(b.label,'fr'));
+                if (options.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'Aucun couple disponible';
+                    select.appendChild(opt);
+                    select.disabled = true;
+                } else {
+                    options.forEach(o => {
+                        const opt = document.createElement('option');
+                        opt.value = o.value;
+                        opt.textContent = o.label;
+                        select.appendChild(opt);
+                    });
+                }
+            }).catch((e)=>{ console.warn('[roulement] couples indisponibles', e); });
 
-    fetch('/api/competences?site_id=' + sessionStorage.getItem('selectedSite'), {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-        .then(res => {
-            if (!res.ok) throw new Error("Accès refusé");
-            return res.json();
-        })
-        .then(competences => {
-            const select = modal.querySelector('#competenceSelect');
-            competences.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.competence_id;
-                opt.textContent = c.competence;
-                select.appendChild(opt);
-            });
-        });
-    fetch('/api/horaires?site_id=' + sessionStorage.getItem('selectedSite'), {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-        .then(res => {
-            if (!res.ok) throw new Error("Accès refusé");
-            return res.json();
-        })
-        .then(horaires => {
-            const select = modal.querySelector('#horaireSelect');
-            horaires.forEach(h => {
-                const opt = document.createElement('option');
-                opt.value = h.horaire_id;
-                opt.textContent = h.horaire_debut + ' - ' + h.horaire_fin;
-                select.appendChild(opt);
-            });
-        });
-
-    modal.querySelector('#roulementAnnuler').onclick = () => modal.remove();
+    modal.querySelector('#roulementAnnuler').onclick = () => { overlay.remove(); window.removeEventListener('keydown', onKeyDown); };
 
     modal.querySelector('#roulementValider').onclick = async (e) => {
         const btn = e.currentTarget;
@@ -79,8 +103,8 @@ function openRoulementMenu(nom_id, nom) {
             .map(cb => cb.value)
             .join(',');
         const semaineType = modal.querySelector('#semaineType').value;
-        const competence_id = modal.querySelector('#competenceSelect').value;
-        const horaire_id = modal.querySelector('#horaireSelect').value;
+    const couple = modal.querySelector('#coupleSelect').value || '';
+    const [competence_id, horaire_id] = couple.split('|');
         const site_id = sessionStorage.getItem('selectedSite');
 
         // Validations côté client
@@ -96,7 +120,7 @@ function openRoulementMenu(nom_id, nom) {
             alert('Sélectionnez au moins un jour.');
             return;
         }
-        if (!competence_id || !horaire_id) {
+    if (!competence_id || !horaire_id) {
             alert('Sélectionnez une compétence et un horaire.');
             return;
         }
@@ -121,7 +145,8 @@ function openRoulementMenu(nom_id, nom) {
                 btn.disabled = false;
                 return;
             }
-            modal.remove();
+            overlay.remove();
+            window.removeEventListener('keydown', onKeyDown);
             alert('Roulement ajouté !');
             fetchRoulementNoms();
         } catch (err) {
@@ -174,6 +199,8 @@ async function fetchRoulementNoms() {
     if (!response.ok) return;
 
     const data = await response.json();
+    // Tri alphabétique (fr) des noms pour l'affichage
+    data.sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr', { sensitivity: 'base' }));
     const tbody = document.querySelector("#roulementNomTable tbody");
     tbody.innerHTML = '';
     data.forEach(async ({ nom, nom_id }) => {

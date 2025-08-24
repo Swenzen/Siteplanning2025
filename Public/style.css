@@ -423,7 +423,7 @@ table.grid-freeze .sub-table input[type=checkbox] { cursor:pointer; }
 
 
 /* ========== MODALES ========== */
-.modal, .date-modal, .modalh, .indisponibilites-modal, .roulement-modal {
+.modal, .date-modal, .modalh, .indisponibilites-modal {
   display:none;
   position:fixed;
   left:0; top:0;
@@ -437,23 +437,49 @@ table.grid-freeze .sub-table input[type=checkbox] { cursor:pointer; }
 .roulement-modal {
   display:block; /* force l'affichage de la modale roulement (le sélecteur global la cachait) */
   background:#fff;
-  margin:10% auto;
-  padding:20px;
+  margin:6% auto;
+  padding:20px 24px;
   border:1px solid #ccc;
   border-radius:10px;
-  width:70%;
-  max-width:800px;
+  width:90%;
+  max-width:640px;
   box-shadow:0 4px 16px rgba(0,0,0,0.15);
 }
 .modalh-content { width:300px; }
 .indisponibilites-modal-content { width:70%; }
-.roulement-modal {
-  position:fixed;
-  top:20%;
-  left:50%;
-  transform:translate(-50%,0);
-  min-width:320px;
+.roulement-modal { position:relative; top:auto; left:auto; transform:none; min-width:340px; max-height:80vh; overflow:auto; }
+.roulement-modal h3 { margin-top:0; margin-bottom:12px; }
+.roulement-modal label { font-weight:600; display:block; margin:10px 0 6px; }
+.roulement-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1050; display:flex; align-items:center; justify-content:center; padding:24px; }
+.roulement-days {
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap:8px;
+  margin-top:8px;
 }
+.roulement-day {
+  text-align:center;
+  border:1px solid #e3e6ef;
+  border-radius:8px;
+  padding:6px 4px;
+  background:#f8fafc;
+}
+.roulement-day strong { display:block; margin-bottom:6px; font-size:13px; color:#334155; }
+.roulement-day input[type="checkbox"] { transform:scale(1.2); }
+.roulement-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+.roulement-select { width:100%; padding:8px; border:1px solid #cfd8e3; border-radius:8px; background:#fff; }
+.roulement-modal .roulement-actions button { 
+  padding:8px 12px; 
+  border-radius:8px; 
+  border:1px solid #cfd8e3; 
+  background:#fff; 
+  color:#111827; /* texte foncé pour être lisible sur fond blanc */
+  cursor:pointer; 
+}
+.roulement-modal .roulement-actions button:hover { background:#f3f4f6; }
+.roulement-modal .roulement-actions button:focus { outline:2px solid #93c5fd; outline-offset:2px; }
+.roulement-modal .roulement-actions button.success { background:#16a34a; color:#fff; border-color:#15803d; }
+.roulement-actions button:hover { filter:brightness(0.97); }
 .close, .date-close, .indisponibilites-close {
   float:right; font-size:28px; font-weight:bold; color:#aaa; cursor:pointer;
 }
