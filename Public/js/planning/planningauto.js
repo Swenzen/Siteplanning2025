@@ -1095,19 +1095,29 @@ document.getElementById('btnPrintPlanning').onclick = function() {
 
   // Ouvre une nouvelle fenêtre
   const win = window.open('', '_blank');
-  // Ajoute une classe pour l'orientation si besoin
-  const orientation = confirm("OK = Portrait, Annuler = Paysage") ? 'portrait' : 'landscape';
+  // Orientation: par défaut Portrait (l'utilisateur peut changer dans la boîte d'impression système)
+  const orientation = 'portrait';
+
+  // Récup infos contexte (pour titre)
+  const startDate = document.getElementById('startDate')?.value || '';
+  const endDate = document.getElementById('endDate')?.value || '';
+  const siteName = document.querySelector('#siteSelector option:checked')?.textContent || '';
+  const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
+  const classes = [];
+  if (orientation === 'landscape') classes.push('landscape');
+  if (ctx === 'valide') classes.push('page-valide');
+  const bodyClassAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
 
   win.document.write(`
     <html>
       <head>
         <title>Impression planning</title>
-        <link rel="stylesheet" href="style.css">
+        <link rel=\"stylesheet\" href=\"/style.css\"> 
       </head>
-      <body${orientation === 'landscape' ? ' class="landscape"' : ''}>
-        <button id="btnPrintNow" class="no-print">Imprimer</button>
+      <body${bodyClassAttr}>
+        <button id=\"btnPrintNow\" class=\"no-print\">Imprimer</button>
         ${tableClone.outerHTML}
-        <script src="js/planning/print-planning-popup.js" defer></script>
+        <script src=\"/js/planning/print-planning-popup.js\" defer></script>
       </body>
     </html>
   `);

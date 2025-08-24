@@ -147,6 +147,25 @@ app.get(['/testscinticoeur.html','/testscinticoeur.js','/testscinticoeur.css'], 
     }
 });
 
+// CSP plus souple pour les pages Planning (autorise styles inline)
+const planningCsp = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data:; object-src 'none'";
+app.get([
+    '/planning/planning.html',
+    '/planning/planning-automatique.html',
+    '/planning/planning-desideratas.html',
+    '/planning/planning-roulement.html',
+    '/planning/planning-automatique-clone.html',
+    '/planning/planning-valide.html'
+], (req, res, next) => {
+    try {
+        res.setHeader('Content-Security-Policy', planningCsp);
+        const file = req.path.replace(/^\//, '');
+        res.sendFile(path.join(__dirname, 'Public', file));
+    } catch (e) {
+        next(e);
+    }
+});
+
 // Servir les fichiers statiques 
 app.use(express.static(path.join(__dirname, 'Public')));
 
