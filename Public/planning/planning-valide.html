@@ -9,6 +9,14 @@
   </head>
   <body>
     <section class="section-container">
+      <div id="valide-banner" class="valide-banner no-print hidden" role="status" aria-live="polite">
+        <span class="valide-icon" aria-hidden="true">✓</span>
+        <div class="valide-text">
+          <strong>Attention, le planning a été validé !</strong>
+          <span id="valide-periode"></span>
+        </div>
+        <span class="valide-badge" aria-hidden="true">Validé ✓</span>
+      </div>
       <div id="dateSelector" class="mb-20">
         <label for="startDate">Date de début :</label>
         <input type="date" id="startDate">

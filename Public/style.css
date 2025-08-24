@@ -991,6 +991,38 @@ thead tr th {
 /* === PLANNING VALIDE: masquer les badges (D/A/V) et n'afficher que les noms === */
 .page-valide .badge-assign { display: none !important; }
 
+/* Bandeau Planning Validé */
+.valide-banner {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  color: #1b5e20;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 10px 0 18px;
+  box-shadow: 0 2px 8px rgba(46,125,50,0.08);
+}
+.valide-banner.hidden { display:none !important; }
+.valide-icon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #43a047;
+  color: #fff;
+  font-weight: 900;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.valide-text { flex:1; }
+.valide-badge {
+  background:#2e7d32; color:#fff;
+  padding:6px 10px; border-radius: 20px; font-weight:700;
+}
+
 /* === Panneau Outils avancés === */
 .advanced-tools {
   width: 90%;
