@@ -397,8 +397,21 @@ function showTooltip(event, noms, { competenceId, horaireId, date, siteId, plann
       tooltip.style.display = "none";
       const nomId = li.dataset.nomId;
       if (!nomId) return;
-    const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
-    const flags = { desideratas: ctx === 'desideratas', planning_auto: ctx === 'automatique' };
+      const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
+      const flags = { desideratas: ctx === 'desideratas', planning_auto: ctx === 'automatique' };
+
+      // Sur la page planning auto, si la case contient déjà un Désidératas (D), on interdit toute modification ici
+      try {
+        const isAutoPage = (ctx === 'automatique') || (typeof location !== 'undefined' && /planning-automatique\.html?$/i.test(location.pathname || ''));
+        if (isAutoPage) {
+          const td = document.querySelector(`#planningTableWithNames td[data-competence-id="${competenceId}"][data-horaire-id="${horaireId}"][data-date="${date}"]`);
+          const hasD = td && td.querySelector('.nom-block[data-desideratas="1"]');
+          if (hasD) {
+            alert('Non: cette case est protégée (désidératas). Supprimez/modifiez-la dans la page Désidératas.');
+            return;
+          }
+        }
+      } catch {}
       await updatePlanningV2({
         date,
         nom_id: nomId,

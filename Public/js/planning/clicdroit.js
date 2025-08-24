@@ -411,6 +411,19 @@ function tooltipClicDroit(event, { nom, nom_id, competenceId, horaireId, date, s
     if (e.target.classList.contains("tooltip-delete")) {
       e.stopPropagation();
       tooltip.style.display = "none";
+      // Si on est sur la page planning auto ET que la case contient un D, on bloque
+      try {
+        const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
+        const isAutoPage = (ctx === 'automatique') || (typeof location !== 'undefined' && /planning-automatique\.html?$/i.test(location.pathname || ''));
+        if (isAutoPage) {
+          const td = document.querySelector(`#planningTableWithNames td[data-competence-id="${competenceId}"][data-horaire-id="${horaireId}"][data-date="${date}"]`);
+          const isTargetD = td && td.querySelector(`.nom-block[data-nom-id="${nom_id}"][data-desideratas="1"]`);
+          if (isTargetD) {
+            alert('Non: cette affectation est un désidératas. Il faut la supprimer depuis la page Désidératas.');
+            return;
+          }
+        }
+      } catch {}
       try {
         const token = localStorage.getItem("token");
         if (isVacanceSousCase || isVacanceCell) {
