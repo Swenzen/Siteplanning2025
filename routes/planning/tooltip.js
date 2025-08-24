@@ -5,15 +5,15 @@ const authenticateToken = require('../../middleware/auth'); // Middleware d'auth
 
 // Route pour récupérer les noms disponibles pour une compétence donnée
 router.get('/nom-ids', authenticateToken, (req, res) => {
-    const { competence_id, semaine, annee, jour_id } = req.query;
-    const site_id = req.query.site_id;
+  const { competence_id, semaine, annee, jour_id, horaire_id } = req.query;
+  const site_id = req.query.site_id;
     const userSiteIds = req.user.siteIds;
 
     if (!userSiteIds.includes(String(site_id))) {
         return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
     }
 
-    const query = `
+    let query = `
         SELECT DISTINCT n.nom, n.nom_id
         FROM Tcompetence_nom_Tsite cns
         JOIN Tnom n ON cns.nom_id = n.nom_id
@@ -44,14 +44,24 @@ router.get('/nom-ids', authenticateToken, (req, res) => {
         )
     `;
 
+    const params = [
+      competence_id, site_id, site_id, site_id,
+      semaine, annee, jour_id, site_id,
+      semaine, annee, jour_id, site_id,
+      semaine, annee, site_id
+    ];
+
+    if (horaire_id) {
+      query += ` AND n.nom_id NOT IN (
+        SELECT e.nom_id FROM Texclusioncompetencenom_Tsite e
+        WHERE e.site_id = ? AND e.competence_id = ? AND e.horaire_id = ? AND e.excluded = 1
+      )`;
+      params.push(site_id, competence_id, horaire_id);
+    }
+
     connection.query(
         query,
-        [
-            competence_id, site_id, site_id, site_id,
-            semaine, annee, jour_id, site_id,
-            semaine, annee, jour_id, site_id,
-            semaine, annee, site_id
-        ],
+        params,
         (err, results) => {
             if (err) {
                 return res.status(500).send('Erreur lors de la récupération des noms');
@@ -63,13 +73,13 @@ router.get('/nom-ids', authenticateToken, (req, res) => {
 });
 
 router.get('/available-names', authenticateToken, (req, res) => {
-    const { competence_id, site_id, date } = req.query;
+  const { competence_id, site_id, date, horaire_id } = req.query;
 
     if (!competence_id || !site_id || !date) {
         return res.status(400).send('Les paramètres competence_id, site_id et date sont requis.');
     }
 
-    const query = `
+    let query = `
         SELECT DISTINCT n.nom, n.nom_id
         FROM Tcompetence_nom_Tsite cns
         JOIN Tnom n ON cns.nom_id = n.nom_id
@@ -88,9 +98,19 @@ router.get('/available-names', authenticateToken, (req, res) => {
           AND ? BETWEEN n.date_debut AND n.date_fin
     `;
 
+    const params = [competence_id, site_id, date, site_id, date, site_id, date];
+
+    if (horaire_id) {
+      query += ` AND n.nom_id NOT IN (
+        SELECT e.nom_id FROM Texclusioncompetencenom_Tsite e
+        WHERE e.site_id = ? AND e.competence_id = ? AND e.horaire_id = ? AND e.excluded = 1
+      )`;
+      params.push(site_id, competence_id, horaire_id);
+    }
+
     connection.query(
         query,
-        [competence_id, site_id, date, site_id, date, site_id, date],
+        params,
         (err, results) => {
             if (err) {
                 console.error('Erreur lors de la récupération des noms disponibles :', err.message);

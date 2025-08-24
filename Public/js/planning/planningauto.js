@@ -634,8 +634,9 @@ document
     const nomDeLaCompetence =
       cell.parentElement.querySelector("td").textContent;
 
-    // Récupérer les noms disponibles
-    const noms = await fetchAvailableNames(competenceId, siteId, date);
+  // Récupérer les noms disponibles (avec filtrage par exclusion via horaireId)
+  console.log('[planningauto] click cell -> params', { competenceId, horaireId, date, siteId });
+  const noms = await fetchAvailableNames(competenceId, siteId, date, horaireId);
 
     // Afficher le tooltip en passant bien le nom de la compétence et la date cliquée
     showTooltip(event, noms, {
@@ -713,13 +714,33 @@ async function fetchCompetencesParNom() {
 //Roulement +++
 
 
-async function fetchAvailableNames(competence_id, site_id, date) {
+async function fetchAvailableNames(competence_id, site_id, date, horaire_id) {
     const token = localStorage.getItem("token");
-    const res = await fetch(`/api/available-names?competence_id=${competence_id}&site_id=${site_id}&date=${date}`, {
+    const params = new URLSearchParams({ competence_id, site_id, date });
+    if (horaire_id) params.append('horaire_id', horaire_id);
+    const url = `/api/available-names?${params.toString()}`;
+    console.log('[planningauto] fetchAvailableNames ->', url);
+    const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) return [];
-    return await res.json(); // [{ nom, nom_id }, ...]
+    let data = await res.json(); // [{ nom, nom_id }, ...]
+    console.log('[planningauto] available names (raw):', data);
+
+    // Fallback: filtrage client par exclusions si horaire fourni
+    if (horaire_id) {
+      try {
+        const exRes = await fetch(`/api/exclusions-competence-nom?site_id=${site_id}`, { headers: { Authorization: `Bearer ${token}` } });
+        if (exRes.ok) {
+          const excl = await exRes.json();
+          const excludedSet = new Set((excl || []).filter(r => r.excluded).map(r => `${r.nom_id}|${r.competence_id}|${r.horaire_id}`));
+          const before = Array.isArray(data) ? data.slice() : [];
+          data = Array.isArray(data) ? data.filter(n => !excludedSet.has(`${n.nom_id}|${competence_id}|${horaire_id}`)) : data;
+          console.log('[planningauto] fallback filtered', { before, after: data, excludedSetSize: excludedSet.size });
+        }
+      } catch {}
+    }
+    return data;
 }
 
 async function fetchMissions(siteId, startDate, endDate) {

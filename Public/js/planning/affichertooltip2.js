@@ -19,6 +19,7 @@ async function fetchNomIds(competenceId, event, clickedDate, clickedCompetence, 
   const hFin = toHMS(horaireFin);
 
   let horaireId = overrideHoraireId ? Number(overrideHoraireId) : null;
+  console.log('[fetchNomIds] params', { competenceId, horaireDebut, horaireFin, overrideHoraireId, siteId });
   try {
     if (!horaireId && hDeb && hFin) {
       const resHor = await fetch(`/api/horaires-competences?site_id=${siteId}`, {
@@ -29,6 +30,7 @@ async function fetchNomIds(competenceId, event, clickedDate, clickedCompetence, 
         // Chercher l'horaire par début/fin et qui contient la compétence
         const match = (horaires || []).find(h => (h.horaire_debut || h.debut) === hDeb && (h.horaire_fin || h.fin) === hFin && Array.isArray(h.competences) && h.competences.includes(Number(competenceId)));
         if (match) horaireId = match.horaire_id || match.id || null;
+        console.log('[fetchNomIds] resolved horaireId', { hDeb, hFin, found: !!match, horaireId });
       }
     }
   } catch (e) {
@@ -38,8 +40,13 @@ async function fetchNomIds(competenceId, event, clickedDate, clickedCompetence, 
   // Récupérer la liste initiale
   let data = [];
   try {
-    const res = await fetch(`/api/nom-ids?competence_id=${competenceId}&site_id=${siteId}`);
+    const qs = new URLSearchParams({ competence_id: competenceId, site_id: siteId });
+    if (horaireId) qs.append('horaire_id', String(horaireId));
+    const url = `/api/nom-ids?${qs.toString()}`;
+    console.log('[fetchNomIds] calling', url);
+    const res = await fetch(url);
     data = res.ok ? await res.json() : [];
+    console.log('[fetchNomIds] initial noms', data);
   } catch (e) {
     data = [];
   }
@@ -53,6 +60,7 @@ async function fetchNomIds(competenceId, event, clickedDate, clickedCompetence, 
       if (resEx.ok) {
         const excl = await resEx.json();
         const excludedSet = new Set((excl || []).filter(r => r.excluded).map(r => `${r.nom_id}|${r.competence_id}|${r.horaire_id}`));
+        console.log('[fetchNomIds] excludedSet size', excludedSet.size);
         // data peut contenir des strings (indisponibles) et des objets {nom, nom_id}
         data = Array.isArray(data) ? data.filter(n => {
           if (typeof n === 'string') return true; // on laisse les autres infos du tooltip
@@ -61,6 +69,7 @@ async function fetchNomIds(competenceId, event, clickedDate, clickedCompetence, 
           const key = `${nid}|${competenceId}|${horaireId}`;
           return !excludedSet.has(key);
         }) : data;
+        console.log('[fetchNomIds] filtered noms', data);
       }
     } catch {}
   }
@@ -206,6 +215,7 @@ function showEmptyTooltip(
   // Appeler fetchNomIds pour récupérer les noms disponibles
   const td = event.target && event.target.closest ? event.target.closest('td[data-horaire-id][data-competence-id]') : null;
   const overrideHoraireId = td ? td.getAttribute('data-horaire-id') : null;
+  console.log('[showEmptyTooltip] td dataset', td ? { competenceId: td.getAttribute('data-competence-id'), horaireId: td.getAttribute('data-horaire-id'), date: td.getAttribute('data-date') } : null);
   fetchNomIds(competenceId, event, null, null, horaireDebut, horaireFin, overrideHoraireId);
 }
 
@@ -282,12 +292,8 @@ async function updatePlanning(
 
 // 2eme tableau pour afficher les noms disponibles
 
-async function fetchAvailableNames(competenceId, siteId, date) {
-  console.log("Appel à fetchAvailableNames avec :", {
-    competenceId,
-    siteId,
-    date,
-  });
+async function fetchAvailableNames(competenceId, siteId, date, horaireId) {
+  console.log('Appel à fetchAvailableNames avec :', { competenceId, siteId, date, horaireId });
 
   const token = localStorage.getItem("token");
 
@@ -297,8 +303,16 @@ async function fetchAvailableNames(competenceId, siteId, date) {
   }
 
   try {
+    const params = new URLSearchParams({
+      competence_id: competenceId,
+      site_id: siteId,
+      date: date
+    });
+    if (horaireId) params.append('horaire_id', horaireId);
+    const url = `/api/available-names?${params.toString()}`;
+    console.log('[fetchAvailableNames] calling', url);
     const response = await fetch(
-      `/api/available-names?competence_id=${competenceId}&site_id=${siteId}&date=${date}`,
+      url,
       {
         method: "GET",
         headers: {
@@ -315,8 +329,21 @@ async function fetchAvailableNames(competenceId, siteId, date) {
       );
     }
 
-    const data = await response.json();
-    console.log("Noms disponibles récupérés :", data);
+  let data = await response.json();
+  console.log('Noms disponibles récupérés :', data);
+    // Fallback filtrage client si nécessaire
+    if (horaireId) {
+      try {
+        const exRes = await fetch(`/api/exclusions-competence-nom?site_id=${siteId}`, { headers: { Authorization: `Bearer ${token}` } });
+        if (exRes.ok) {
+          const excl = await exRes.json();
+          const excludedSet = new Set((excl || []).filter(r => r.excluded).map(r => `${r.nom_id}|${r.competence_id}|${r.horaire_id}`));
+      const before = Array.isArray(data) ? data.slice() : [];
+      data = Array.isArray(data) ? data.filter(n => !excludedSet.has(`${n.nom_id}|${competenceId}|${horaireId}`)) : data;
+      console.log('[fetchAvailableNames] fallback filtered', { before, after: data, excludedSetSize: excludedSet.size });
+        }
+      } catch {}
+    }
     return data;
   } catch (error) {
     console.error(

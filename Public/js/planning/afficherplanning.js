@@ -587,7 +587,7 @@ document
     const nomDeLaCompetence =
       cell.parentElement.querySelector("td").textContent;
 
-    const noms = await fetchAvailableNames(competenceId, siteId, date);
+  const noms = await fetchAvailableNames(competenceId, siteId, date, horaireId);
 
     showTooltip(event, noms, {
       competenceId,
