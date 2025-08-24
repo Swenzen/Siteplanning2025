@@ -956,3 +956,6 @@ thead tr th {
   text-align: center;
 }
 
+/* === PLANNING VALIDE: masquer les badges (D/A/V) et n'afficher que les noms === */
+.page-valide .badge-assign { display: none !important; }
+

@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       <ul class="dropdown-menu">
                                     <li><a href="/planning/planning-desideratas.html">Planning desideratas</a></li>
                                                 <li><a href="/planning/planning-automatique.html">Planning automatique</a></li>
+                                                <li><a href="/planning/planning-valide.html">Planning validé</a></li>
                                                 <li><a href="/planning/planning-roulement.html">Planning roulement</a></li>
                                                 <li><a href="/planning/planning-automatique-clone.html">Planning automatique (clone)</a></li>
                     </ul>

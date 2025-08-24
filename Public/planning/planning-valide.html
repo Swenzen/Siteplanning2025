@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning – Validé</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/header.js" defer></script>
+  </head>
+  <body>
+    <section class="section-container">
+      <div id="dateSelector" class="mb-20">
+        <label for="startDate">Date de début :</label>
+        <input type="date" id="startDate">
+        <label for="endDate">Date de fin :</label>
+        <input type="date" id="endDate">
+        <button id="applyDateFilter">Appliquer</button>
+      </div>
+
+      <table id="planningTableWithNames">
+        <thead></thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+      </table>
+      <!-- Bouton requis par planningauto.js, masqué via classe CSS -->
+      <button id="btnPrintPlanning" class="hidden">Imprimer</button>
+      <div id="tooltip" class="tooltip-hidden"></div>
+    </section>
+
+    <!-- Scripts identiques au rendu, avec contexte spécifique "valide" -->
+    <script src="/js/planning/clicdroit.js"></script>
+    <script src="/js/planning/planningauto.js"></script>
+    <script src="/js/planning/affichertooltip2.js"></script>
+    <script src="/js/planning/style/style.js"></script>
+    <script src="/js/planning/planning-valide.js"></script>
+  </body>
+  </html>

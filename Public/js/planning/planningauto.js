@@ -270,9 +270,15 @@ async function displayPlanningWithNames(
   const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
   const isAutoPage = (ctx === 'automatique') || (typeof location !== 'undefined' && /planning-automatique\.html?$/.test(location.pathname || ''));
   const isDesideratasPage = (ctx === 'desideratas') || (typeof location !== 'undefined' && /planning-desideratas\.html?$/.test(location.pathname || ''));
+  const isValidePage = (ctx === 'valide') || (typeof location !== 'undefined' && /planning-valide\.html?$/.test(location.pathname || ''));
 
   // 1) Sur la page desideratas, on n'affiche que les noms dont desideratas = 1
-  const nomsARendre = isDesideratasPage ? (Array.isArray(noms) ? noms.filter(n => Number(n.desideratas) === 1) : []) : noms;
+  let nomsARendre = noms;
+  if (isDesideratasPage) {
+    nomsARendre = Array.isArray(noms) ? noms.filter(n => Number(n.desideratas) === 1) : [];
+  } else if (isValidePage) {
+    nomsARendre = Array.isArray(noms) ? noms.filter(n => Number(n.planning_valide) === 1) : [];
+  }
 
   nomsARendre.forEach(({ nom, nom_id, desideratas, planning_auto, planning_valide }) => {
           // Affiche la mission liée à ce nom AVANT le nom
@@ -541,8 +547,17 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
       return [];
     }
 
-    const data = await response.json();
+    let data = await response.json();
     console.log("Données récupérées pour le tableau avec noms :", data);
+
+    // Si on est sur la page "Planning validé", ne conserver que les lignes validées
+    try {
+      const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
+      if (ctx === 'valide' && Array.isArray(data)) {
+        data = data.filter(r => Number(r.planning_valide) === 1);
+        console.log(`[Planning validé] Lignes après filtrage planning_valide=1: ${data.length}`);
+      }
+    } catch(e) {}
 
     // Ajout de la gestion des cellules verrouillées
     const dataWithLocked = data.map((cell) => {
@@ -563,11 +578,19 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
         ouverture: fermetureForcee ? 0 : cell.ouverture // <-- force fermeture si besoin
       };
     });
-    renderPlanningRemplissageTable(dataWithLocked);
+    if (typeof window.renderPlanningRemplissageTable === 'function') {
+      renderPlanningRemplissageTable(dataWithLocked);
+    }
 
     // Ajoute ces deux lignes ici :
-    const competencesParNom = await fetchCompetencesParNom();
-    startSwitchEvolution(data, competencesParNom);
+    try {
+      const competencesParNom = await fetchCompetencesParNom();
+      if (typeof window.startSwitchEvolution === 'function') {
+        startSwitchEvolution(data, competencesParNom);
+      }
+    } catch (e) {
+      // Optionnel: ignore si non disponible sur cette page
+    }
 
     return data;
   } catch (error) {
@@ -721,6 +744,41 @@ window.addEventListener('DOMContentLoaded', () => {
     refreshSecondTable();
   }
 });
+  
+// Dévalider le planning (retirer V) sur la période affichée
+document.getElementById('btnInvalidatePlanning')?.addEventListener('click', async () => {
+  const token = localStorage.getItem('token');
+  const siteId = sessionStorage.getItem('selectedSite');
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  if (!token || !siteId || !startDate || !endDate) {
+    alert('Token, site ou période manquants');
+    return;
+  }
+
+  if (!confirm('Retirer le statut validé (V) de toutes les affectations sur la période affichée ?')) return;
+
+  try {
+    const res = await fetch('/api/invalidate-planningv2-range', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ site_id: siteId, start_date: startDate, end_date: endDate })
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(t || 'Erreur réseau');
+    }
+    const out = await res.json();
+    alert(`Dévalidation effectuée. Lignes affectées: ${out.affected}`);
+    await refreshSecondTable();
+  } catch (e) {
+    console.error('Erreur dévalidation:', e);
+    alert('Erreur lors de la dévalidation du planning');
+  }
+});
 
 // Suppression des affectations sauf celles marquées Désidératas (D) dans la période affichée
 document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', async () => {
@@ -733,17 +791,19 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
     return;
   }
 
-  if (!confirm('Supprimer toutes les affectations SAUF les désidératas (D) sur la période affichée ?')) return;
+  if (!confirm("Supprimer toutes les affectations SAUF les désidératas (D) sur la période affichée ?\n\nNote: les affectations validées (V) ne seront pas supprimées.")) return;
 
   try {
     // Récupérer toutes les cases avec noms pour la période, incluant les flags
     const rows = await fetchCompetencesWithNames(siteId, startDate, endDate);
-    // Construire la liste des entrées à supprimer: toutes sauf desideratas=1
+    // Construire la liste des entrées à supprimer: toutes sauf desideratas=1 ET non validées (planning_valide != 1)
+    const totalCandidats = rows.filter(r => r && r.nom_id && Number(r.desideratas) !== 1).length;
+    const ignorésValidés = rows.filter(r => r && r.nom_id && Number(r.desideratas) !== 1 && Number(r.planning_valide || 0) === 1).length;
     const deletions = [];
     rows.forEach(r => {
       // Chaque ligne r représente une cellule et peut contenir un seul nom: r.nom/r.nom_id
-      // planning_auto est projeté au niveau r.planning_auto
-      if (r && r.nom_id && Number(r.desideratas) !== 1) {
+      // Flags projetés par la requête: desideratas, planning_auto, planning_valide
+      if (r && r.nom_id && Number(r.desideratas) !== 1 && Number(r.planning_valide || 0) !== 1) {
         deletions.push({
           date: r.date,
           nom_id: r.nom_id,
@@ -768,12 +828,45 @@ document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', as
       });
     }
 
-    // Rafraîchir l’affichage
-    await refreshSecondTable();
-    alert(`Supprimé ${deletions.length} affectation(s) (hors désidératas).`);
+  // Rafraîchir l’affichage
+  await refreshSecondTable();
+  const msgParts = [`Supprimé ${deletions.length} affectation(s) (hors désidératas).`];
+  if (ignorésValidés > 0) msgParts.push(`${ignorésValidés} affectation(s) validée(s) (V) ignorée(s).`);
+  if (totalCandidats > 0 && deletions.length === 0 && ignorésValidés > 0) msgParts.push('Aucune suppression car tout était validé.');
+  alert(msgParts.join(' '));
   } catch (e) {
     console.error('Erreur suppression non-désidératas:', e);
     alert('Erreur lors de la suppression des affectations (hors désidératas).');
+  }
+});
+
+// Validation des plannings (flag V)
+document.getElementById('btnValidatePlanning')?.addEventListener('click', async () => {
+  const token = localStorage.getItem('token');
+  const site_id = sessionStorage.getItem('selectedSite');
+  const start_date = document.getElementById('startDate')?.value;
+  const end_date = document.getElementById('endDate')?.value;
+  if (!token || !site_id || !start_date || !end_date) {
+    alert('Token, site ou période manquants');
+    return;
+  }
+  if (!confirm('Valider (V) toutes les affectations visibles dans la période affichée ?')) return;
+  try {
+    const resp = await fetch('/api/validate-planningv2-range', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ site_id, start_date, end_date })
+    });
+    if (!resp.ok) {
+      const t = await resp.text();
+      alert(`Échec validation (${resp.status}): ${t || 'Erreur'}`);
+      return;
+    }
+    await refreshSecondTable();
+    alert('Plannings validés (V) pour la période.');
+  } catch (e) {
+    console.error('Erreur validation planning:', e);
+    alert('Erreur réseau lors de la validation.');
   }
 });
 

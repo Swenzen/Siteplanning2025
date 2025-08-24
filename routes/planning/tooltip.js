@@ -210,6 +210,54 @@ router.post('/delete-planningv2', authenticateToken, validateSiteAccess(), (req,
     );
 });
 
+// Marquer planning_valide=1 pour toutes les lignes Tplanningv2 dans une période et un site
+router.post('/validate-planningv2-range', authenticateToken, validateSiteAccess(), (req, res) => {
+  const { site_id, start_date, end_date } = req.body;
+  const userSiteIds = (req.user && req.user.siteIds) ? req.user.siteIds.map(String) : [];
+  if (!site_id || !start_date || !end_date) {
+    return res.status(400).send('Paramètres manquants');
+  }
+  if (!userSiteIds.includes(String(site_id))) {
+    return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+  }
+  const sql = `
+    UPDATE Tplanningv2
+    SET planning_valide = 1
+    WHERE site_id = ? AND date BETWEEN ? AND ?
+  `;
+  connection.query(sql, [site_id, start_date, end_date], (err, result) => {
+    if (err) {
+      console.error('Erreur SQL validate-planningv2-range:', err.message);
+      return res.status(500).send('Erreur lors de la validation du planning');
+    }
+    res.json({ success: true, affected: result.affectedRows });
+  });
+});
+
+// Dévalider: remettre planning_valide=0 sur la période et le site
+router.post('/invalidate-planningv2-range', authenticateToken, validateSiteAccess(), (req, res) => {
+  const { site_id, start_date, end_date } = req.body;
+  const userSiteIds = (req.user && req.user.siteIds) ? req.user.siteIds.map(String) : [];
+  if (!site_id || !start_date || !end_date) {
+    return res.status(400).send('Paramètres manquants');
+  }
+  if (!userSiteIds.includes(String(site_id))) {
+    return res.status(403).send('Accès refusé : Vous n\'avez pas accès à ce site.');
+  }
+  const sql = `
+    UPDATE Tplanningv2
+    SET planning_valide = 0
+    WHERE site_id = ? AND date BETWEEN ? AND ?
+  `;
+  connection.query(sql, [site_id, start_date, end_date], (err, result) => {
+    if (err) {
+      console.error('Erreur SQL invalidate-planningv2-range:', err.message);
+      return res.status(500).send('Erreur lors de la dévalidation du planning');
+    }
+    res.json({ success: true, affected: result.affectedRows });
+  });
+});
+
 router.post('/delete-vacancev2', authenticateToken, validateSiteAccess(), (req, res) => {
   const { date, nom_id, site_id } = req.body;
   if (!date || !nom_id || !site_id) {
