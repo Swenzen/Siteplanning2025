@@ -106,7 +106,14 @@ async function displayPlanningWithNames(
       row.nom_id &&
       !cases[key].noms.some((n) => n.nom_id === row.nom_id)
     ) {
-      cases[key].noms.push({ nom: row.nom, nom_id: row.nom_id });
+      // Inclure les flags p.desideratas/planning_auto/planning_valide (projetés par la requête)
+      cases[key].noms.push({
+        nom: row.nom,
+        nom_id: row.nom_id,
+        desideratas: row.desideratas || 0,
+        planning_auto: row.planning_auto || 0,
+        planning_valide: row.planning_valide || 0
+      });
     }
     if (row.commentaire) {
       cases[key].commentaires.push({
@@ -237,7 +244,7 @@ async function displayPlanningWithNames(
           dateCell.classList.add("cell-fermee");
         }
 
-        if (commentaireGeneral) {
+  if (commentaireGeneral) {
           dateCell.innerHTML += `<div class="commentaire-block">${commentaireGeneral.commentaire}</div>`;
         }
 
@@ -256,8 +263,18 @@ async function displayPlanningWithNames(
           }
         }
 
-        // Puis les noms
-        noms.forEach(({ nom, nom_id }) => {
+  // Puis les noms
+  // Chaque entrée dans cells[date].noms peut désormais inclure des flags p.*
+  // grâce à /api/datecompetencewithnames: desideratas, planning_auto, planning_valide
+  // Contexte de page
+  const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
+  const isAutoPage = (ctx === 'automatique') || (typeof location !== 'undefined' && /planning-automatique\.html?$/.test(location.pathname || ''));
+  const isDesideratasPage = (ctx === 'desideratas') || (typeof location !== 'undefined' && /planning-desideratas\.html?$/.test(location.pathname || ''));
+
+  // 1) Sur la page desideratas, on n'affiche que les noms dont desideratas = 1
+  const nomsARendre = isDesideratasPage ? (Array.isArray(noms) ? noms.filter(n => Number(n.desideratas) === 1) : []) : noms;
+
+  nomsARendre.forEach(({ nom, nom_id, desideratas, planning_auto, planning_valide }) => {
           // Affiche la mission liée à ce nom AVANT le nom
           if (missions && missions.length > 0) {
             const missionNom = missions.find(
@@ -279,9 +296,18 @@ async function displayPlanningWithNames(
           }
 
           // Puis le nom
+          // Construit les badges d'étiquettes
+          // Sur la page desideratas: masquer D et A pour un affichage minimal
+          const badges = [];
+          if (!isDesideratasPage && Number(desideratas) === 1) badges.push('<span class="badge-assign badge-desideratas" title="Désidératas">D</span>');
+          if (!isDesideratasPage && Number(planning_auto) === 1) badges.push('<span class="badge-assign badge-auto" title="Auto">A</span>');
+          if (Number(planning_valide) === 1) badges.push('<span class="badge-assign badge-valide" title="Validé">V</span>');
+          const badgesHtml = badges.join('');
+          const extraClass = (isAutoPage && Number(desideratas) === 1) ? ' nom-desideratas' : '';
+
           dateCell.innerHTML += `
-            <div class="nom-block" data-nom="${nom}" data-nom-id="${nom_id}">
-              <span class="nom-valeur">${nom}</span>
+            <div class="nom-block${extraClass}" data-nom="${nom}" data-nom-id="${nom_id}" data-desideratas="${Number(desideratas) === 1 ? '1' : '0'}">
+              <span class="nom-valeur">${nom}</span>${badgesHtml}
             </div>
           `;
         });

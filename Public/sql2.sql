@@ -273,6 +273,12 @@ CREATE TABLE Tplanningv2 (
     FOREIGN KEY (site_id) REFERENCES Tsite(site_id) ON DELETE CASCADE -- Clé étrangère vers Tsite
 );
 
+-- Etendre Tplanningv2 pour tracer l'origine et l'état
+ALTER TABLE Tplanningv2
+    ADD COLUMN desideratas TINYINT(1) NOT NULL DEFAULT 0,
+    ADD COLUMN planning_auto TINYINT(1) NOT NULL DEFAULT 0,
+    ADD COLUMN planning_valide TINYINT(1) NOT NULL DEFAULT 0;
+
 
 -- Table de planning définitif (même structure que Tplanningv2)
 CREATE TABLE Tplanningdefinitif (

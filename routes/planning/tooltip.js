@@ -124,29 +124,54 @@ router.get('/available-names', authenticateToken, (req, res) => {
 
 
 router.post('/update-planningv2', authenticateToken, validateSiteAccess(), (req, res) => {
-    const { date, nom_id, competence_id, horaire_id, site_id } = req.body;
+  const { date, nom_id, competence_id, horaire_id, site_id, desideratas = 0, planning_auto = 0, planning_valide = 0 } = req.body;
 
-    if (!date || !nom_id || !competence_id || !horaire_id || !site_id) {
-        return res.status(400).send('Tous les champs sont requis.');
+  if (!date || !nom_id || !competence_id || !horaire_id || !site_id) {
+    return res.status(400).send('Tous les champs sont requis.');
+  }
+
+  // Tentative avec les colonnes d'origine + flags
+  const insertWithFlags = `
+    INSERT INTO Tplanningv2 (date, nom_id, competence_id, horaire_id, site_id, desideratas, planning_auto, planning_valide)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  const insertWithFlagsParams = [
+    date,
+    nom_id,
+    competence_id,
+    horaire_id,
+    site_id,
+    Number(!!desideratas),
+    Number(!!planning_auto),
+    Number(!!planning_valide)
+  ];
+
+  connection.query(insertWithFlags, insertWithFlagsParams, (err) => {
+    if (!err) {
+      return res.send('Planning mis à jour avec succès.');
     }
 
-  const query = `
-    INSERT INTO Tplanningv2 (date, nom_id, competence_id, horaire_id, site_id)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-
-    connection.query(
-        query,
-        [date, nom_id, competence_id, horaire_id, site_id],
-        (err) => {
-            if (err) {
-                console.error('Erreur lors de la mise à jour de Tplanningv2 :', err.message);
-                return res.status(500).send('Erreur lors de la mise à jour de Tplanningv2.');
-            }
-
-            res.send('Planning mis à jour avec succès.');
+    // Si les colonnes n'existent pas encore (base pas migrée), fallback sans flags
+    const isUnknownColumn = /Unknown column|ER_BAD_FIELD_ERROR/i.test(err.message || '');
+    if (isUnknownColumn) {
+      console.warn('[update-planningv2] Colonnes flags absentes dans Tplanningv2, insertion sans flags. Pensez à lancer l\'ALTER TABLE pour desideratas/planning_auto/planning_valide. Détail:', err.message);
+      const insertBasic = `
+        INSERT INTO Tplanningv2 (date, nom_id, competence_id, horaire_id, site_id)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      const insertBasicParams = [date, nom_id, competence_id, horaire_id, site_id];
+      return connection.query(insertBasic, insertBasicParams, (err2) => {
+        if (err2) {
+          console.error('Erreur lors de la mise à jour de Tplanningv2 (fallback) :', err2.message);
+          return res.status(500).send('Erreur lors de la mise à jour de Tplanningv2.');
         }
-    );
+        return res.send('Planning mis à jour avec succès.');
+      });
+    }
+
+    console.error('Erreur lors de la mise à jour de Tplanningv2 :', err.message);
+    return res.status(500).send('Erreur lors de la mise à jour de Tplanningv2.');
+  });
 });
 
 router.post('/delete-planningv2', authenticateToken, validateSiteAccess(), (req, res) => {

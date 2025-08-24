@@ -31,6 +31,9 @@ SELECT
     d.date,
     n.nom,
     n.nom_id,
+    COALESCE(p.desideratas, 0) AS desideratas,
+    COALESCE(p.planning_auto, 0) AS planning_auto,
+    COALESCE(p.planning_valide, 0) AS planning_valide,
     comm.commentaire,
     comm.nom_id AS commentaire_nom_id,
     CASE 

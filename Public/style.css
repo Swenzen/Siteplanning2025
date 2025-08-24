@@ -47,6 +47,22 @@ body {
 .highlight-switch { box-shadow:0 0 8px #007bff; border:2px solid #007bff; }
 .vacance-title-cell { font-weight:bold; cursor:pointer; }
 
+/* Style commun pour les noms marqués comme desideratas */
+/* Sur la page automatique, les desideratas doivent ressortir clairement */
+body:not(.page-desideratas) #planningTableWithNames .nom-block.nom-desideratas {
+  outline: 2px dashed rgba(218, 165, 32, 0.7);
+  background: rgba(255, 249, 196, 0.55);
+  border-radius: 6px;
+  padding: 2px 6px;
+  border-left: 4px solid #a97900;
+  filter: saturate(1.1) contrast(1.05);
+}
+/* Accentuer le texte pour qu'il se voie même avec des fonds de cellule colorés */
+#planningTableWithNames .nom-block.nom-desideratas .nom-valeur { font-weight: 800; color: #5a4100; text-shadow: 0 1px 0 rgba(255,255,255,0.45); }
+
+/* Optionnel: souligner également par un liseré quand l'attribut data-desideratas=1 est présent */
+body:not(.page-desideratas) #planningTableWithNames .nom-block[data-desideratas="1"] { box-shadow: inset 0 0 0 2px rgba(169,121,0,0.35); }
+
 /* ========== BOUTONS GÉNÉRAUX ========== */
 button,
 .action-btn,
@@ -392,6 +408,16 @@ table.grid-freeze .sub-table input[type=checkbox] { cursor:pointer; }
   padding:2px 4px; text-align:center;
 }
 .tooltip-table .cell-x { color:red; font-weight:bold; }
+
+/* Badges d'origine/état des affectations */
+.badge-assign { display:inline-block; margin-left:6px; padding:2px 6px; border-radius:10px; font-size:11px; font-weight:bold; vertical-align:middle; }
+.badge-desideratas { background:#fff3cd; color:#8a6d3b; border:1px solid #ffe08a; }
+.badge-auto { background:#e0f3ff; color:#0b5394; border:1px solid #b6e0ff; }
+.badge-valide { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
+
+/* Pas d'encadré spécifique sur la page desideratas (affichage minimal) */
+/* Si le flag desideratas est présent, renforcer la couleur même hors page dedicée */
+
 
 /* ========== MODALES ========== */
 .modal, .date-modal, .modalh, .indisponibilites-modal, .roulement-modal {

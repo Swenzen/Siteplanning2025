@@ -45,6 +45,74 @@ connection.connect((err) => {
     }
 });
 
+// Migration légère: s'assurer que Tplanningv2 possède les colonnes de flags
+function ensurePlanningFlagsColumns() {
+    const dbName = (process.env.NODE_ENV === 'production') ? process.env.MYSQLDATABASE : 'date';
+    console.log(`[migration] Vérification des colonnes flags dans Tplanningv2 (base=${dbName})`);
+
+    // Vérifier l'existence des colonnes via information_schema
+    const checkSql = `
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'Tplanningv2'
+            AND COLUMN_NAME IN ('desideratas', 'planning_auto', 'planning_valide')
+    `;
+
+    pool.query(checkSql, [dbName], (err, rows) => {
+        if (err) {
+            console.warn('[migration] Impossible de vérifier les colonnes (information_schema). On tente ALTER direct avec gestion des doublons.', err.message);
+            return runAlterSequentially();
+        }
+
+        const existing = new Set(rows.map(r => r.COLUMN_NAME));
+        const alters = [];
+        if (!existing.has('desideratas')) {
+            alters.push("ALTER TABLE Tplanningv2 ADD COLUMN desideratas TINYINT(1) NOT NULL DEFAULT 0");
+        }
+        if (!existing.has('planning_auto')) {
+            alters.push("ALTER TABLE Tplanningv2 ADD COLUMN planning_auto TINYINT(1) NOT NULL DEFAULT 0");
+        }
+        if (!existing.has('planning_valide')) {
+            alters.push("ALTER TABLE Tplanningv2 ADD COLUMN planning_valide TINYINT(1) NOT NULL DEFAULT 0");
+        }
+
+        if (alters.length === 0) {
+            console.log('[migration] Colonnes déjà présentes.');
+            return;
+        }
+
+        runAlterList(alters);
+    });
+
+    function runAlterSequentially() {
+        // Fallback: tenter les 3 ALTER en gérant Duplicate column name
+        const alters = [
+            "ALTER TABLE Tplanningv2 ADD COLUMN desideratas TINYINT(1) NOT NULL DEFAULT 0",
+            "ALTER TABLE Tplanningv2 ADD COLUMN planning_auto TINYINT(1) NOT NULL DEFAULT 0",
+            "ALTER TABLE Tplanningv2 ADD COLUMN planning_valide TINYINT(1) NOT NULL DEFAULT 0"
+        ];
+        runAlterList(alters);
+    }
+
+    function runAlterList(alters) {
+        if (alters.length === 0) return;
+        const sql = alters.shift();
+        pool.query(sql, (err) => {
+            if (err) {
+                // Ignorer si la colonne existe déjà
+                if (/Duplicate column name|ER_DUP_FIELDNAME/i.test(err.message || '')) {
+                    console.log(`[migration] Déjà présent: ${sql}`);
+                } else {
+                    console.warn(`[migration] Échec ALTER: ${sql} -> ${err.message}`);
+                }
+            } else {
+                console.log(`[migration] OK: ${sql}`);
+            }
+            // Prochain ALTER
+            runAlterList(alters);
+        });
+    }
+}
+
 // Middleware pour parser le corps des requêtes
 app.use(bodyParser.json());
 
@@ -217,6 +285,9 @@ app.post('/login', (req, res) => {
 });
 
 // Démarrer le serveur web
+// Lancer la migration au démarrage puis écouter
+ensurePlanningFlagsColumns();
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 }).on('error', (err) => {

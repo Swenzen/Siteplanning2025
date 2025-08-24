@@ -44,7 +44,9 @@ async function fetchNomIds(competenceId, event, clickedDate, clickedCompetence, 
     if (horaireId) qs.append('horaire_id', String(horaireId));
     const url = `/api/nom-ids?${qs.toString()}`;
     console.log('[fetchNomIds] calling', url);
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     data = res.ok ? await res.json() : [];
     console.log('[fetchNomIds] initial noms', data);
   } catch (e) {
@@ -215,8 +217,10 @@ function showEmptyTooltip(
   // Appeler fetchNomIds pour récupérer les noms disponibles
   const td = event.target && event.target.closest ? event.target.closest('td[data-horaire-id][data-competence-id]') : null;
   const overrideHoraireId = td ? td.getAttribute('data-horaire-id') : null;
+  const clickedDate = td ? td.getAttribute('data-date') : null;
   console.log('[showEmptyTooltip] td dataset', td ? { competenceId: td.getAttribute('data-competence-id'), horaireId: td.getAttribute('data-horaire-id'), date: td.getAttribute('data-date') } : null);
-  fetchNomIds(competenceId, event, null, null, horaireDebut, horaireFin, overrideHoraireId);
+  // Transmettre la date de la cellule cliquée pour que l\'insertion /update-planningv2 dispose d\'une date valide
+  fetchNomIds(competenceId, event, clickedDate, null, horaireDebut, horaireFin, overrideHoraireId);
 }
 
 // Fonction pour mettre à jour le planning dans la base de données
@@ -329,7 +333,7 @@ async function fetchAvailableNames(competenceId, siteId, date, horaireId) {
       );
     }
 
-  let data = await response.json();
+    let data = await response.json();
   console.log('Noms disponibles récupérés :', data);
     // Fallback filtrage client si nécessaire
     if (horaireId) {
@@ -393,12 +397,15 @@ function showTooltip(event, noms, { competenceId, horaireId, date, siteId, plann
       tooltip.style.display = "none";
       const nomId = li.dataset.nomId;
       if (!nomId) return;
+    const ctx = (typeof window !== 'undefined' && window.PLANNING_CONTEXT) ? window.PLANNING_CONTEXT : '';
+    const flags = { desideratas: ctx === 'desideratas', planning_auto: ctx === 'automatique' };
       await updatePlanningV2({
         date,
         nom_id: nomId,
         competenceId,
         horaireId,
-        siteId
+  siteId,
+  flags
       });
     });
 
@@ -508,6 +515,7 @@ async function updatePlanningV2({
   competenceId,
   horaireId,
   siteId,
+  flags = {}
 }) {
   const token = localStorage.getItem("token");
 
@@ -529,6 +537,9 @@ async function updatePlanningV2({
         competence_id: competenceId,
         horaire_id: horaireId,
         site_id: siteId,
+        desideratas: flags.desideratas ? 1 : 0,
+        planning_auto: flags.planning_auto ? 1 : 0,
+        planning_valide: flags.planning_valide ? 1 : 0
       }),
     });
 

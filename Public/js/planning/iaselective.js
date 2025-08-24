@@ -1028,7 +1028,7 @@ async function applySimuPlanningToDB(planningSimule) {
   let ok = 0, fail = 0;
   for (const cell of toSend) {
     try {
-      const res = await fetch("/api/update-planningv2", {
+    const res = await fetch("/api/update-planningv2", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1039,7 +1039,8 @@ async function applySimuPlanningToDB(planningSimule) {
           nom_id: cell.nom_id,
           competence_id: cell.competence_id,
           horaire_id: cell.horaire_id,
-          site_id: cell.site_id
+      site_id: cell.site_id,
+      planning_auto: 1
         })
       });
       if (res.ok) ok++;
@@ -1253,14 +1254,14 @@ async function appliquerRoulementsDansPlanningAuto() {
     }
 
   // 4. Envoie les affectations à l'API
-    for (const aff of affectations) {
-        await fetch('/api/update-planningv2', {
+  for (const aff of affectations) {
+    await fetch('/api/update-planningv2', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(aff)
+      body: JSON.stringify({ ...aff, planning_auto: 1 })
         });
     }
 
