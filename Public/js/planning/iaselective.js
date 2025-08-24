@@ -1050,7 +1050,20 @@ async function applySimuPlanningToDB(planningSimule) {
     }
   }
   alert(`Planning appliqué !\nSuccès : ${ok}\nErreurs : ${fail}`);
-  if (typeof fetchPlanningData === "function") fetchPlanningData();
+  // Rafraîchir immédiatement l'affichage des deux tableaux
+  try {
+    if (typeof refreshSecondTable === "function") {
+      await refreshSecondTable();
+    }
+    // Alias éventuel attendu par d'autres modules
+    if (typeof refreshPlanningTableWithNames === "function") {
+      await refreshPlanningTableWithNames();
+    }
+    // Ancien hook (pour compat) si présent
+    if (typeof fetchPlanningData === "function") fetchPlanningData();
+  } catch (e) {
+    console.warn("Refresh après application du planning a échoué:", e);
+  }
 
 }
 

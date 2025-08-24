@@ -22,8 +22,7 @@
         <input type="date" id="startDate">
         <label for="endDate">Date de fin :</label>
         <input type="date" id="endDate">
-        <button id="applyDateFilter">Appliquer</button>
-    <button id="btnDeleteAutoAssignments" title="Supprimer toutes les affectations marquées A dans la période affichée">Supprimer les A</button>
+                <button id="applyDateFilter">Appliquer</button>
     </div>
 
     <table id="planningTableWithNames">
@@ -31,6 +30,9 @@
         <tbody></tbody>
         <tfoot></tfoot>
     </table>
+        <div style="margin: 10px 5%;">
+            <button id="btnDeleteNonDesideratas" class="danger" title="Supprimer toutes les affectations sauf celles marquées Désidératas dans la période affichée">Supprimer les noms (sauf les désidératas)</button>
+        </div>
     <button id="btnPrintPlanning">Imprimer ce planning</button>
     <div id="tooltip" class="tooltip-hidden"></div>
 

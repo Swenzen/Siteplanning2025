@@ -578,9 +578,34 @@ async function fetchCompetencesWithNames(siteId, startDate, endDate) {
 }
 
 async function refreshSecondTable() {
-  const startDate = document.getElementById("startDate").value;
-  const endDate = document.getElementById("endDate").value;
-  const siteId = sessionStorage.getItem("selectedSite");
+  let startDate = document.getElementById("startDate").value;
+  let endDate = document.getElementById("endDate").value;
+  // Fallback: si les inputs sont vides, reprendre les dernières valeurs connues
+  if (!startDate) {
+    const saved = sessionStorage.getItem('startDate');
+    if (saved) {
+      startDate = saved;
+      const el = document.getElementById('startDate');
+      if (el && !el.value) el.value = saved;
+    }
+  }
+  if (!endDate) {
+    const saved = sessionStorage.getItem('endDate');
+    if (saved) {
+      endDate = saved;
+      const el = document.getElementById('endDate');
+      if (el && !el.value) el.value = saved;
+    }
+  }
+  let siteId = sessionStorage.getItem("selectedSite");
+  if (!siteId) {
+    const siteSel = document.getElementById('siteSelector');
+    if (siteSel && siteSel.value) {
+      siteId = String(siteSel.value);
+      sessionStorage.setItem('selectedSite', siteId);
+      console.log('[refreshSecondTable] selectedSite récupéré depuis #siteSelector:', siteId);
+    }
+  }
   if (startDate && endDate && siteId) {
     const competencesWithNames = await fetchCompetencesWithNames(
       siteId,
@@ -599,40 +624,33 @@ async function refreshSecondTable() {
       vacancesData,
       missions // <-- on passe les missions ici
     );
+  } else {
+    console.warn('[refreshSecondTable] paramètres manquants', { startDate, endDate, siteId });
+    if (!siteId) alert('Veuillez sélectionner un site dans le menu en haut à droite.');
   }
 }
+
+// Exposer un alias global attendu par d'autres modules (ex: iaselective.js)
+try { window.refreshPlanningTableWithNames = refreshSecondTable; } catch(e) {}
 applyDateFilterButton.addEventListener("click", async () => {
   const startDate = startDateInput.value;
   const endDate = endDateInput.value;
   const siteId = sessionStorage.getItem("selectedSite");
 
-  // Vérifiez si les dates sont définies
   if (!startDate || !endDate) {
     alert("Veuillez sélectionner une date de début et une date de fin.");
     return;
   }
 
-  console.log("Dates sélectionnées :", { startDate, endDate });
+  // Sauvegarder immédiatement les dates choisies
+  sessionStorage.setItem("startDate", startDate);
+  sessionStorage.setItem("endDate", endDate);
+  sessionStorage.setItem("planningStartDate", startDate);
+  sessionStorage.setItem("planningEndDate", endDate);
 
-  // Récupérer les compétences avec noms pour le deuxième tableau
-  const competencesWithNames = await fetchCompetencesWithNames(
-    siteId,
-    startDate,
-    endDate
-  );
-  // Récupérer les vacances pour la période
-  const vacancesData = await fetchVacancesData(siteId, startDate, endDate);
-
-  // AJOUTE CETTE LIGNE :
-  const missions = await fetchMissions(siteId, startDate, endDate);
-
-  displayPlanningWithNames(
-    competencesWithNames,
-    startDate,
-    endDate,
-    vacancesData,
-    missions // <-- on passe bien les missions ici
-  );
+  console.log("Dates sélectionnées :", { startDate, endDate, siteId });
+  // Utiliser le rafraîchissement centralisé
+  await refreshSecondTable();
 });
 
 document
@@ -694,19 +712,18 @@ async function fetchVacancesData(siteId, startDate, endDate) {
   return vacancesData;
 }
 
-// Sauvegarder les dates dans le localStorage lors de l'application du filtre
-applyDateFilterButton.addEventListener("click", () => {
-  const startDate = startDateInput.value;
-  const endDate = endDateInput.value;
-
-  sessionStorage.setItem("startDate", startDate);
-  sessionStorage.setItem("endDate", endDate);
-  sessionStorage.setItem("planningStartDate", startDate);
-  sessionStorage.setItem("planningEndDate", endDate);
+// Optionnel: recharger automatiquement si des dates sont déjà définies au chargement
+window.addEventListener('DOMContentLoaded', () => {
+  const s = document.getElementById('startDate')?.value;
+  const e = document.getElementById('endDate')?.value;
+  const siteId = sessionStorage.getItem('selectedSite');
+  if (s && e && siteId) {
+    refreshSecondTable();
+  }
 });
 
-// Suppression des affectations marquées Auto (A) dans la période affichée
-document.getElementById('btnDeleteAutoAssignments')?.addEventListener('click', async () => {
+// Suppression des affectations sauf celles marquées Désidératas (D) dans la période affichée
+document.getElementById('btnDeleteNonDesideratas')?.addEventListener('click', async () => {
   const token = localStorage.getItem('token');
   const siteId = sessionStorage.getItem('selectedSite');
   const startDate = document.getElementById('startDate').value;
@@ -716,17 +733,17 @@ document.getElementById('btnDeleteAutoAssignments')?.addEventListener('click', a
     return;
   }
 
-  if (!confirm('Supprimer toutes les affectations AUTO (A) sur la période affichée ?')) return;
+  if (!confirm('Supprimer toutes les affectations SAUF les désidératas (D) sur la période affichée ?')) return;
 
   try {
     // Récupérer toutes les cases avec noms pour la période, incluant les flags
     const rows = await fetchCompetencesWithNames(siteId, startDate, endDate);
-    // Construire la liste des entrées à supprimer: celles avec planning_auto=1
+    // Construire la liste des entrées à supprimer: toutes sauf desideratas=1
     const deletions = [];
     rows.forEach(r => {
       // Chaque ligne r représente une cellule et peut contenir un seul nom: r.nom/r.nom_id
       // planning_auto est projeté au niveau r.planning_auto
-      if (r && r.nom_id && Number(r.planning_auto) === 1) {
+      if (r && r.nom_id && Number(r.desideratas) !== 1) {
         deletions.push({
           date: r.date,
           nom_id: r.nom_id,
@@ -738,7 +755,7 @@ document.getElementById('btnDeleteAutoAssignments')?.addEventListener('click', a
     });
 
     if (deletions.length === 0) {
-      alert('Aucune affectation Auto (A) à supprimer dans la période.');
+      alert('Aucune affectation non-désidératas à supprimer dans la période.');
       return;
     }
 
@@ -753,10 +770,10 @@ document.getElementById('btnDeleteAutoAssignments')?.addEventListener('click', a
 
     // Rafraîchir l’affichage
     await refreshSecondTable();
-    alert(`Supprimé ${deletions.length} affectation(s) Auto.`);
+    alert(`Supprimé ${deletions.length} affectation(s) (hors désidératas).`);
   } catch (e) {
-    console.error('Erreur suppression Auto:', e);
-    alert('Erreur lors de la suppression des affectations Auto.');
+    console.error('Erreur suppression non-désidératas:', e);
+    alert('Erreur lors de la suppression des affectations (hors désidératas).');
   }
 });
 
